@@ -97,6 +97,57 @@ class ModflowPrtmip(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "griddata": {
+            "izone": {
+                "block": "griddata",
+                "description": "is an integer zone number assigned to each cell.  izone may be positive, negative, or zero.  the current cell's zone number is recorded with each particle track datum.  if a prp package's istopzone option is set to any value other than zero, particles released by that prp package terminate if they enter a cell whose izone value matches istopzone.  if istopzone is not specified or is set to zero in a prp package, izone has no effect on the termination of particles released by that prp package.  each prp package may configure a single istopzone value.",
+                "layered": True,
+                "longname": "zone number",
+                "name": "izone",
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "integer",
+            },
+            "porosity": {
+                "block": "griddata",
+                "description": "is the aquifer porosity.",
+                "layered": True,
+                "longname": "porosity",
+                "name": "porosity",
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "retfactor": {
+                "block": "griddata",
+                "description": "is a real value by which velocity is divided within a given cell.  retfactor can be used to account for solute retardation, i.e., the apparent effect of linear sorption on the velocity of particles that track solute advection.  retfactor may be assigned any real value.  a retfactor value greater than 1 represents particle retardation (slowing), and a value of 1 represents no retardation.  the effect of specifying a retfactor value for each cell is the same as the effect of directly multiplying the porosity in each cell by the proposed retfactor value for each cell.  retfactor allows conceptual isolation of effects such as retardation from the effect of porosity.  the default value is 1.",
+                "layered": True,
+                "longname": "retardation factor",
+                "name": "retfactor",
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+        },
+        "multi": False,
+        "name": "prt-mip",
+        "options": {
+            "export_array_ascii": {
+                "block": "options",
+                "description": "keyword that specifies input griddata arrays should be written to layered ascii output files.",
+                "longname": "export array variables to layered ascii files.",
+                "mf6internal": "export_ascii",
+                "name": "export_array_ascii",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            }
+        },
+    }
 
     def __init__(
         self,

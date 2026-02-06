@@ -153,6 +153,94 @@ class ModflowGwfapi(MFPackage):
             "optional false",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "dimensions": {
+            "maxbound": {
+                "block": "dimensions",
+                "description": "integer value specifying the maximum number of api boundary cells that will be specified for use during any stress period.",
+                "longname": "maximum number of user-defined api boundaries",
+                "name": "maxbound",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            }
+        },
+        "fkeys": {
+            "obs_filerecord": {
+                "abbr": "obs",
+                "key": "obs_filerecord",
+                "param": "continuous",
+                "parent": "parent_model_or_package",
+                "val": "observations",
+            }
+        },
+        "multi": True,
+        "name": "gwf-api",
+        "options": {
+            "boundnames": {
+                "block": "options",
+                "description": "keyword to indicate that boundary names may be provided with the list of api boundary cells.",
+                "name": "boundnames",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "mover": {
+                "block": "options",
+                "description": "keyword to indicate that this instance of the api boundary package can be used with the water mover (mvr) package.  when the mover option is specified, additional memory is allocated within the package to store the available, provided, and received water.",
+                "name": "mover",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "observations": {
+                "block": "options",
+                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
+                "name": "observations",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "obs",
+                    "key": "obs_filerecord",
+                    "param": "continuous",
+                    "parent": "parent_model_or_package",
+                    "val": "observations",
+                },
+                "type": "record obs6 filein obs6_filename",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of api boundary flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print calculated flows to listing file",
+                "mf6internal": "iprflow",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of api boundary information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "mf6internal": "iprpak",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that api boundary flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save api flows to budget file",
+                "mf6internal": "ipakcb",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+    }
 
     def __init__(
         self,

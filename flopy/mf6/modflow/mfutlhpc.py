@@ -86,6 +86,76 @@ class ModflowUtlhpc(MFPackage):
             "reader urword",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "utl-hpc",
+        "options": {
+            "dev_log_mpi": {
+                "block": "options",
+                "description": "keyword to enable (extremely verbose) logging of mpi traffic to file.",
+                "longname": "log mpi traffic",
+                "name": "dev_log_mpi",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_table": {
+                "block": "options",
+                "description": "keyword to indicate that the partition table will be printed to the listing file.",
+                "longname": "model print table to listing file",
+                "name": "print_table",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+        "partitions": {
+            "partitions": {
+                "block": "partitions",
+                "description": "is the list of zero-based partition numbers.",
+                "item": {
+                    "block": "partitions",
+                    "description": "is the record of zero-based partition numbers.",
+                    "fields": {
+                        "mname": {
+                            "block": "partitions",
+                            "description": "is the unique model name.",
+                            "longname": "model name",
+                            "name": "mname",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "mrank": {
+                            "block": "partitions",
+                            "description": "is the zero-based partition number (also: MPI rank or processor id) to which the model will be assigned.",
+                            "longname": "model rank",
+                            "name": "mrank",
+                            "reader": "urword",
+                            "type": "integer",
+                        },
+                    },
+                    "longname": "list of partition numbers",
+                    "name": "partitions",
+                    "optional": True,
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "longname": "list of partition numbers",
+                "name": "partitions",
+                "optional": True,
+                "reader": "urword",
+                "type": "recarray",
+            }
+        },
+        "ref": {
+            "abbr": "hpc",
+            "key": "hpc_filerecord",
+            "param": "hpc_data",
+            "parent": "parent_package",
+            "val": "hpc_data",
+        },
+    }
 
     def __init__(
         self,

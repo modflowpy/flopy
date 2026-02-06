@@ -115,6 +115,73 @@ class ModflowUtlsfrtab(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "dimensions": {
+            "ncol": {
+                "block": "dimensions",
+                "description": "integer value specifying the number of columns in the reach cross-section table. there must be ncol columns of data in the table block. ncol must be equal to 2 if manfraction is not specified or 3 otherwise.",
+                "longname": "number of table columns",
+                "name": "ncol",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            },
+            "nrow": {
+                "block": "dimensions",
+                "description": "integer value specifying the number of rows in the reach cross-section table. there must be nrow rows of data in the table block.",
+                "longname": "number of table rows",
+                "name": "nrow",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            },
+        },
+        "multi": True,
+        "name": "utl-sfrtab",
+        "table": {
+            "table": {
+                "block": "table",
+                "item": {
+                    "block": "table",
+                    "fields": {
+                        "height": {
+                            "block": "table",
+                            "description": "real value that is the height relative to the top of the lowest elevation of the streambed (RTP) and corresponding to the station data on the same line. HEIGHT must be greater than or equal to zero and at least one cross-section height must be equal to zero.",
+                            "longname": "depth",
+                            "name": "height",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                        "manfraction": {
+                            "block": "table",
+                            "description": "real value that defines the Manning's roughness coefficient data for the cross-section as a fraction of the Manning's roughness coefficient for the reach (MAN) and corresponding to the station data on the same line. MANFRACTION must be greater than zero. MANFRACTION is applied from the XFRACTION value on the same line to the XFRACTION value on the next line. Although a MANFRACTION value is specified on the last line, any value greater than zero can be applied to MANFRACTION(NROW). MANFRACTION is only specified if NCOL is 3. If MANFRACTION is not specified, the Manning's roughness coefficient for the reach (MAN) is applied to the entire cross-section.",
+                            "longname": "Manning's roughness coefficient",
+                            "name": "manfraction",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                        "xfraction": {
+                            "block": "table",
+                            "description": "real value that defines the station (x) data for the cross-section as a fraction of the width (RWID) of the reach. XFRACTION must be greater than or equal to zero but can be greater than one. XFRACTION values can be used to decrease or increase the width of a reach from the specified reach width (RWID).",
+                            "longname": "fractional width",
+                            "name": "xfraction",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                    },
+                    "name": "table",
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "name": "table",
+                "reader": "urword",
+                "shape": "(nrow)",
+                "type": "recarray",
+            }
+        },
+    }
 
     def __init__(
         self,

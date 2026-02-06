@@ -144,6 +144,63 @@ class ModflowMvt(MFPackage):
             "optional false",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "gwt-mvt",
+        "options": {
+            "budget_filerecord": {
+                "block": "options",
+                "fields": {},
+                "name": "budget_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "budgetcsv_filerecord": {
+                "block": "options",
+                "fields": {},
+                "name": "budgetcsv_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of lake flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print calculated flows to listing file",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of mover information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that lake flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save lake flows to budget file",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+        "ref": {
+            "abbr": "mvt",
+            "key": "mvt_filerecord",
+            "param": "perioddata",
+            "parent": "parent_model_or_package",
+            "val": "perioddata",
+        },
+    }
 
     def __init__(
         self,

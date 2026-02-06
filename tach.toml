@@ -1,13 +1,13 @@
+interfaces = []
 exclude = [
-    ".*__pycache__",
-    ".*egg-info",
+    "**/*__pycache__",
+    "**/*egg-info",
     "autotest",
     "docs",
 ]
 source_roots = [
     ".",
 ]
-root_module = "ignore"
 
 [[modules]]
 path = "flopy.datbase"
@@ -16,11 +16,11 @@ depends_on = []
 [[modules]]
 path = "flopy.discretization.grid"
 depends_on = [
-    { path = "flopy.export.shapefile_utils" },
-    { path = "flopy.utils.crs" },
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.geospatial_utils" },
-    { path = "flopy.utils.gridutil" },
+    "flopy.export.shapefile_utils",
+    "flopy.utils.crs",
+    "flopy.utils.geometry",
+    "flopy.utils.geospatial_utils",
+    "flopy.utils.gridutil",
 ]
 
 [[modules]]
@@ -30,25 +30,25 @@ depends_on = []
 [[modules]]
 path = "flopy.discretization.structuredgrid"
 depends_on = [
-    { path = "flopy.discretization.grid" },
-    { path = "flopy.mf6.utils.binarygrid_util" },
+    "flopy.discretization.grid",
+    "flopy.mf6.utils.binarygrid_util",
 ]
 
 [[modules]]
 path = "flopy.discretization.unstructuredgrid"
 depends_on = [
-    { path = "flopy.discretization.grid" },
-    { path = "flopy.mf6.utils.binarygrid_util" },
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.gridgen" },
+    "flopy.discretization.grid",
+    "flopy.mf6.utils.binarygrid_util",
+    "flopy.utils.geometry",
+    "flopy.utils.gridgen",
 ]
 
 [[modules]]
 path = "flopy.discretization.vertexgrid"
 depends_on = [
-    { path = "flopy.discretization.grid" },
-    { path = "flopy.mf6.utils.binarygrid_util" },
-    { path = "flopy.utils.geometry" },
+    "flopy.discretization.grid",
+    "flopy.mf6.utils.binarygrid_util",
+    "flopy.utils.geometry",
 ]
 
 [[modules]]
@@ -58,26 +58,26 @@ depends_on = []
 [[modules]]
 path = "flopy.export.metadata"
 depends_on = [
-    { path = "flopy.utils.flopy_io" },
+    "flopy.utils.flopy_io",
 ]
 
 [[modules]]
 path = "flopy.export.netcdf"
 depends_on = [
-    { path = "flopy.export.longnames" },
-    { path = "flopy.export.metadata" },
-    { path = "flopy.utils.crs" },
-    { path = "flopy.utils.parse_version" },
+    "flopy.export.longnames",
+    "flopy.export.metadata",
+    "flopy.utils.crs",
+    "flopy.utils.parse_version",
 ]
 
 [[modules]]
 path = "flopy.export.shapefile_utils"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.discretization.grid" },
-    { path = "flopy.utils.crs" },
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.geospatial_utils" },
+    "flopy.datbase",
+    "flopy.discretization.grid",
+    "flopy.utils.crs",
+    "flopy.utils.flopy_io",
+    "flopy.utils.geospatial_utils",
 ]
 
 [[modules]]
@@ -87,166 +87,166 @@ depends_on = []
 [[modules]]
 path = "flopy.export.utils"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.export.longnames" },
-    { path = "flopy.export.netcdf" },
-    { path = "flopy.export.shapefile_utils" },
-    { path = "flopy.export.unitsformat" },
-    { path = "flopy.export.vtk" },
-    { path = "flopy.mbase" },
-    { path = "flopy.pakbase" },
-    { path = "flopy.utils.crs" },
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.geometry" },
+    "flopy.datbase",
+    "flopy.export.longnames",
+    "flopy.export.netcdf",
+    "flopy.export.shapefile_utils",
+    "flopy.export.unitsformat",
+    "flopy.export.vtk",
+    "flopy.mbase",
+    "flopy.pakbase",
+    "flopy.utils.crs",
+    "flopy.utils.flopy_io",
+    "flopy.utils.geometry",
 ]
 
 [[modules]]
 path = "flopy.export.vtk"
 depends_on = [
-    { path = "flopy.datbase" },
+    "flopy.datbase",
 ]
 
 [[modules]]
 path = "flopy.mbase"
 depends_on = [
-    { path = "flopy.discretization.grid" },
-    { path = "flopy.export.utils" },
-    { path = "flopy.utils.flopy_io" },
+    "flopy.discretization.grid",
+    "flopy.export.utils",
+    "flopy.utils.flopy_io",
 ]
 
 [[modules]]
 path = "flopy.mf6.coordinates.modeldimensions"
 depends_on = [
-    { path = "flopy.mf6.coordinates.modelgrid" },
-    { path = "flopy.mf6.coordinates.simulationtime" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.utils.mfenums" },
-    { path = "flopy.utils.datautil" },
+    "flopy.mf6.coordinates.modelgrid",
+    "flopy.mf6.coordinates.simulationtime",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.utils.mfenums",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.coordinates.modelgrid"
 depends_on = [
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.utils.mfenums" },
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.utils.mfenums",
 ]
 
 [[modules]]
 path = "flopy.mf6.coordinates.simulationtime"
 depends_on = [
-    { path = "flopy.mf6.mfbase" },
+    "flopy.mf6.mfbase",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdata"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.export.utils" },
-    { path = "flopy.mbase" },
-    { path = "flopy.mf6.coordinates.modeldimensions" },
-    { path = "flopy.mf6.data.mfdatastorage" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.utils.datautil" },
+    "flopy.datbase",
+    "flopy.export.utils",
+    "flopy.mbase",
+    "flopy.mf6.coordinates.modeldimensions",
+    "flopy.mf6.data.mfdatastorage",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdataarray"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdatastorage" },
-    { path = "flopy.mf6.data.mffileaccess" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.utils.mfenums" },
-    { path = "flopy.plot.plotutil" },
-    { path = "flopy.utils.datautil" },
+    "flopy.datbase",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdatastorage",
+    "flopy.mf6.data.mffileaccess",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.utils.mfenums",
+    "flopy.plot.plotutil",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdatalist"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.mbase" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdatastorage" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mffileaccess" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.utils.mfenums" },
-    { path = "flopy.utils.datautil" },
+    "flopy.datbase",
+    "flopy.mbase",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdatastorage",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mffileaccess",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.utils.mfenums",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdataplist"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.discretization.structuredgrid" },
-    { path = "flopy.discretization.unstructuredgrid" },
-    { path = "flopy.discretization.vertexgrid" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdatalist" },
-    { path = "flopy.mf6.data.mfdatastorage" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mffileaccess" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.utils.mfenums" },
-    { path = "flopy.utils.datautil" },
+    "flopy.datbase",
+    "flopy.discretization.structuredgrid",
+    "flopy.discretization.unstructuredgrid",
+    "flopy.discretization.vertexgrid",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdatalist",
+    "flopy.mf6.data.mfdatastorage",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mffileaccess",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.utils.mfenums",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdatascalar"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdatastorage" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mffileaccess" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.plot.plotutil" },
-    { path = "flopy.utils.datautil" },
+    "flopy.datbase",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdatastorage",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mffileaccess",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.plot.plotutil",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdatastorage"
 depends_on = [
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mffileaccess" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.utils.datautil" },
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mffileaccess",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfdatautil"
 depends_on = [
-    { path = "flopy.mf6.coordinates.modeldimensions" },
-    { path = "flopy.mf6.data.mfdatastorage" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.utils.datautil" },
+    "flopy.mf6.coordinates.modeldimensions",
+    "flopy.mf6.data.mfdatastorage",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mffileaccess"
 depends_on = [
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.utils.binaryfile" },
-    { path = "flopy.utils.datautil" },
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.utils.binaryfile",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.data.mfstructure"
 depends_on = [
-    { path = "flopy.mf6.mfbase" },
+    "flopy.mf6.mfbase",
 ]
 
 [[modules]]
@@ -256,95 +256,95 @@ depends_on = []
 [[modules]]
 path = "flopy.mf6.mfmodel"
 depends_on = [
-    { path = "flopy.discretization.grid" },
-    { path = "flopy.discretization.modeltime" },
-    { path = "flopy.discretization.structuredgrid" },
-    { path = "flopy.discretization.unstructuredgrid" },
-    { path = "flopy.discretization.vertexgrid" },
-    { path = "flopy.export.utils" },
-    { path = "flopy.mbase" },
-    { path = "flopy.mf6.coordinates.modeldimensions" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdatalist" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.mfpackage" },
-    { path = "flopy.mf6.utils.mfenums" },
-    { path = "flopy.mf6.utils.output_util" },
-    { path = "flopy.plot.plotutil" },
-    { path = "flopy.utils.check" },
-    { path = "flopy.utils.datautil" },
+    "flopy.discretization.grid",
+    "flopy.discretization.modeltime",
+    "flopy.discretization.structuredgrid",
+    "flopy.discretization.unstructuredgrid",
+    "flopy.discretization.vertexgrid",
+    "flopy.export.utils",
+    "flopy.mbase",
+    "flopy.mf6.coordinates.modeldimensions",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdatalist",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.mfpackage",
+    "flopy.mf6.utils.mfenums",
+    "flopy.mf6.utils.output_util",
+    "flopy.plot.plotutil",
+    "flopy.utils.check",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.mfpackage"
 depends_on = [
-    { path = "flopy.mbase" },
-    { path = "flopy.mf6.coordinates.modeldimensions" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdataarray" },
-    { path = "flopy.mf6.data.mfdatalist" },
-    { path = "flopy.mf6.data.mfdataplist" },
-    { path = "flopy.mf6.data.mfdatascalar" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.utils.output_util" },
-    { path = "flopy.pakbase" },
-    { path = "flopy.plot.plotutil" },
-    { path = "flopy.utils.check" },
-    { path = "flopy.utils.datautil" },
+    "flopy.mbase",
+    "flopy.mf6.coordinates.modeldimensions",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdataarray",
+    "flopy.mf6.data.mfdatalist",
+    "flopy.mf6.data.mfdataplist",
+    "flopy.mf6.data.mfdatascalar",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.utils.output_util",
+    "flopy.pakbase",
+    "flopy.plot.plotutil",
+    "flopy.utils.check",
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.mf6.mfsimbase"
 depends_on = [
-    { path = "flopy.mbase" },
-    { path = "flopy.mf6.data.mfdata" },
-    { path = "flopy.mf6.data.mfdatalist" },
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.data.mfstructure" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.mf6.mfmodel" },
-    { path = "flopy.mf6.mfpackage" },
-    { path = "flopy.mf6.utils.binaryfile_utils" },
-    { path = "flopy.mf6.utils.mfobservation" },
+    "flopy.mbase",
+    "flopy.mf6.data.mfdata",
+    "flopy.mf6.data.mfdatalist",
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.data.mfstructure",
+    "flopy.mf6.mfbase",
+    "flopy.mf6.mfmodel",
+    "flopy.mf6.mfpackage",
+    "flopy.mf6.utils.binaryfile_utils",
+    "flopy.mf6.utils.mfobservation",
 ]
 
 [[modules]]
 path = "flopy.mf6.modflow.mfgwe"
 depends_on = [
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.mfmodel" },
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.mfmodel",
 ]
 
 [[modules]]
 path = "flopy.mf6.modflow.mfgwedisu"
 depends_on = [
-    { path = "flopy.mf6.data.mfdatautil" },
-    { path = "flopy.mf6.mfpackage" },
+    "flopy.mf6.data.mfdatautil",
+    "flopy.mf6.mfpackage",
 ]
 
 [[modules]]
 path = "flopy.mf6.modflow.mfsimulation"
 depends_on = [
-    { path = "flopy.mf6.mfsimbase" },
+    "flopy.mf6.mfsimbase",
 ]
 
 [[modules]]
 path = "flopy.mf6.utils.binaryfile_utils"
 depends_on = [
-    { path = "flopy.utils.binaryfile" },
+    "flopy.utils.binaryfile",
 ]
 
 [[modules]]
 path = "flopy.mf6.utils.binarygrid_util"
 depends_on = [
-    { path = "flopy.discretization.structuredgrid" },
-    { path = "flopy.discretization.unstructuredgrid" },
-    { path = "flopy.discretization.vertexgrid" },
-    { path = "flopy.utils.utils_def" },
+    "flopy.discretization.structuredgrid",
+    "flopy.discretization.unstructuredgrid",
+    "flopy.discretization.vertexgrid",
+    "flopy.utils.utils_def",
 ]
 
 [[modules]]
@@ -373,26 +373,26 @@ depends_on = []
 [[modules]]
 path = "flopy.mf6.utils.model_splitter"
 depends_on = [
-    { path = "flopy.mf6.data.mfdataarray" },
-    { path = "flopy.mf6.data.mfdatalist" },
-    { path = "flopy.mf6.data.mfdataplist" },
-    { path = "flopy.mf6.data.mfdatascalar" },
-    { path = "flopy.mf6.mfbase" },
-    { path = "flopy.plot.plotutil" },
+    "flopy.mf6.data.mfdataarray",
+    "flopy.mf6.data.mfdatalist",
+    "flopy.mf6.data.mfdataplist",
+    "flopy.mf6.data.mfdatascalar",
+    "flopy.mf6.mfbase",
+    "flopy.plot.plotutil",
 ]
 
 [[modules]]
 path = "flopy.mf6.utils.output_util"
 depends_on = [
-    { path = "flopy.mbase" },
-    { path = "flopy.pakbase" },
-    { path = "flopy.utils.observationfile" },
+    "flopy.mbase",
+    "flopy.pakbase",
+    "flopy.utils.observationfile",
 ]
 
 [[modules]]
 path = "flopy.mf6.utils.postprocessing"
 depends_on = [
-    { path = "flopy.mf6.utils.binarygrid_util" },
+    "flopy.mf6.utils.binarygrid_util",
 ]
 
 [[modules]]
@@ -402,29 +402,29 @@ depends_on = []
 [[modules]]
 path = "flopy.mf6.utils.testutils"
 depends_on = [
-    { path = "flopy.utils.datautil" },
+    "flopy.utils.datautil",
 ]
 
 [[modules]]
 path = "flopy.pakbase"
 depends_on = [
-    { path = "flopy.utils.check" },
-    { path = "flopy.utils.flopy_io" },
+    "flopy.utils.check",
+    "flopy.utils.flopy_io",
 ]
 
 [[modules]]
 path = "flopy.plot.crosssection"
 depends_on = [
-    { path = "flopy.plot.plotutil" },
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.geospatial_utils" },
+    "flopy.plot.plotutil",
+    "flopy.utils.geometry",
+    "flopy.utils.geospatial_utils",
 ]
 
 [[modules]]
 path = "flopy.plot.map"
 depends_on = [
-    { path = "flopy.plot.plotutil" },
-    { path = "flopy.utils.geometry" },
+    "flopy.plot.plotutil",
+    "flopy.utils.geometry",
 ]
 
 [[modules]]
@@ -434,11 +434,11 @@ depends_on = []
 [[modules]]
 path = "flopy.plot.plotutil"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.plot.map" },
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.geospatial_utils" },
-    { path = "flopy.utils.particletrackfile" },
+    "flopy.datbase",
+    "flopy.plot.map",
+    "flopy.utils.geometry",
+    "flopy.utils.geospatial_utils",
+    "flopy.utils.particletrackfile",
 ]
 
 [[modules]]
@@ -448,22 +448,22 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.binaryfile"
 depends_on = [
-    { path = "flopy.utils.datafile" },
-    { path = "flopy.utils.gridutil" },
+    "flopy.utils.datafile",
+    "flopy.utils.gridutil",
 ]
 
 [[modules]]
 path = "flopy.utils.check"
 depends_on = [
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.recarray_utils" },
-    { path = "flopy.utils.util_array" },
+    "flopy.utils.flopy_io",
+    "flopy.utils.recarray_utils",
+    "flopy.utils.util_array",
 ]
 
 [[modules]]
 path = "flopy.utils.compare"
 depends_on = [
-    { path = "flopy.utils.mfreadnam" },
+    "flopy.utils.mfreadnam",
 ]
 
 [[modules]]
@@ -473,15 +473,15 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.cvfdutil"
 depends_on = [
-    { path = "flopy.utils.utl_import" },
+    "flopy.utils.utl_import",
 ]
 
 [[modules]]
 path = "flopy.utils.datafile"
 depends_on = [
-    { path = "flopy.discretization.structuredgrid" },
-    { path = "flopy.export.shapefile_utils" },
-    { path = "flopy.plot.plotutil" },
+    "flopy.discretization.structuredgrid",
+    "flopy.export.shapefile_utils",
+    "flopy.plot.plotutil",
 ]
 
 [[modules]]
@@ -491,25 +491,25 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.flopy_io"
 depends_on = [
-    { path = "flopy.utils.util_list" },
+    "flopy.utils.util_list",
 ]
 
 [[modules]]
 path = "flopy.utils.formattedfile"
 depends_on = [
-    { path = "flopy.utils.datafile" },
+    "flopy.utils.datafile",
 ]
 
 [[modules]]
 path = "flopy.utils.geometry"
 depends_on = [
-    { path = "flopy.utils.geospatial_utils" },
+    "flopy.utils.geospatial_utils",
 ]
 
 [[modules]]
 path = "flopy.utils.geospatial_utils"
 depends_on = [
-    { path = "flopy.utils.geometry" },
+    "flopy.utils.geometry",
 ]
 
 [[modules]]
@@ -519,41 +519,41 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.gridgen"
 depends_on = [
-    { path = "flopy.export.shapefile_utils" },
-    { path = "flopy.mbase" },
-    { path = "flopy.utils.cvfdutil" },
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.geospatial_utils" },
-    { path = "flopy.utils.util_array" },
+    "flopy.export.shapefile_utils",
+    "flopy.mbase",
+    "flopy.utils.cvfdutil",
+    "flopy.utils.flopy_io",
+    "flopy.utils.geospatial_utils",
+    "flopy.utils.util_array",
 ]
 
 [[modules]]
 path = "flopy.utils.gridintersect"
 depends_on = [
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.geospatial_utils" },
-    { path = "flopy.utils.utl_import" },
+    "flopy.utils.geometry",
+    "flopy.utils.geospatial_utils",
+    "flopy.utils.utl_import",
 ]
 
 [[modules]]
 path = "flopy.utils.gridutil"
 depends_on = [
-    { path = "flopy.utils.cvfdutil" },
+    "flopy.utils.cvfdutil",
 ]
 
 [[modules]]
 path = "flopy.utils.lgrutil"
 depends_on = [
-    { path = "flopy.utils.cvfdutil" },
-    { path = "flopy.utils.util_array" },
+    "flopy.utils.cvfdutil",
+    "flopy.utils.util_array",
 ]
 
 [[modules]]
 path = "flopy.utils.mflistfile"
 depends_on = [
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.observationfile" },
-    { path = "flopy.utils.utils_def" },
+    "flopy.utils.flopy_io",
+    "flopy.utils.observationfile",
+    "flopy.utils.utils_def",
 ]
 
 [[modules]]
@@ -563,10 +563,10 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.modpathfile"
 depends_on = [
-    { path = "flopy.export.shapefile_utils" },
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.particletrackfile" },
+    "flopy.export.shapefile_utils",
+    "flopy.utils.flopy_io",
+    "flopy.utils.geometry",
+    "flopy.utils.particletrackfile",
 ]
 
 [[modules]]
@@ -576,14 +576,14 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.observationfile"
 depends_on = [
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.utils_def" },
+    "flopy.utils.flopy_io",
+    "flopy.utils.utils_def",
 ]
 
 [[modules]]
 path = "flopy.utils.optionblock"
 depends_on = [
-    { path = "flopy.utils.flopy_io" },
+    "flopy.utils.flopy_io",
 ]
 
 [[modules]]
@@ -593,23 +593,23 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.particletrackfile"
 depends_on = [
-    { path = "flopy.export.shapefile_utils" },
-    { path = "flopy.utils.geometry" },
+    "flopy.export.shapefile_utils",
+    "flopy.utils.geometry",
 ]
 
 [[modules]]
 path = "flopy.utils.postprocessing"
 depends_on = [
-    { path = "flopy.utils.binaryfile" },
-    { path = "flopy.utils.formattedfile" },
+    "flopy.utils.binaryfile",
+    "flopy.utils.formattedfile",
 ]
 
 [[modules]]
 path = "flopy.utils.rasters"
 depends_on = [
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.geospatial_utils" },
-    { path = "flopy.utils.utl_import" },
+    "flopy.utils.geometry",
+    "flopy.utils.geospatial_utils",
+    "flopy.utils.utl_import",
 ]
 
 [[modules]]
@@ -627,30 +627,30 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.swroutputfile"
 depends_on = [
-    { path = "flopy.utils.utils_def" },
+    "flopy.utils.utils_def",
 ]
 
 [[modules]]
 path = "flopy.utils.triangle"
 depends_on = [
-    { path = "flopy.mbase" },
-    { path = "flopy.utils.cvfdutil" },
-    { path = "flopy.utils.geospatial_utils" },
+    "flopy.mbase",
+    "flopy.utils.cvfdutil",
+    "flopy.utils.geospatial_utils",
 ]
 
 [[modules]]
 path = "flopy.utils.util_array"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.utils.binaryfile" },
-    { path = "flopy.utils.flopy_io" },
+    "flopy.datbase",
+    "flopy.utils.binaryfile",
+    "flopy.utils.flopy_io",
 ]
 
 [[modules]]
 path = "flopy.utils.util_list"
 depends_on = [
-    { path = "flopy.datbase" },
-    { path = "flopy.utils.recarray_utils" },
+    "flopy.datbase",
+    "flopy.utils.recarray_utils",
 ]
 
 [[modules]]
@@ -660,24 +660,24 @@ depends_on = []
 [[modules]]
 path = "flopy.utils.utl_import"
 depends_on = [
-    { path = "flopy.utils.parse_version" },
+    "flopy.utils.parse_version",
 ]
 
 [[modules]]
 path = "flopy.utils.voronoi"
 depends_on = [
-    { path = "flopy.utils.cvfdutil" },
-    { path = "flopy.utils.geometry" },
-    { path = "flopy.utils.triangle" },
-    { path = "flopy.utils.utl_import" },
+    "flopy.utils.cvfdutil",
+    "flopy.utils.geometry",
+    "flopy.utils.triangle",
+    "flopy.utils.utl_import",
 ]
 
 [[modules]]
 path = "flopy.utils.zonbud"
 depends_on = [
-    { path = "flopy.export.utils" },
-    { path = "flopy.mbase" },
-    { path = "flopy.utils.binaryfile" },
-    { path = "flopy.utils.flopy_io" },
-    { path = "flopy.utils.utils_def" },
+    "flopy.export.utils",
+    "flopy.mbase",
+    "flopy.utils.binaryfile",
+    "flopy.utils.flopy_io",
+    "flopy.utils.utils_def",
 ]

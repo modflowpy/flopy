@@ -111,6 +111,77 @@ class ModflowGwtfmi(MFPackage):
             "reader urword",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "gwt-fmi",
+        "options": {
+            "flow_imbalance_correction": {
+                "block": "options",
+                "description": "correct for an imbalance in flows by assuming that any residual flow error comes in or leaves at the concentration of the cell.  when this option is activated, the gwt model budget written to the listing file will contain two additional entries: flow-error and flow-correction.  these two entries will be equal but opposite in sign.  the flow-correction term is a mass flow that is added to offset the error caused by an imprecise flow balance.  if these terms are not relatively small, the flow model should be rerun with stricter convergence tolerances.",
+                "longname": "correct for flow imbalance",
+                "mf6internal": "imbalancecorrect",
+                "name": "flow_imbalance_correction",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that fmi flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save calculated flow imbalance correction to budget file",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+        "packagedata": {
+            "packagedata": {
+                "block": "packagedata",
+                "item": {
+                    "block": "packagedata",
+                    "fields": {
+                        "filein": {
+                            "block": "packagedata",
+                            "description": "keyword to specify that an input filename is expected next.",
+                            "longname": "file keyword",
+                            "name": "filein",
+                            "optional": "false",
+                            "reader": "urword",
+                            "type": "keyword",
+                        },
+                        "flowtype": {
+                            "block": "packagedata",
+                            "description": "is the word GWFBUDGET, GWFHEAD, GWFMOVER or the name of an advanced GWF stress package.  If GWFBUDGET is specified, then the corresponding file must be a budget file. If GWFHEAD is specified, the file must be a head file.  If GWFGRID is specified, the file must be a binary grid file.  If an advanced GWF stress package name appears then the corresponding file must be the budget file saved by a LAK, SFR, MAW or UZF Package.",
+                            "longname": "flow type",
+                            "name": "flowtype",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "fname": {
+                            "block": "packagedata",
+                            "description": "is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run.",
+                            "longname": "file name",
+                            "name": "fname",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                    },
+                    "longname": "flowtype list",
+                    "name": "packagedata",
+                    "optional": True,
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "longname": "flowtype list",
+                "name": "packagedata",
+                "optional": True,
+                "reader": "urword",
+                "type": "recarray",
+            }
+        },
+    }
 
     def __init__(
         self,

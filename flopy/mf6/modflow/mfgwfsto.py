@@ -41,8 +41,11 @@ class ModflowGwfsto(MFPackage):
         keyword that specifies input grid arrays, which already support the layered
         keyword, should be written to layered ascii output files.
     export_array_netcdf : keyword
-        keyword that specifies input griddata arrays should be written to the model
-        output netcdf file.
+        keyword that specifies input gridded arrays should be written to the model
+        output netcdf file with attributes that support using the generated file as a
+        modflow 6 simulation input.  this option only has an effect when an output
+        model netcdf file is configured and the simulation is run in validate mode,
+        otherwise it is ignored.
     dev_original_specific_storage : keyword
         flag indicating the original storage specific storage formulation should be
         used
@@ -256,6 +259,170 @@ class ModflowGwfsto(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "fkeys": {
+            "tvs_filerecord": {
+                "abbr": "tvs",
+                "key": "tvs_filerecord",
+                "param": "tvs_perioddata",
+                "parent": "parent_package",
+                "val": "perioddata",
+            }
+        },
+        "griddata": {
+            "iconvert": {
+                "block": "griddata",
+                "default": 0,
+                "description": "is a flag for each cell that specifies whether or not a cell is convertible for the storage calculation. 0 indicates confined storage is used. $>$0 indicates confined storage is used when head is above cell top and a mixed formulation of unconfined and confined storage is used when head is below cell top.",
+                "layered": True,
+                "longname": "convertible indicator",
+                "name": "iconvert",
+                "netcdf": True,
+                "optional": False,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "integer",
+            },
+            "ss": {
+                "block": "griddata",
+                "default": 1e-05,
+                "description": "is specific storage (or the storage coefficient if storagecoefficient is specified as an option). specific storage values must be greater than or equal to 0. if the csub package is included in the gwf model, specific storage must be zero for every cell.",
+                "layered": True,
+                "longname": "specific storage",
+                "name": "ss",
+                "netcdf": True,
+                "optional": False,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "sy": {
+                "block": "griddata",
+                "default": 0.15,
+                "description": "is specific yield. specific yield values must be greater than or equal to 0. specific yield does not have to be specified if there are no convertible cells (iconvert=0 in every cell).",
+                "layered": True,
+                "longname": "specific yield",
+                "name": "sy",
+                "netcdf": True,
+                "optional": False,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+        },
+        "multi": False,
+        "name": "gwf-sto",
+        "options": {
+            "dev_oldstorageformulation": {
+                "block": "options",
+                "description": "development option flag for old storage formulation",
+                "longname": "development option flag for old storage formulation",
+                "mf6internal": "iconf_ss",
+                "name": "dev_oldstorageformulation",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "dev_original_specific_storage": {
+                "block": "options",
+                "description": "flag indicating the original storage specific storage formulation should be used",
+                "longname": "development option for original specific storage",
+                "mf6internal": "iorig_ss",
+                "name": "dev_original_specific_storage",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "export_array_ascii": {
+                "block": "options",
+                "description": "keyword that specifies input grid arrays, which already support the layered keyword, should be written to layered ascii output files.",
+                "longname": "export array variables to layered ascii files.",
+                "mf6internal": "export_ascii",
+                "name": "export_array_ascii",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "export_array_netcdf": {
+                "block": "options",
+                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
+                "extended": True,
+                "longname": "export array variables to netcdf output files.",
+                "mf6internal": "export_nc",
+                "name": "export_array_netcdf",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "perioddata": {
+                "block": "options",
+                "description": "Contains data for the tvs package. Data can be passed as a dictionary to the tvs package with variable names as keys and package data as values. Data for the perioddata variable is also acceptable. See tvs package documentation for more information.",
+                "name": "perioddata",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "tvs",
+                    "key": "tvs_filerecord",
+                    "param": "tvs_perioddata",
+                    "parent": "parent_package",
+                    "val": "perioddata",
+                },
+                "type": "record tvs6 filein tvs6_filename",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that cell-by-cell flow terms will be written to the file specified with 'budget save file' in output control.",
+                "longname": "keyword to save npf flows",
+                "mf6internal": "ipakcb",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "ss_confined_only": {
+                "block": "options",
+                "description": "keyword to indicate that compressible storage is only calculated for a convertible cell (iconvert>0) when the cell is under confined conditions (head greater than or equal to the top of the cell). this option has no effect on cells that are marked as being always confined (iconvert=0).  this option is identical to the approach used to calculate storage changes under confined conditions in modflow-2005.",
+                "longname": "keyword to indicate specific storage only applied under confined conditions",
+                "name": "ss_confined_only",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "storagecoefficient": {
+                "block": "options",
+                "description": "keyword to indicate that the ss array is read as storage coefficient rather than specific storage.",
+                "longname": "keyword to indicate ss is read as storage coefficient",
+                "mf6internal": "istor_coef",
+                "name": "storagecoefficient",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+        "period": {
+            "steady-state": {
+                "block": "period",
+                "description": "keyword to indicate that stress period iper is steady-state. steady-state conditions will apply until the transient keyword is specified in a subsequent begin period block. if the csub package is included in the gwf model, only the first and last stress period can be steady-state.",
+                "longname": "steady state indicator",
+                "mf6internal": "steady_state",
+                "name": "steady-state",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "transient": {
+                "block": "period",
+                "description": "keyword to indicate that stress period iper is transient. transient conditions will apply until the steady-state keyword is specified in a subsequent begin period block.",
+                "longname": "transient indicator",
+                "name": "transient",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,

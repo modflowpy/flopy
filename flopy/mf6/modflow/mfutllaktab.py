@@ -117,6 +117,81 @@ class ModflowUtllaktab(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "dimensions": {
+            "ncol": {
+                "block": "dimensions",
+                "description": "integer value specifying the number of columns in the lake table. there must be ncol columns of data in the table block. for lakes with horizontal and/or vertical ctype connections, ncol must be equal to 3. for lakes with embeddedh or embeddedv ctype connections, ncol must be equal to 4.",
+                "longname": "number of table columns",
+                "name": "ncol",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            },
+            "nrow": {
+                "block": "dimensions",
+                "description": "integer value specifying the number of rows in the lake table. there must be nrow rows of data in the table block.",
+                "longname": "number of table rows",
+                "name": "nrow",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            },
+        },
+        "multi": True,
+        "name": "utl-laktab",
+        "table": {
+            "table": {
+                "block": "table",
+                "item": {
+                    "block": "table",
+                    "fields": {
+                        "barea": {
+                            "block": "table",
+                            "description": "real value that defines the lake-GWF exchange area corresponding to the stage specified on the line. BAREA is only specified if the CLAKTYPE for the lake is EMBEDDEDH or EMBEDDEDV.",
+                            "longname": "lake-GWF exchange area",
+                            "name": "barea",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                        "sarea": {
+                            "block": "table",
+                            "description": "real value that defines the lake surface area corresponding to the stage specified on the line.",
+                            "longname": "lake surface area",
+                            "name": "sarea",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                        "stage": {
+                            "block": "table",
+                            "description": "real value that defines the stage corresponding to the remaining data on the line.",
+                            "longname": "lake stage",
+                            "name": "stage",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                        "volume": {
+                            "block": "table",
+                            "description": "real value that defines the lake volume corresponding to the stage specified on the line.",
+                            "longname": "lake volume",
+                            "name": "volume",
+                            "reader": "urword",
+                            "type": "double precision",
+                        },
+                    },
+                    "name": "table",
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "name": "table",
+                "reader": "urword",
+                "shape": "(nrow)",
+                "type": "recarray",
+            }
+        },
+    }
 
     def __init__(
         self,

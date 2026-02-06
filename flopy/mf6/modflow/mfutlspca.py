@@ -147,6 +147,79 @@ class ModflowUtlspca(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "fkeys": {
+            "tas_filerecord": {
+                "abbr": "tas",
+                "key": "tas_filerecord",
+                "param": "tas_array",
+                "parent": "parent_package",
+                "val": "timearrayseries",
+            }
+        },
+        "multi": True,
+        "name": "utl-spca",
+        "options": {
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of spc information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "readasarrays": {
+                "block": "options",
+                "default": True,
+                "description": "indicates that array-based input will be used for the spc package.  this keyword must be specified to use array-based input.  when readasarrays is specified, values must be provided for every cell within a model layer, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results.",
+                "longname": "use array-based input",
+                "name": "readasarrays",
+                "optional": False,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "timearrayseries": {
+                "block": "options",
+                "description": "Contains data for the tas package. Data can be passed as a dictionary to the tas package with variable names as keys and package data as values. Data for the timearrayseries variable is also acceptable. See tas package documentation for more information.",
+                "name": "timearrayseries",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "tas",
+                    "key": "tas_filerecord",
+                    "param": "tas_array",
+                    "parent": "parent_package",
+                    "val": "timearrayseries",
+                },
+                "type": "record tas6 filein tas6_filename",
+            },
+        },
+        "period": {
+            "concentration": {
+                "block": "period",
+                "description": 'is the concentration of the associated recharge or evapotranspiration stress package.  the concentration array may be defined by a time-array series (see the "using time-array series in a package" section).',
+                "longname": "concentration",
+                "name": "concentration",
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(ncol*nrow; ncpl)",
+                "type": "double precision",
+            },
+            "temperature": {
+                "block": "period",
+                "description": 'is the temperature of the associated recharge or evapotranspiration stress package.  the temperature array may be defined by a time-array series (see the "using time-array series in a package" section).',
+                "longname": "temperature",
+                "name": "temperature",
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(ncol*nrow; ncpl)",
+                "type": "double precision",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,

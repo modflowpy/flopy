@@ -36,6 +36,9 @@ class ModflowGwenam(MFPackage):
     save_flows : keyword
         keyword to indicate that all model package flow terms will be written to the
         file specified with 'budget fileout' in output control.
+    dependent_variable_scaling : keyword
+        flag to scale x and rhs to avoid very large positive or negative dependent
+        variable values
     nc_mesh2d_filerecord : (ncmesh2dfile)
         netcdf layered mesh fileout record.
         * ncmesh2dfile : string
@@ -129,7 +132,6 @@ class ModflowGwenam(MFPackage):
             "reader urword",
             "optional true",
             "mf6internal idv_scale",
-            "prerelease true",
         ],
         [
             "block options",
@@ -281,6 +283,167 @@ class ModflowGwenam(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "gwe-nam",
+        "options": {
+            "dependent_variable_scaling": {
+                "block": "options",
+                "description": "flag to scale x and rhs to avoid very large positive or negative dependent variable values",
+                "longname": "flag to scale x and rhs",
+                "mf6internal": "idv_scale",
+                "name": "dependent_variable_scaling",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "list": {
+                "block": "options",
+                "description": "is name of the listing file to create for this gwe model.  if not specified, then the name of the list file will be the basename of the gwe model name file and the '.lst' extension.  for example, if the gwe name file is called 'my.model.nam' then the list file will be called 'my.model.lst'.",
+                "longname": "name of listing file",
+                "name": "list",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+            "nc_filerecord": {
+                "block": "options",
+                "description": "netcdf filerecord",
+                "fields": {
+                    "netcdf_filename": {
+                        "block": "options",
+                        "description": "defines a NetCDF input file.",
+                        "extended": "true",
+                        "longname": "netcdf input filename",
+                        "mf6internal": "netcdf_fname",
+                        "name": "netcdf_filename",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "name": "nc_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "nc_mesh2d_filerecord": {
+                "block": "options",
+                "description": "netcdf layered mesh fileout record.",
+                "fields": {
+                    "ncmesh2dfile": {
+                        "block": "options",
+                        "description": "name of the NetCDF ugrid layered mesh output file.",
+                        "extended": "true",
+                        "longname": "file keyword",
+                        "name": "ncmesh2dfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "ncmesh2drec",
+                "name": "nc_mesh2d_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "nc_structured_filerecord": {
+                "block": "options",
+                "description": "netcdf structured fileout record.",
+                "fields": {
+                    "ncstructfile": {
+                        "block": "options",
+                        "description": "name of the NetCDF structured output file.",
+                        "extended": "true",
+                        "longname": "file keyword",
+                        "name": "ncstructfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "ncstructrec",
+                "name": "nc_structured_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of all model package flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print calculated flows to listing file",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of all model stress package information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that all model package flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save flows for all packages to budget file",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+        "packages": {
+            "packages": {
+                "block": "packages",
+                "item": {
+                    "block": "packages",
+                    "fields": {
+                        "fname": {
+                            "block": "packages",
+                            "description": "is the name of the file containing the package input.  The path to the file should be included if the file is not located in the folder where the program was run.",
+                            "longname": "file name",
+                            "name": "fname",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "ftype": {
+                            "block": "packages",
+                            "description": "is the file type, which must be one of the following character values shown in table~ref{table:ftype-gwe}. Ftype may be entered in any combination of uppercase and lowercase.",
+                            "longname": "package type",
+                            "name": "ftype",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "pname": {
+                            "block": "packages",
+                            "description": "is the user-defined name for the package. PNAME is restricted to 16 characters.  No spaces are allowed in PNAME.  PNAME character values are read and stored by the program for stress packages only.  These names may be useful for labeling purposes when multiple stress packages of the same type are located within a single GWE Model.  If PNAME is specified for a stress package, then PNAME will be used in the flow budget table in the listing file; it will also be used for the text entry in the cell-by-cell budget file.  PNAME is case insensitive and is stored in all upper case letters.",
+                            "longname": "user name for package",
+                            "name": "pname",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                    },
+                    "longname": "package list",
+                    "name": "packages",
+                    "optional": False,
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "longname": "package list",
+                "name": "packages",
+                "optional": False,
+                "reader": "urword",
+                "type": "recarray",
+            }
+        },
+    }
 
     def __init__(
         self,
@@ -290,6 +453,7 @@ class ModflowGwenam(MFPackage):
         print_input=None,
         print_flows=None,
         save_flows=None,
+        dependent_variable_scaling=None,
         nc_mesh2d_filerecord=None,
         nc_structured_filerecord=None,
         nc_filerecord=None,
@@ -312,6 +476,9 @@ class ModflowGwenam(MFPackage):
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
+        self.dependent_variable_scaling = self.build_mfdata(
+            "dependent_variable_scaling", dependent_variable_scaling
+        )
         self.nc_mesh2d_filerecord = self.build_mfdata(
             "nc_mesh2d_filerecord", nc_mesh2d_filerecord
         )

@@ -61,8 +61,8 @@ class ModflowGwfrch(MFPackage):
         the observations variable is also acceptable. See obs package documentation for
         more information.
     maxbound : integer
-        integer value specifying the maximum number of recharge cells cells that will
-        be specified for use during any stress period.
+        integer value specifying the maximum number of recharge cells that will be
+        specified for use during any stress period.
     stress_period_data : [(cellid, recharge, aux, boundname)]
         * cellid : [integer]
                 is the cell identifier, and depends on the type of grid that is used for the
@@ -309,6 +309,197 @@ class ModflowGwfrch(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "dimensions": {
+            "maxbound": {
+                "block": "dimensions",
+                "description": "integer value specifying the maximum number of recharge cells that will be specified for use during any stress period.",
+                "longname": "maximum number of recharge cells",
+                "name": "maxbound",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            }
+        },
+        "fkeys": {
+            "obs_filerecord": {
+                "abbr": "obs",
+                "key": "obs_filerecord",
+                "param": "continuous",
+                "parent": "parent_model_or_package",
+                "val": "observations",
+            },
+            "ts_filerecord": {
+                "abbr": "ts",
+                "description": "xxx",
+                "key": "ts_filerecord",
+                "param": "timeseries",
+                "parent": "parent_package",
+                "val": "timeseries",
+            },
+        },
+        "multi": True,
+        "name": "gwf-rch",
+        "options": {
+            "auxiliary": {
+                "block": "options",
+                "description": "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block.",
+                "longname": "keyword to specify aux variables",
+                "name": "auxiliary",
+                "optional": True,
+                "reader": "urword",
+                "shape": "(naux)",
+                "type": "string",
+            },
+            "auxmultname": {
+                "block": "options",
+                "description": "name of auxiliary variable to be used as multiplier of recharge.",
+                "longname": "name of auxiliary variable for multiplier",
+                "name": "auxmultname",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+            "boundnames": {
+                "block": "options",
+                "description": "keyword to indicate that boundary names may be provided with the list of recharge cells.",
+                "name": "boundnames",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "fixed_cell": {
+                "block": "options",
+                "description": "indicates that recharge will not be reassigned to a cell underlying the cell specified in the list if the specified cell is inactive.",
+                "longname": "if cell is dry do not apply recharge to underlying cell",
+                "name": "fixed_cell",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "observations": {
+                "block": "options",
+                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
+                "name": "observations",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "obs",
+                    "key": "obs_filerecord",
+                    "param": "continuous",
+                    "parent": "parent_model_or_package",
+                    "val": "observations",
+                },
+                "type": "record obs6 filein obs6_filename",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of recharge flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print recharge rates to listing file",
+                "mf6internal": "iprflow",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of recharge information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "mf6internal": "iprpak",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that recharge flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save recharge to budget file",
+                "mf6internal": "ipakcb",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "timeseries": {
+                "block": "options",
+                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
+                "name": "timeseries",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "ts",
+                    "description": "xxx",
+                    "key": "ts_filerecord",
+                    "param": "timeseries",
+                    "parent": "parent_package",
+                    "val": "timeseries",
+                },
+                "type": "record ts6 filein ts6_filename",
+            },
+        },
+        "period": {
+            "stress_period_data": {
+                "block": "period",
+                "item": {
+                    "block": "period",
+                    "fields": {
+                        "aux": {
+                            "block": "period",
+                            "description": "represents the values of the auxiliary variables for each recharge. The values of auxiliary variables must be present for each recharge. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.  If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                            "longname": "auxiliary variables",
+                            "mf6internal": "auxvar",
+                            "name": "aux",
+                            "optional": "true",
+                            "reader": "urword",
+                            "shape": "(naux)",
+                            "time_series": "true",
+                            "type": "double precision",
+                        },
+                        "boundname": {
+                            "block": "period",
+                            "description": "name of the recharge cell.  BOUNDNAME is an ASCII character variable that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes.",
+                            "longname": "recharge name",
+                            "name": "boundname",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "cellid": {
+                            "block": "period",
+                            "description": "is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell.",
+                            "longname": "cell identifier",
+                            "name": "cellid",
+                            "reader": "urword",
+                            "shape": "(ncelldim)",
+                            "type": "integer",
+                        },
+                        "recharge": {
+                            "block": "period",
+                            "description": "is the recharge flux rate ($LT^{-1}$).  This rate is multiplied inside the program by the surface area of the cell to calculate the volumetric recharge rate. If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                            "longname": "recharge rate",
+                            "name": "recharge",
+                            "reader": "urword",
+                            "time_series": "true",
+                            "type": "double precision",
+                        },
+                    },
+                    "mf6internal": "spd",
+                    "name": "stress_period_data",
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "mf6internal": "spd",
+                "name": "stress_period_data",
+                "reader": "urword",
+                "shape": "(maxbound)",
+                "type": "recarray",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,

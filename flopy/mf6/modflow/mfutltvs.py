@@ -191,6 +191,117 @@ class ModflowUtltvs(MFPackage):
             "time_series true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "fkeys": {
+            "ts_filerecord": {
+                "abbr": "ts",
+                "description": "xxx",
+                "key": "ts_filerecord",
+                "param": "timeseries",
+                "parent": "parent_package",
+                "val": "timeseries",
+            }
+        },
+        "multi": False,
+        "name": "utl-tvs",
+        "options": {
+            "disable_storage_change_integration": {
+                "block": "options",
+                "description": "keyword that deactivates inclusion of storage derivative terms in the sto package matrix formulation.  in the absence of this keyword (the default), the groundwater storage formulation will be modified to correctly adjust heads based on transient variations in stored water volumes arising from changes to ss and sy properties.",
+                "longname": "deactivate storage change integration",
+                "name": "disable_storage_change_integration",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that information for each change to a storage property in a cell will be written to the model listing file.",
+                "longname": "print input to listing file",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "timeseries": {
+                "block": "options",
+                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
+                "name": "timeseries",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "ts",
+                    "description": "xxx",
+                    "key": "ts_filerecord",
+                    "param": "timeseries",
+                    "parent": "parent_package",
+                    "val": "timeseries",
+                },
+                "type": "record ts6 filein ts6_filename",
+            },
+        },
+        "period": {
+            "perioddata": {
+                "block": "period",
+                "item": {
+                    "block": "period",
+                    "fields": {
+                        "cellid": {
+                            "block": "period",
+                            "description": "is the cell identifier, and depends on the type of grid that is used for the simulation.  for a structured grid that uses the dis input file, cellid is the layer, row, and column.   for a grid that uses the disv input file, cellid is the layer and cell2d number.  if the model uses the unstructured discretization (disu) input file, cellid is the node number for the cell.",
+                            "longname": "cell identifier",
+                            "name": "cellid",
+                            "reader": "urword",
+                            "shape": "(ncelldim)",
+                            "type": "integer",
+                        },
+                        "tvssetting": {
+                            "block": "period",
+                            "choices": {
+                                "ss": {
+                                    "block": "period",
+                                    "description": "is the new value to be assigned as the cell's specific storage (or storage coefficient if the storagecoefficient sto package option is specified) from the start of the specified stress period, as per ss in the sto package.  specific storage values must be greater than or equal to 0.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                                    "longname": "specific storage",
+                                    "name": "ss",
+                                    "reader": "urword",
+                                    "time_series": True,
+                                    "type": "double precision",
+                                },
+                                "sy": {
+                                    "block": "period",
+                                    "description": "is the new value to be assigned as the cell's specific yield from the start of the specified stress period, as per sy in the sto package.  specific yield values must be greater than or equal to 0.  if the options block includes a ts6 entry (see the 'time-variable input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                                    "longname": "specific yield",
+                                    "name": "sy",
+                                    "reader": "urword",
+                                    "time_series": True,
+                                    "type": "double precision",
+                                },
+                            },
+                            "description": "line of information that is parsed into a property name keyword and values.  property name keywords that can be used to start the tvssetting string include: ss and sy.",
+                            "name": "tvssetting",
+                            "reader": "urword",
+                            "type": "keystring",
+                        },
+                    },
+                    "name": "perioddata",
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "name": "perioddata",
+                "reader": "urword",
+                "type": "recarray",
+            },
+            "transient_block": True,
+        },
+        "ref": {
+            "abbr": "tvs",
+            "key": "tvs_filerecord",
+            "param": "tvs_perioddata",
+            "parent": "parent_package",
+            "val": "perioddata",
+        },
+    }
 
     def __init__(
         self,

@@ -57,6 +57,20 @@ class ModflowGwtsrc(MFPackage):
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
+    highest_saturated : keyword
+        apply mass source loading rate to specified cellid or highest underlying cell
+        with a cell saturation greater than zero. the highest_saturated option has an
+        additional complication for certain types of grids specified using the disu
+        package. when the disu package is used, a cell may have more than one cell
+        underlying it. if the overlying cell were to become inactive, there is no
+        straightforward method for determining how to apportion the mass source loading
+        rate to the underlying cells. in this case, the approach described by
+        cite{modflowusg} is used. the mass source loading rate is assigned to the first
+        active cell encountered (determined by searching through the underlying cell
+        numbers from the lowest number to the highest number). in this manner, the
+        total mass source loading rate is conserved; however, the spatial distribution
+        of the applied mass source loading rate may not be maintained as layers become
+        dry or wet during a simulation.
     maxbound : integer
         integer value specifying the maximum number of sources cells that will be
         specified for use during any stress period.
@@ -235,7 +249,6 @@ class ModflowGwtsrc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "prerelease true",
             "mf6internal highest_sat",
         ],
         [
@@ -307,6 +320,198 @@ class ModflowGwtsrc(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "dimensions": {
+            "maxbound": {
+                "block": "dimensions",
+                "description": "integer value specifying the maximum number of sources cells that will be specified for use during any stress period.",
+                "longname": "maximum number of sources",
+                "name": "maxbound",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            }
+        },
+        "fkeys": {
+            "obs_filerecord": {
+                "abbr": "obs",
+                "key": "obs_filerecord",
+                "param": "continuous",
+                "parent": "parent_model_or_package",
+                "val": "observations",
+            },
+            "ts_filerecord": {
+                "abbr": "ts",
+                "description": "xxx",
+                "key": "ts_filerecord",
+                "param": "timeseries",
+                "parent": "parent_package",
+                "val": "timeseries",
+            },
+        },
+        "multi": True,
+        "name": "gwt-src",
+        "options": {
+            "auxiliary": {
+                "block": "options",
+                "description": "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block.",
+                "longname": "keyword to specify aux variables",
+                "name": "auxiliary",
+                "optional": True,
+                "reader": "urword",
+                "shape": "(naux)",
+                "type": "string",
+            },
+            "auxmultname": {
+                "block": "options",
+                "description": "name of auxiliary variable to be used as multiplier of mass loading rate.",
+                "longname": "name of auxiliary variable for multiplier",
+                "name": "auxmultname",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+            "boundnames": {
+                "block": "options",
+                "description": "keyword to indicate that boundary names may be provided with the list of mass source cells.",
+                "name": "boundnames",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "highest_saturated": {
+                "block": "options",
+                "description": "apply mass source loading rate to specified cellid or highest underlying cell with a cell saturation greater than zero. the highest_saturated option has an additional complication for certain types of grids specified using the disu package. when the disu package is used, a cell may have more than one cell underlying it. if the overlying cell were to become inactive, there is no straightforward method for determining how to apportion the mass source loading rate to the underlying cells. in this case, the approach described by cite{modflowusg} is used. the mass source loading rate is assigned to the first active cell encountered (determined by searching through the underlying cell numbers from the lowest number to the highest number). in this manner, the total mass source loading rate is conserved; however, the spatial distribution of the applied mass source loading rate may not be maintained as layers become dry or wet during a simulation.",
+                "longname": "apply source to highest saturated cell",
+                "mf6internal": "highest_sat",
+                "name": "highest_saturated",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "observations": {
+                "block": "options",
+                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
+                "name": "observations",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "obs",
+                    "key": "obs_filerecord",
+                    "param": "continuous",
+                    "parent": "parent_model_or_package",
+                    "val": "observations",
+                },
+                "type": "record obs6 filein obs6_filename",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of mass source flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print calculated flows to listing file",
+                "mf6internal": "iprflow",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of mass source information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "mf6internal": "iprpak",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that mass source flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save well flows to budget file",
+                "mf6internal": "ipakcb",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "timeseries": {
+                "block": "options",
+                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
+                "name": "timeseries",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "ts",
+                    "description": "xxx",
+                    "key": "ts_filerecord",
+                    "param": "timeseries",
+                    "parent": "parent_package",
+                    "val": "timeseries",
+                },
+                "type": "record ts6 filein ts6_filename",
+            },
+        },
+        "period": {
+            "stress_period_data": {
+                "block": "period",
+                "item": {
+                    "block": "period",
+                    "fields": {
+                        "aux": {
+                            "block": "period",
+                            "description": "represents the values of the auxiliary variables for each mass source. The values of auxiliary variables must be present for each mass source. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.  If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                            "longname": "auxiliary variables",
+                            "mf6internal": "auxvar",
+                            "name": "aux",
+                            "optional": "true",
+                            "reader": "urword",
+                            "shape": "(naux)",
+                            "time_series": "true",
+                            "type": "double precision",
+                        },
+                        "boundname": {
+                            "block": "period",
+                            "description": "name of the mass source cell.  BOUNDNAME is an ASCII character variable that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes.",
+                            "longname": "well name",
+                            "name": "boundname",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "cellid": {
+                            "block": "period",
+                            "description": "is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell.",
+                            "longname": "cell identifier",
+                            "name": "cellid",
+                            "reader": "urword",
+                            "shape": "(ncelldim)",
+                            "type": "integer",
+                        },
+                        "smassrate": {
+                            "block": "period",
+                            "description": "is the mass source loading rate. A positive value indicates addition of solute mass and a negative value indicates removal of solute mass. If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                            "longname": "mass source loading rate",
+                            "name": "smassrate",
+                            "reader": "urword",
+                            "time_series": "true",
+                            "type": "double precision",
+                        },
+                    },
+                    "mf6internal": "spd",
+                    "name": "stress_period_data",
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "mf6internal": "spd",
+                "name": "stress_period_data",
+                "reader": "urword",
+                "shape": "(maxbound)",
+                "type": "recarray",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,
@@ -320,6 +525,7 @@ class ModflowGwtsrc(MFPackage):
         save_flows=None,
         timeseries=None,
         observations=None,
+        highest_saturated=None,
         maxbound=None,
         stress_period_data=None,
         filename=None,
@@ -349,6 +555,9 @@ class ModflowGwtsrc(MFPackage):
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.highest_saturated = self.build_mfdata(
+            "highest_saturated", highest_saturated
         )
         self.maxbound = self.build_mfdata("maxbound", maxbound)
         self.stress_period_data = self.build_mfdata(

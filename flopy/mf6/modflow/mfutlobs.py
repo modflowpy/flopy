@@ -172,6 +172,90 @@ class ModflowUtlobs(MFPackage):
             "numeric_index true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "continuous": {
+            "continuous": {
+                "block": "continuous",
+                "item": {
+                    "block": "continuous",
+                    "fields": {
+                        "id": {
+                            "block": "continuous",
+                            "description": "Text identifying cell where observation is located. For packages other than NPF, if boundary names are defined in the corresponding package input file, ID can be a boundary name. Otherwise ID is a cellid. If the model discretization is type DIS, cellid is three integers (layer, row, column). If the discretization is DISV, cellid is two integers (layer, cell number). If the discretization is DISU, cellid is one integer (node number).",
+                            "longname": "time",
+                            "name": "id",
+                            "numeric_index": "true",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "id2": {
+                            "block": "continuous",
+                            "description": "Text identifying cell adjacent to cell identified by ID. The form of ID2 is as described for ID. ID2 is used for intercell-flow observations of a GWF model, for three observation types of the LAK Package, for two observation types of the MAW Package, and one observation type of the UZF Package.",
+                            "longname": "time",
+                            "name": "id2",
+                            "numeric_index": "true",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "obsname": {
+                            "block": "continuous",
+                            "description": "string of 1 to 40 nonblank characters used to identify the observation. The identifier need not be unique; however, identification and post-processing of observations in the output files are facilitated if each observation is given a unique name.",
+                            "longname": "observation name",
+                            "name": "obsname",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "obstype": {
+                            "block": "continuous",
+                            "description": "a string of characters used to identify the observation type.",
+                            "longname": "observation type",
+                            "name": "obstype",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                    },
+                    "name": "continuous",
+                    "optional": False,
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "name": "continuous",
+                "optional": False,
+                "reader": "urword",
+                "type": "recarray",
+            }
+        },
+        "multi": True,
+        "name": "utl-obs",
+        "options": {
+            "digits": {
+                "block": "options",
+                "description": "keyword and an integer digits specifier used for conversion of simulated values to text on output. if not specified, the default is the maximum number of digits stored in the program (as written with the g0 fortran specifier). when simulated values are written to a comma-separated value text file specified in a continuous block below, the digits specifier controls the number of significant digits with which simulated values are written to the output file. the digits specifier has no effect on the number of significant digits with which the simulation time is written for continuous observations.  if digits is specified as zero, then observations are written with the default setting, which is the maximum number of digits.",
+                "name": "digits",
+                "optional": True,
+                "reader": "urword",
+                "type": "integer",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of observation information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+        "ref": {
+            "abbr": "obs",
+            "key": "obs_filerecord",
+            "param": "continuous",
+            "parent": "parent_model_or_package",
+            "val": "observations",
+        },
+    }
 
     def __init__(
         self,

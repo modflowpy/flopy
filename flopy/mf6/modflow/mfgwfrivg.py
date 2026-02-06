@@ -7,9 +7,9 @@ from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenera
 from flopy.mf6.mfpackage import MFChildPackages, MFPackage
 
 
-class ModflowGwfevta(MFPackage):
+class ModflowGwfrivg(MFPackage):
     """
-    ModflowGwfevta defines a EVTA package.
+    ModflowGwfrivg defines a RIVG package.
 
     Parameters
     ----------
@@ -19,16 +19,6 @@ class ModflowGwfevta(MFPackage):
     loading_package : bool, default False
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
-    readasarrays : keyword
-        indicates that array-based input will be used for the evapotranspiration
-        package.  this keyword must be specified to use array-based input.  when
-        readasarrays is specified, values must be provided for every cell within a
-        model layer, even those cells that have an idomain value less than one.  values
-        assigned to cells with idomain values less than one are not used and have no
-        effect on simulation results.
-    fixed_cell : keyword
-        indicates that evapotranspiration will not be reassigned to a cell underlying
-        the cell specified in the list if the specified cell is inactive.
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -41,55 +31,50 @@ class ModflowGwfevta(MFPackage):
         terminate with an error if auxiliary variables are specified on more than one
         line in the options block.
     auxmultname : string
-        name of auxiliary variable to be used as multiplier of evapotranspiration rate.
+        name of auxiliary variable to be used as multiplier of riverbed conductance.
     print_input : keyword
-        keyword to indicate that the list of evapotranspiration information will be
-        written to the listing file immediately after it is read.
+        keyword to indicate that the list of river information will be written to the
+        listing file immediately after it is read.
     print_flows : keyword
-        keyword to indicate that the list of evapotranspiration flow rates will be
-        printed to the listing file for every stress period time step in which 'budget
-        print' is specified in output control.  if there is no output control option
-        and 'print_flows' is specified, then flow rates are printed for the last time
-        step of each stress period.
+        keyword to indicate that the list of river flow rates will be printed to the
+        listing file for every stress period time step in which 'budget print' is
+        specified in output control.  if there is no output control option and
+        'print_flows' is specified, then flow rates are printed for the last time step
+        of each stress period.
     save_flows : keyword
-        keyword to indicate that evapotranspiration flow terms will be written to the
-        file specified with 'budget fileout' in output control.
-    timearrayseries : record tas6 filein tas6_filename
-        Contains data for the tas package. Data can be passed as a dictionary to the
-        tas package with variable names as keys and package data as values. Data for
-        the timearrayseries variable is also acceptable. See tas package documentation
-        for more information.
+        keyword to indicate that river flow terms will be written to the file specified
+        with 'budget fileout' in output control.
     observations : record obs6 filein obs6_filename
         Contains data for the obs package. Data can be passed as a dictionary to the
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
+    mover : keyword
+        keyword to indicate that this instance of the river package can be used with
+        the water mover (mvr) package.  when the mover option is specified, additional
+        memory is allocated within the package to store the available, provided, and
+        received water.
     export_array_netcdf : keyword
         keyword that specifies input gridded arrays should be written to the model
         output netcdf file with attributes that support using the generated file as a
         modflow 6 simulation input.  this option only has an effect when an output
         model netcdf file is configured and the simulation is run in validate mode,
         otherwise it is ignored.
-    ievt : [integer]
-        ievt is the layer number that defines the layer in each vertical column where
-        evapotranspiration is applied. if ievt is omitted, evapotranspiration by
-        default is applied to cells in layer 1.  if ievt is specified, it must be
-        specified as the first variable in the period block or modflow will terminate
-        with an error.
-    surface : [double precision]
-        is the elevation of the et surface (:math:`l`).
-    rate : [double precision]
-        is the maximum et flux rate (:math:`lt^{-1}`).
-    depth : [double precision]
-        is the et extinction depth (:math:`l`).
+    maxbound : integer
+        integer value specifying the maximum number of rivers cells that will be
+        specified for use during any stress period.
+    stage : [double precision]
+        is the head in the river.
+    cond : [double precision]
+        is the riverbed hydraulic conductance.
+    rbot : [double precision]
+        is the elevation of the bottom of the riverbed.
     aux : [double precision]
         is an array of values for auxiliary variable aux(iaux), where iaux is a value
         from 1 to naux, and aux(iaux) must be listed as part of the auxiliary
-        variables.  a separate array can be specified for each auxiliary variable.  if
-        an array is not specified for an auxiliary variable, then a value of zero is
-        assigned.  if the value specified here for the auxiliary variable is the same
-        as auxmultname, then the evapotranspiration rate will be multiplied by this
-        array.
+        variables.  a separate array can be specified for each auxiliary variable. if
+        the value specified here for the auxiliary variable is the same as auxmultname,
+        then the conductance array will be multiplied by this array.
 
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
@@ -100,39 +85,27 @@ class ModflowGwfevta(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(("gwf6", "evta", "options", "auxiliary"))
-    tas_filerecord = ListTemplateGenerator(
-        ("gwf6", "evta", "options", "tas_filerecord")
-    )
+    auxiliary = ArrayTemplateGenerator(("gwf6", "rivg", "options", "auxiliary"))
     obs_filerecord = ListTemplateGenerator(
-        ("gwf6", "evta", "options", "obs_filerecord")
+        ("gwf6", "rivg", "options", "obs_filerecord")
     )
-    ievt = ArrayTemplateGenerator(("gwf6", "evta", "period", "ievt"))
-    surface = ArrayTemplateGenerator(("gwf6", "evta", "period", "surface"))
-    rate = ArrayTemplateGenerator(("gwf6", "evta", "period", "rate"))
-    depth = ArrayTemplateGenerator(("gwf6", "evta", "period", "depth"))
-    aux = ArrayTemplateGenerator(("gwf6", "evta", "period", "aux"))
-    package_abbr = "gwfevta"
-    _package_type = "evta"
-    dfn_file_name = "gwf-evta.dfn"
+    stage = ArrayTemplateGenerator(("gwf6", "rivg", "period", "stage"))
+    cond = ArrayTemplateGenerator(("gwf6", "rivg", "period", "cond"))
+    rbot = ArrayTemplateGenerator(("gwf6", "rivg", "period", "rbot"))
+    aux = ArrayTemplateGenerator(("gwf6", "rivg", "period", "aux"))
+    package_abbr = "gwfrivg"
+    _package_type = "rivg"
+    dfn_file_name = "gwf-rivg.dfn"
     dfn = [
         ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
-            "name readasarrays",
+            "name readarraygrid",
             "type keyword",
-            "shape",
             "reader urword",
             "optional false",
-            "default true",
-        ],
-        [
-            "block options",
-            "name fixed_cell",
-            "type keyword",
-            "shape",
-            "reader urword",
-            "optional true",
+            "developmode true",
+            "default True",
         ],
         [
             "block options",
@@ -176,48 +149,6 @@ class ModflowGwfevta(MFPackage):
         ],
         [
             "block options",
-            "name tas_filerecord",
-            "type record tas6 filein tas6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package tas",
-            "construct_data timearrayseries",
-            "parameter_name tas_array",
-        ],
-        [
-            "block options",
-            "name tas6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name tas6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block options",
             "name obs_filerecord",
             "type record obs6 filein obs6_filename",
             "shape",
@@ -240,6 +171,16 @@ class ModflowGwfevta(MFPackage):
         ],
         [
             "block options",
+            "name filein",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
             "name obs6_filename",
             "type string",
             "preserve_case true",
@@ -247,6 +188,14 @@ class ModflowGwfevta(MFPackage):
             "tagged false",
             "reader urword",
             "optional false",
+        ],
+        [
+            "block options",
+            "name mover",
+            "type keyword",
+            "tagged true",
+            "reader urword",
+            "optional true",
         ],
         [
             "block options",
@@ -258,10 +207,17 @@ class ModflowGwfevta(MFPackage):
             "extended true",
         ],
         [
+            "block dimensions",
+            "name maxbound",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
             "block period",
             "name iper",
             "type integer",
-            "block_variable true",
+            "block_variable True",
             "in_record true",
             "tagged false",
             "shape",
@@ -271,55 +227,59 @@ class ModflowGwfevta(MFPackage):
         ],
         [
             "block period",
-            "name ievt",
-            "type integer",
-            "shape (ncol*nrow; ncpl)",
+            "name stage",
+            "type double precision",
+            "shape (nodes)",
             "reader readarray",
-            "numeric_index true",
-            "optional true",
+            "layered true",
             "netcdf true",
+            "default 3.e30",
         ],
         [
             "block period",
-            "name surface",
+            "name cond",
             "type double precision",
-            "shape (ncol*nrow; ncpl)",
+            "shape (nodes)",
             "reader readarray",
+            "layered true",
             "netcdf true",
-            "default 0.",
+            "default 3.e30",
         ],
         [
             "block period",
-            "name rate",
+            "name rbot",
             "type double precision",
-            "shape (ncol*nrow; ncpl)",
+            "shape (nodes)",
             "reader readarray",
-            "time_series true",
+            "layered true",
             "netcdf true",
-            "default 1.e-3",
-        ],
-        [
-            "block period",
-            "name depth",
-            "type double precision",
-            "shape (ncol*nrow; ncpl)",
-            "reader readarray",
-            "netcdf true",
-            "default 1.0",
+            "default 3.e30",
         ],
         [
             "block period",
             "name aux",
             "type double precision",
-            "shape (ncol*nrow; ncpl)",
+            "shape (nodes)",
             "reader readarray",
-            "time_series true",
+            "layered true",
             "netcdf true",
+            "optional true",
             "mf6internal auxvar",
         ],
     ]
     spec = {
         "advanced": False,
+        "dimensions": {
+            "maxbound": {
+                "block": "dimensions",
+                "description": "integer value specifying the maximum number of rivers cells that will be specified for use during any stress period.",
+                "longname": "maximum number of river cells in any stress period",
+                "name": "maxbound",
+                "optional": True,
+                "reader": "urword",
+                "type": "integer",
+            }
+        },
         "fkeys": {
             "obs_filerecord": {
                 "abbr": "obs",
@@ -327,17 +287,10 @@ class ModflowGwfevta(MFPackage):
                 "param": "continuous",
                 "parent": "parent_model_or_package",
                 "val": "observations",
-            },
-            "tas_filerecord": {
-                "abbr": "tas",
-                "key": "tas_filerecord",
-                "param": "tas_array",
-                "parent": "parent_package",
-                "val": "timearrayseries",
-            },
+            }
         },
         "multi": True,
-        "name": "gwf-evta",
+        "name": "gwf-rivg",
         "options": {
             "auxiliary": {
                 "block": "options",
@@ -351,7 +304,7 @@ class ModflowGwfevta(MFPackage):
             },
             "auxmultname": {
                 "block": "options",
-                "description": "name of auxiliary variable to be used as multiplier of evapotranspiration rate.",
+                "description": "name of auxiliary variable to be used as multiplier of riverbed conductance.",
                 "longname": "name of auxiliary variable for multiplier",
                 "name": "auxmultname",
                 "optional": True,
@@ -369,11 +322,10 @@ class ModflowGwfevta(MFPackage):
                 "reader": "urword",
                 "type": "keyword",
             },
-            "fixed_cell": {
+            "mover": {
                 "block": "options",
-                "description": "indicates that evapotranspiration will not be reassigned to a cell underlying the cell specified in the list if the specified cell is inactive.",
-                "longname": "if cell is dry do not apply evapotranspiration to underlying cell",
-                "name": "fixed_cell",
+                "description": "keyword to indicate that this instance of the river package can be used with the water mover (mvr) package.  when the mover option is specified, additional memory is allocated within the package to store the available, provided, and received water.",
+                "name": "mover",
                 "optional": True,
                 "reader": "urword",
                 "type": "keyword",
@@ -395,8 +347,8 @@ class ModflowGwfevta(MFPackage):
             },
             "print_flows": {
                 "block": "options",
-                "description": "keyword to indicate that the list of evapotranspiration flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
-                "longname": "print evapotranspiration rates to listing file",
+                "description": "keyword to indicate that the list of river flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print calculated flows to listing file",
                 "mf6internal": "iprflow",
                 "name": "print_flows",
                 "optional": True,
@@ -405,7 +357,7 @@ class ModflowGwfevta(MFPackage):
             },
             "print_input": {
                 "block": "options",
-                "description": "keyword to indicate that the list of evapotranspiration information will be written to the listing file immediately after it is read.",
+                "description": "keyword to indicate that the list of river information will be written to the listing file immediately after it is read.",
                 "longname": "print input to listing file",
                 "mf6internal": "iprpak",
                 "name": "print_input",
@@ -413,99 +365,76 @@ class ModflowGwfevta(MFPackage):
                 "reader": "urword",
                 "type": "keyword",
             },
-            "readasarrays": {
+            "readarraygrid": {
                 "block": "options",
                 "default": True,
-                "description": "indicates that array-based input will be used for the evapotranspiration package.  this keyword must be specified to use array-based input.  when readasarrays is specified, values must be provided for every cell within a model layer, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results.",
-                "longname": "use array-based input",
-                "name": "readasarrays",
+                "description": "indicates that array-based grid input will be used for the river package.  this keyword must be specified to use array-based grid input.  when readarraygrid is specified, values must be provided for every cell within a model grid, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results. no data cells should contain the value dnodata (3.0e+30).",
+                "developmode": True,
+                "longname": "use array-based grid input",
+                "name": "readarraygrid",
                 "optional": False,
                 "reader": "urword",
                 "type": "keyword",
             },
             "save_flows": {
                 "block": "options",
-                "description": "keyword to indicate that evapotranspiration flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save chd flows to budget file",
+                "description": "keyword to indicate that river flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save riv flows to budget file",
                 "mf6internal": "ipakcb",
                 "name": "save_flows",
                 "optional": True,
                 "reader": "urword",
                 "type": "keyword",
             },
-            "timearrayseries": {
-                "block": "options",
-                "description": "Contains data for the tas package. Data can be passed as a dictionary to the tas package with variable names as keys and package data as values. Data for the timearrayseries variable is also acceptable. See tas package documentation for more information.",
-                "name": "timearrayseries",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "tas",
-                    "key": "tas_filerecord",
-                    "param": "tas_array",
-                    "parent": "parent_package",
-                    "val": "timearrayseries",
-                },
-                "type": "record tas6 filein tas6_filename",
-            },
         },
         "period": {
             "aux": {
                 "block": "period",
-                "description": "is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  a separate array can be specified for each auxiliary variable.  if an array is not specified for an auxiliary variable, then a value of zero is assigned.  if the value specified here for the auxiliary variable is the same as auxmultname, then the evapotranspiration rate will be multiplied by this array.",
-                "longname": "evapotranspiration auxiliary variable iaux",
+                "description": "is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  a separate array can be specified for each auxiliary variable. if the value specified here for the auxiliary variable is the same as auxmultname, then the conductance array will be multiplied by this array.",
+                "layered": True,
+                "longname": "river auxiliary variable iaux",
                 "mf6internal": "auxvar",
                 "name": "aux",
                 "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "time_series": True,
-                "type": "double precision",
-            },
-            "depth": {
-                "block": "period",
-                "default": 1.0,
-                "description": "is the et extinction depth ($l$).",
-                "longname": "extinction depth",
-                "name": "depth",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "double precision",
-            },
-            "ievt": {
-                "block": "period",
-                "description": "ievt is the layer number that defines the layer in each vertical column where evapotranspiration is applied. if ievt is omitted, evapotranspiration by default is applied to cells in layer 1.  if ievt is specified, it must be specified as the first variable in the period block or modflow will terminate with an error.",
-                "longname": "layer number for evapotranspiration",
-                "name": "ievt",
-                "netcdf": True,
-                "numeric_index": True,
                 "optional": True,
                 "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "type": "integer",
-            },
-            "rate": {
-                "block": "period",
-                "default": 0.001,
-                "description": "is the maximum et flux rate ($lt^{-1}$).",
-                "longname": "evapotranspiration surface",
-                "name": "rate",
-                "netcdf": True,
-                "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
-                "time_series": True,
+                "shape": "(nodes)",
                 "type": "double precision",
             },
-            "surface": {
+            "cond": {
                 "block": "period",
-                "default": 0.0,
-                "description": "is the elevation of the et surface ($l$).",
-                "longname": "evapotranspiration surface",
-                "name": "surface",
+                "default": 3e30,
+                "description": "is the riverbed hydraulic conductance.",
+                "layered": True,
+                "longname": "river conductnace",
+                "name": "cond",
                 "netcdf": True,
                 "reader": "readarray",
-                "shape": "(ncol*nrow; ncpl)",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "rbot": {
+                "block": "period",
+                "default": 3e30,
+                "description": "is the elevation of the bottom of the riverbed.",
+                "layered": True,
+                "longname": "river bottom elevation",
+                "name": "rbot",
+                "netcdf": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "stage": {
+                "block": "period",
+                "default": 3e30,
+                "description": "is the head in the river.",
+                "layered": True,
+                "longname": "river stage",
+                "name": "stage",
+                "netcdf": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
                 "type": "double precision",
             },
             "transient_block": True,
@@ -516,57 +445,50 @@ class ModflowGwfevta(MFPackage):
         self,
         model,
         loading_package=False,
-        readasarrays=True,
-        fixed_cell=None,
         auxiliary=None,
         auxmultname=None,
         print_input=None,
         print_flows=None,
         save_flows=None,
-        timearrayseries=None,
         observations=None,
+        mover=None,
         export_array_netcdf=None,
-        ievt=None,
-        surface=0.0,
-        rate=0.001,
-        depth=1.0,
+        maxbound=None,
+        stage=3e30,
+        cond=3e30,
+        rbot=3e30,
         aux=None,
         filename=None,
         pname=None,
         **kwargs,
     ):
-        """Initialize ModflowGwfevta."""
+        """Initialize ModflowGwfrivg."""
         super().__init__(
             parent=model,
-            package_type="evta",
+            package_type="rivg",
             filename=filename,
             pname=pname,
             loading_package=loading_package,
             **kwargs,
         )
 
-        self.readasarrays = self.build_mfdata("readasarrays", readasarrays)
-        self.fixed_cell = self.build_mfdata("fixed_cell", fixed_cell)
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self._tas_filerecord = self.build_mfdata("tas_filerecord", None)
-        self._tas_package = self.build_child_package(
-            "tas", timearrayseries, "tas_array", self._tas_filerecord
-        )
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
         )
+        self.mover = self.build_mfdata("mover", mover)
         self.export_array_netcdf = self.build_mfdata(
             "export_array_netcdf", export_array_netcdf
         )
-        self.ievt = self.build_mfdata("ievt", ievt)
-        self.surface = self.build_mfdata("surface", surface)
-        self.rate = self.build_mfdata("rate", rate)
-        self.depth = self.build_mfdata("depth", depth)
+        self.maxbound = self.build_mfdata("maxbound", maxbound)
+        self.stage = self.build_mfdata("stage", stage)
+        self.cond = self.build_mfdata("cond", cond)
+        self.rbot = self.build_mfdata("rbot", rbot)
         self.aux = self.build_mfdata("aux", aux)
 
         self._init_complete = True

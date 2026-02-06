@@ -65,6 +65,13 @@ class ModflowGwfwel(MFPackage):
                 well extraction rates that have been reduced by the program.  Entries are only
                 written if the extraction rates are reduced.
 
+    flow_reduction_length : keyword
+        keyword that indicates the auto_flow_reduce value is a length instead of a
+        fraction of the cell thickness. a warning will be issued if the
+        flow_reduction_length option is specified but the auto_flow_reduce option is
+        not specified in the options block. the program will terminate with an error if
+        the flow_reduction_length option is specified and the auto_flow_reduce value
+        specified in the options block is less than or equal to zero.
     timeseries : record ts6 filein ts6_filename
         Contains data for the ts package. Data can be passed as a dictionary to the ts
         package with variable names as keys and package data as values. Data for the
@@ -232,6 +239,14 @@ class ModflowGwfwel(MFPackage):
         ],
         [
             "block options",
+            "name flow_reduction_length",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iflowredlen",
+        ],
+        [
+            "block options",
             "name ts_filerecord",
             "type record ts6 filein ts6_filename",
             "shape",
@@ -381,6 +396,235 @@ class ModflowGwfwel(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "dimensions": {
+            "maxbound": {
+                "block": "dimensions",
+                "description": "integer value specifying the maximum number of wells cells that will be specified for use during any stress period.",
+                "longname": "maximum number of wells",
+                "name": "maxbound",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            }
+        },
+        "fkeys": {
+            "obs_filerecord": {
+                "abbr": "obs",
+                "key": "obs_filerecord",
+                "param": "continuous",
+                "parent": "parent_model_or_package",
+                "val": "observations",
+            },
+            "ts_filerecord": {
+                "abbr": "ts",
+                "description": "xxx",
+                "key": "ts_filerecord",
+                "param": "timeseries",
+                "parent": "parent_package",
+                "val": "timeseries",
+            },
+        },
+        "multi": True,
+        "name": "gwf-wel",
+        "options": {
+            "afrcsv_filerecord": {
+                "block": "options",
+                "fields": {
+                    "afrcsvfile": {
+                        "block": "options",
+                        "description": "name of the comma-separated value (CSV) output file to write information about well extraction rates that have been reduced by the program.  Entries are only written if the extraction rates are reduced.",
+                        "longname": "file keyword",
+                        "name": "afrcsvfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "afrcsv_rec",
+                "name": "afrcsv_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "auto_flow_reduce": {
+                "block": "options",
+                "description": "keyword and real value that defines the fraction of the cell thickness used as an interval for smoothly adjusting negative pumping rates to 0 in cells with head values less than or equal to the bottom of the cell. negative pumping rates are adjusted to 0 or a smaller negative value when the head in the cell is equal to or less than the calculated interval above the cell bottom. auto_flow_reduce is set to 0.1 if the specified value is less than or equal to zero. by default, negative pumping rates are not reduced during a simulation.  this auto_flow_reduce option only applies to wells in model cells that are marked as 'convertible' (icelltype /= 0) in the node property flow (npf) input file. reduction in flow will not occur for wells in cells marked as confined (icelltype = 0).",
+                "longname": "cell fractional thickness for reduced pumping",
+                "mf6internal": "flowred",
+                "name": "auto_flow_reduce",
+                "optional": True,
+                "reader": "urword",
+                "type": "double precision",
+            },
+            "auxiliary": {
+                "block": "options",
+                "description": "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block.",
+                "longname": "keyword to specify aux variables",
+                "name": "auxiliary",
+                "optional": True,
+                "reader": "urword",
+                "shape": "(naux)",
+                "type": "string",
+            },
+            "auxmultname": {
+                "block": "options",
+                "description": "name of auxiliary variable to be used as multiplier of well flow rate.",
+                "longname": "name of auxiliary variable for multiplier",
+                "name": "auxmultname",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+            "boundnames": {
+                "block": "options",
+                "description": "keyword to indicate that boundary names may be provided with the list of well cells.",
+                "name": "boundnames",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "flow_reduction_length": {
+                "block": "options",
+                "description": "keyword that indicates the auto_flow_reduce value is a length instead of a fraction of the cell thickness. a warning will be issued if the flow_reduction_length option is specified but the auto_flow_reduce option is not specified in the options block. the program will terminate with an error if the flow_reduction_length option is specified and the auto_flow_reduce value specified in the options block is less than or equal to zero.",
+                "longname": "flow reduction length keyword",
+                "mf6internal": "iflowredlen",
+                "name": "flow_reduction_length",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "mover": {
+                "block": "options",
+                "description": "keyword to indicate that this instance of the well package can be used with the water mover (mvr) package.  when the mover option is specified, additional memory is allocated within the package to store the available, provided, and received water.",
+                "name": "mover",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "observations": {
+                "block": "options",
+                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
+                "name": "observations",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "obs",
+                    "key": "obs_filerecord",
+                    "param": "continuous",
+                    "parent": "parent_model_or_package",
+                    "val": "observations",
+                },
+                "type": "record obs6 filein obs6_filename",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of well flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print calculated flows to listing file",
+                "mf6internal": "iprflow",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of well information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "mf6internal": "iprpak",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that well flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save well flows to budget file",
+                "mf6internal": "ipakcb",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "timeseries": {
+                "block": "options",
+                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
+                "name": "timeseries",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "ts",
+                    "description": "xxx",
+                    "key": "ts_filerecord",
+                    "param": "timeseries",
+                    "parent": "parent_package",
+                    "val": "timeseries",
+                },
+                "type": "record ts6 filein ts6_filename",
+            },
+        },
+        "period": {
+            "stress_period_data": {
+                "block": "period",
+                "item": {
+                    "block": "period",
+                    "fields": {
+                        "aux": {
+                            "block": "period",
+                            "description": "represents the values of the auxiliary variables for each well. The values of auxiliary variables must be present for each well. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.  If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                            "longname": "auxiliary variables",
+                            "mf6internal": "auxvar",
+                            "name": "aux",
+                            "optional": "true",
+                            "reader": "urword",
+                            "shape": "(naux)",
+                            "time_series": "true",
+                            "type": "double precision",
+                        },
+                        "boundname": {
+                            "block": "period",
+                            "description": "name of the well cell.  BOUNDNAME is an ASCII character variable that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes.",
+                            "longname": "well name",
+                            "name": "boundname",
+                            "optional": "true",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "cellid": {
+                            "block": "period",
+                            "description": "is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell.",
+                            "longname": "cell identifier",
+                            "name": "cellid",
+                            "reader": "urword",
+                            "shape": "(ncelldim)",
+                            "type": "integer",
+                        },
+                        "q": {
+                            "block": "period",
+                            "description": "is the volumetric well rate. A positive value indicates recharge (injection) and a negative value indicates discharge (extraction). If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
+                            "longname": "well rate",
+                            "name": "q",
+                            "reader": "urword",
+                            "time_series": "true",
+                            "type": "double precision",
+                        },
+                    },
+                    "mf6internal": "spd",
+                    "name": "stress_period_data",
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "mf6internal": "spd",
+                "name": "stress_period_data",
+                "reader": "urword",
+                "shape": "(maxbound)",
+                "type": "recarray",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,
@@ -394,6 +638,7 @@ class ModflowGwfwel(MFPackage):
         save_flows=None,
         auto_flow_reduce=None,
         afrcsv_filerecord=None,
+        flow_reduction_length=None,
         timeseries=None,
         observations=None,
         mover=None,
@@ -422,6 +667,9 @@ class ModflowGwfwel(MFPackage):
         self.auto_flow_reduce = self.build_mfdata("auto_flow_reduce", auto_flow_reduce)
         self.afrcsv_filerecord = self.build_mfdata(
             "afrcsv_filerecord", afrcsv_filerecord
+        )
+        self.flow_reduction_length = self.build_mfdata(
+            "flow_reduction_length", flow_reduction_length
         )
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(

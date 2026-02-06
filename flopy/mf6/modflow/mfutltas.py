@@ -177,6 +177,114 @@ class ModflowUtltas(MFPackage):
             "repeating true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "attributes": {
+            "interpolation_methodrecord": {
+                "block": "attributes",
+                "description": "xxx",
+                "fields": {
+                    "interpolation_method": {
+                        "block": "attributes",
+                        "description": "Interpolation method, which is either STEPWISE or LINEAR.",
+                        "name": "interpolation_method",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                        "valid": "stepwise linear linearend",
+                    },
+                    "method": {
+                        "block": "attributes",
+                        "description": " xxx",
+                        "name": "method",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                },
+                "name": "interpolation_methodrecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "sfacrecord": {
+                "block": "attributes",
+                "description": "xxx",
+                "fields": {
+                    "sfac": {
+                        "block": "attributes",
+                        "description": " xxx",
+                        "name": "sfac",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                    "sfacval": {
+                        "block": "attributes",
+                        "description": "Scale factor, which will multiply all array values in time series. SFAC is an optional attribute; if omitted, SFAC = 1.0.",
+                        "name": "sfacval",
+                        "optional": "false",
+                        "reader": "urword",
+                        "shape": "time_series_name",
+                        "type": "double precision",
+                    },
+                },
+                "name": "sfacrecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "time_series_namerecord": {
+                "block": "attributes",
+                "description": "xxx",
+                "fields": {
+                    "name": {
+                        "block": "attributes",
+                        "description": "xxx",
+                        "name": "name",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                    "time_series_name": {
+                        "block": "attributes",
+                        "description": "Name by which a package references a particular time-array series. The name must be unique among all time-array series used in a package.",
+                        "name": "time_series_name",
+                        "optional": "false",
+                        "reader": "urword",
+                        "shape": "(any1d)",
+                        "type": "string",
+                    },
+                },
+                "name": "time_series_namerecord",
+                "optional": False,
+                "reader": "urword",
+                "type": "record",
+            },
+        },
+        "multi": True,
+        "name": "utl-tas",
+        "ref": {
+            "abbr": "tas",
+            "key": "tas_filerecord",
+            "param": "tas_array",
+            "parent": "parent_package",
+            "val": "timearrayseries",
+        },
+        "time": {
+            "tas_array": {
+                "block": "time",
+                "description": "an array of numeric, floating-point values, or a constant value, readable by the u2drel array-reading utility.",
+                "just_data": True,
+                "name": "tas_array",
+                "optional": False,
+                "reader": "readarray",
+                "repeating": True,
+                "shape": "(unknown)",
+                "type": "double precision",
+            }
+        },
+    }
 
     def __init__(
         self,

@@ -293,6 +293,135 @@ class ModflowPts(MFPackage):
             "optional false",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "sln-pts",
+        "nonlinear": {
+            "outer_maximum": {
+                "block": "nonlinear",
+                "description": "integer value defining the maximum number of outer (nonlinear) iterations -- that is, calls to the solution routine. for a linear problem outer_maximum should be 1.",
+                "longname": "outer maximum iterations",
+                "name": "outer_maximum",
+                "optional": False,
+                "reader": "urword",
+                "type": "integer",
+            }
+        },
+        "options": {
+            "ats_outer_maximum_fraction": {
+                "block": "options",
+                "description": "real value defining the fraction of the maximum allowable outer iterations used with the adaptive time step (ats) capability if it is active.  if this value is set to zero by the user, then this solution will have no effect on ats behavior.  this value must be greater than or equal to zero and less than or equal to 0.5 or the program will terminate with an error.  if it is not specified by the user, then it is assigned a default value of one third.  when the number of outer iterations for this solution is less than the product of this value and the maximum allowable outer iterations, then ats will increase the time step length by a factor of dtadj in the ats input file.  when the number of outer iterations for this solution is greater than the maximum allowable outer iterations minus the product of this value and the maximum allowable outer iterations, then the ats (if active) will decrease the time step length by a factor of 1 / dtadj.",
+                "longname": "fraction of outer maximum used with ats",
+                "name": "ats_outer_maximum_fraction",
+                "optional": True,
+                "reader": "urword",
+                "type": "double precision",
+            },
+            "complexity": {
+                "block": "options",
+                "description": "is an optional keyword that defines default non-linear and linear solver parameters.  simple - indicates that default solver input values will be defined that work well for nearly linear models. this would be used for models that do not include nonlinear stress packages and models that are either confined or consist of a single unconfined layer that is thick enough to contain the water table within a single layer. moderate - indicates that default solver input values will be defined that work well for moderately nonlinear models. this would be used for models that include nonlinear stress packages and models that consist of one or more unconfined layers. the moderate option should be used when the simple option does not result in successful convergence.  complex - indicates that default solver input values will be defined that work well for highly nonlinear models. this would be used for models that include nonlinear stress packages and models that consist of one or more unconfined layers representing complex geology and surface-water/groundwater interaction. the complex option should be used when the moderate option does not result in successful convergence.  non-linear and linear solver parameters assigned using a specified complexity can be modified in the nonlinear and linear blocks. if the complexity option is not specified, nonlinear and linear variables will be assigned the simple complexity values.",
+                "longname": "print option",
+                "name": "complexity",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+            "csv_inner_output_filerecord": {
+                "block": "options",
+                "fields": {
+                    "inner_csvfile": {
+                        "block": "options",
+                        "description": "name of the ascii comma separated values output file to write solver convergence information. Comma separated values output includes maximum dependent-variable (for example, head) change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.",
+                        "longname": "file keyword",
+                        "name": "inner_csvfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "name": "csv_inner_output_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "csv_outer_output_filerecord": {
+                "block": "options",
+                "fields": {
+                    "outer_csvfile": {
+                        "block": "options",
+                        "description": "name of the ascii comma separated values output file to write maximum dependent-variable (for example, head) change convergence information at the end of each outer iteration for each time step.",
+                        "longname": "file keyword",
+                        "name": "outer_csvfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "name": "csv_outer_output_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "csv_output_filerecord": {
+                "block": "options",
+                "deprecated": "6.1.1",
+                "fields": {
+                    "csvfile": {
+                        "block": "options",
+                        "deprecated": "6.1.1",
+                        "description": "name of the ascii comma separated values output file to write solver convergence information. If PRINT_OPTION is NONE or SUMMARY, comma separated values output includes maximum head change convergence information at the end of each outer iteration for each time step. If PRINT_OPTION is ALL, comma separated values output includes maximum head change and maximum residual convergence information for the solution and each model (if the solution includes more than one model) and linear acceleration information for each inner iteration.",
+                        "longname": "file keyword",
+                        "name": "csvfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "name": "csv_output_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "no_ptcrecord": {
+                "block": "options",
+                "fields": {
+                    "no_ptc": {
+                        "block": "options",
+                        "description": "is a flag that is used to disable pseudo-transient continuation (PTC). Option only applies to steady-state stress periods for models using the Newton-Raphson formulation. For many problems, PTC can significantly improve convergence behavior for steady-state simulations, and for this reason it is active by default.  In some cases, however, PTC can worsen the convergence behavior, especially when the initial conditions are similar to the solution.  When the initial conditions are similar to, or exactly the same as, the solution and convergence is slow, then the NO_PTC FIRST option should be used to deactivate PTC for the first stress period.  The NO_PTC ALL option should also be used in order to compare convergence behavior with other MODFLOW versions, as PTC is only available in MODFLOW 6.",
+                        "longname": "no pseudo-transient continuation",
+                        "name": "no_ptc",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                    "no_ptc_option": {
+                        "block": "options",
+                        "description": "is an optional keyword that is used to define options for disabling pseudo-transient continuation (PTC). FIRST is an optional keyword to disable PTC for the first stress period, if steady-state and one or more model is using the Newton-Raphson formulation. ALL is an optional keyword to disable PTC for all steady-state stress periods for models using the Newton-Raphson formulation. If NO_PTC_OPTION is not specified, the NO_PTC ALL option is used.",
+                        "longname": "no pseudo-transient continuation option",
+                        "name": "no_ptc_option",
+                        "optional": "true",
+                        "reader": "urword",
+                        "type": "string",
+                    },
+                },
+                "longname": "no_ptc record",
+                "name": "no_ptcrecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "print_option": {
+                "block": "options",
+                "description": "is a flag that controls printing of convergence information from the solver.  none means print nothing. summary means print only the total number of iterations and nonlinear residual reduction summaries. all means print linear matrix solver convergence information to the solution listing file and model specific linear matrix solver convergence information to each model listing file in addition to summary information. none is default if print_option is not specified.",
+                "longname": "print option",
+                "name": "print_option",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+        },
+    }
 
     def __init__(
         self,

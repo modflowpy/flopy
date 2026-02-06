@@ -7,9 +7,9 @@ from flopy.mf6.data.mfdatautil import ArrayTemplateGenerator, ListTemplateGenera
 from flopy.mf6.mfpackage import MFChildPackages, MFPackage
 
 
-class ModflowGwfghb(MFPackage):
+class ModflowGwfghbg(MFPackage):
     """
-    ModflowGwfghb defines a GHB package.
+    ModflowGwfghbg defines a GHBG package.
 
     Parameters
     ----------
@@ -33,9 +33,6 @@ class ModflowGwfghb(MFPackage):
     auxmultname : string
         name of auxiliary variable to be used as multiplier of general-head boundary
         conductance.
-    boundnames : keyword
-        keyword to indicate that boundary names may be provided with the list of
-        general-head boundary cells.
     print_input : keyword
         keyword to indicate that the list of general-head boundary information will be
         written to the listing file immediately after it is read.
@@ -48,11 +45,6 @@ class ModflowGwfghb(MFPackage):
     save_flows : keyword
         keyword to indicate that general-head boundary flow terms will be written to
         the file specified with 'budget fileout' in output control.
-    timeseries : record ts6 filein ts6_filename
-        Contains data for the ts package. Data can be passed as a dictionary to the ts
-        package with variable names as keys and package data as values. Data for the
-        timeseries variable is also acceptable. See ts package documentation for more
-        information.
     observations : record obs6 filein obs6_filename
         Contains data for the obs package. Data can be passed as a dictionary to the
         obs package with variable names as keys and package data as values. Data for
@@ -63,38 +55,26 @@ class ModflowGwfghb(MFPackage):
         be used with the water mover (mvr) package.  when the mover option is
         specified, additional memory is allocated within the package to store the
         available, provided, and received water.
+    export_array_netcdf : keyword
+        keyword that specifies input gridded arrays should be written to the model
+        output netcdf file with attributes that support using the generated file as a
+        modflow 6 simulation input.  this option only has an effect when an output
+        model netcdf file is configured and the simulation is run in validate mode,
+        otherwise it is ignored.
     maxbound : integer
         integer value specifying the maximum number of general-head boundary cells that
         will be specified for use during any stress period.
-    stress_period_data : [(cellid, bhead, cond, aux, boundname)]
-        * cellid : [integer]
-                is the cell identifier, and depends on the type of grid that is used for the
-                simulation.  For a structured grid that uses the DIS input file, CELLID is the
-                layer, row, and column.   For a grid that uses the DISV input file, CELLID is
-                the layer and CELL2D number.  If the model uses the unstructured discretization
-                (DISU) input file, CELLID is the node number for the cell.
-        * bhead : double precision
-                is the boundary head. If the Options block includes a TIMESERIESFILE entry (see
-                the 'Time-Variable Input' section), values can be obtained from a time series
-                by entering the time-series name in place of a numeric value.
-        * cond : double precision
-                is the hydraulic conductance of the interface between the aquifer cell and the
-                boundary. If the Options block includes a TIMESERIESFILE entry (see the 'Time-
-                Variable Input' section), values can be obtained from a time series by entering
-                the time-series name in place of a numeric value.
-        * aux : [double precision]
-                represents the values of the auxiliary variables for each general-head
-                boundary. The values of auxiliary variables must be present for each general-
-                head boundary. The values must be specified in the order of the auxiliary
-                variables specified in the OPTIONS block.  If the package supports time series
-                and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable
-                Input' section), values can be obtained from a time series by entering the
-                time-series name in place of a numeric value.
-        * boundname : string
-                name of the general-head boundary cell.  BOUNDNAME is an ASCII character
-                variable that can contain as many as 40 characters.  If BOUNDNAME contains
-                spaces in it, then the entire name must be enclosed within single quotes.
-
+    bhead : [double precision]
+        is the boundary head.
+    cond : [double precision]
+        is the hydraulic conductance of the interface between the aquifer cell and the
+        boundary.
+    aux : [double precision]
+        is an array of values for auxiliary variable aux(iaux), where iaux is a value
+        from 1 to naux, and aux(iaux) must be listed as part of the auxiliary
+        variables.  a separate array can be specified for each auxiliary variable. if
+        the value specified here for the auxiliary variable is the same as auxmultname,
+        then the conductance array will be multiplied by this array.
 
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
@@ -105,17 +85,27 @@ class ModflowGwfghb(MFPackage):
 
     """
 
-    auxiliary = ArrayTemplateGenerator(("gwf6", "ghb", "options", "auxiliary"))
-    ts_filerecord = ListTemplateGenerator(("gwf6", "ghb", "options", "ts_filerecord"))
-    obs_filerecord = ListTemplateGenerator(("gwf6", "ghb", "options", "obs_filerecord"))
-    stress_period_data = ListTemplateGenerator(
-        ("gwf6", "ghb", "period", "stress_period_data")
+    auxiliary = ArrayTemplateGenerator(("gwf6", "ghbg", "options", "auxiliary"))
+    obs_filerecord = ListTemplateGenerator(
+        ("gwf6", "ghbg", "options", "obs_filerecord")
     )
-    package_abbr = "gwfghb"
-    _package_type = "ghb"
-    dfn_file_name = "gwf-ghb.dfn"
+    bhead = ArrayTemplateGenerator(("gwf6", "ghbg", "period", "bhead"))
+    cond = ArrayTemplateGenerator(("gwf6", "ghbg", "period", "cond"))
+    aux = ArrayTemplateGenerator(("gwf6", "ghbg", "period", "aux"))
+    package_abbr = "gwfghbg"
+    _package_type = "ghbg"
+    dfn_file_name = "gwf-ghbg.dfn"
     dfn = [
         ["header", "multi-package", "package-type stress-package"],
+        [
+            "block options",
+            "name readarraygrid",
+            "type keyword",
+            "reader urword",
+            "optional false",
+            "developmode true",
+            "default true",
+        ],
         [
             "block options",
             "name auxiliary",
@@ -128,14 +118,6 @@ class ModflowGwfghb(MFPackage):
             "block options",
             "name auxmultname",
             "type string",
-            "shape",
-            "reader urword",
-            "optional true",
-        ],
-        [
-            "block options",
-            "name boundnames",
-            "type keyword",
             "shape",
             "reader urword",
             "optional true",
@@ -166,48 +148,6 @@ class ModflowGwfghb(MFPackage):
         ],
         [
             "block options",
-            "name ts_filerecord",
-            "type record ts6 filein ts6_filename",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "construct_package ts",
-            "construct_data timeseries",
-            "parameter_name timeseries",
-        ],
-        [
-            "block options",
-            "name ts6",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name filein",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-        ],
-        [
-            "block options",
-            "name ts6_filename",
-            "type string",
-            "preserve_case true",
-            "in_record true",
-            "reader urword",
-            "optional false",
-            "tagged false",
-        ],
-        [
-            "block options",
             "name obs_filerecord",
             "type record obs6 filein obs6_filename",
             "shape",
@@ -221,6 +161,16 @@ class ModflowGwfghb(MFPackage):
         [
             "block options",
             "name obs6",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name filein",
             "type keyword",
             "shape",
             "in_record true",
@@ -247,11 +197,20 @@ class ModflowGwfghb(MFPackage):
             "optional true",
         ],
         [
+            "block options",
+            "name export_array_netcdf",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal export_nc",
+            "extended true",
+        ],
+        [
             "block dimensions",
             "name maxbound",
             "type integer",
             "reader urword",
-            "optional false",
+            "optional true",
         ],
         [
             "block period",
@@ -267,62 +226,34 @@ class ModflowGwfghb(MFPackage):
         ],
         [
             "block period",
-            "name stress_period_data",
-            "type recarray cellid bhead cond aux boundname",
-            "shape (maxbound)",
-            "reader urword",
-            "mf6internal spd",
-        ],
-        [
-            "block period",
-            "name cellid",
-            "type integer",
-            "shape (ncelldim)",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-        ],
-        [
-            "block period",
             "name bhead",
             "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "time_series true",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 3.e30",
         ],
         [
             "block period",
             "name cond",
             "type double precision",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "time_series true",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
+            "default 3.e30",
         ],
         [
             "block period",
             "name aux",
             "type double precision",
-            "in_record true",
-            "tagged false",
-            "shape (naux)",
-            "reader urword",
+            "shape (nodes)",
+            "reader readarray",
+            "layered true",
+            "netcdf true",
             "optional true",
-            "time_series true",
             "mf6internal auxvar",
-        ],
-        [
-            "block period",
-            "name boundname",
-            "type string",
-            "shape",
-            "tagged false",
-            "in_record true",
-            "reader urword",
-            "optional true",
         ],
     ]
     spec = {
@@ -331,9 +262,9 @@ class ModflowGwfghb(MFPackage):
             "maxbound": {
                 "block": "dimensions",
                 "description": "integer value specifying the maximum number of general-head boundary cells that will be specified for use during any stress period.",
-                "longname": "maximum number of general-head boundaries",
+                "longname": "maximum number of general-head boundaries in any stress period",
                 "name": "maxbound",
-                "optional": False,
+                "optional": True,
                 "reader": "urword",
                 "type": "integer",
             }
@@ -345,18 +276,10 @@ class ModflowGwfghb(MFPackage):
                 "param": "continuous",
                 "parent": "parent_model_or_package",
                 "val": "observations",
-            },
-            "ts_filerecord": {
-                "abbr": "ts",
-                "description": "xxx",
-                "key": "ts_filerecord",
-                "param": "timeseries",
-                "parent": "parent_package",
-                "val": "timeseries",
-            },
+            }
         },
         "multi": True,
-        "name": "gwf-ghb",
+        "name": "gwf-ghbg",
         "options": {
             "auxiliary": {
                 "block": "options",
@@ -377,10 +300,13 @@ class ModflowGwfghb(MFPackage):
                 "reader": "urword",
                 "type": "string",
             },
-            "boundnames": {
+            "export_array_netcdf": {
                 "block": "options",
-                "description": "keyword to indicate that boundary names may be provided with the list of general-head boundary cells.",
-                "name": "boundnames",
+                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
+                "extended": True,
+                "longname": "export array variables to netcdf output files.",
+                "mf6internal": "export_nc",
+                "name": "export_array_netcdf",
                 "optional": True,
                 "reader": "urword",
                 "type": "keyword",
@@ -428,98 +354,65 @@ class ModflowGwfghb(MFPackage):
                 "reader": "urword",
                 "type": "keyword",
             },
+            "readarraygrid": {
+                "block": "options",
+                "default": True,
+                "description": "indicates that array-based grid input will be used for the general-head boundary package.  this keyword must be specified to use array-based grid input.  when readarraygrid is specified, values must be provided for every cell within a model grid, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results. no data cells should contain the value dnodata (3.0e+30).",
+                "developmode": True,
+                "longname": "use array-based grid input",
+                "name": "readarraygrid",
+                "optional": False,
+                "reader": "urword",
+                "type": "keyword",
+            },
             "save_flows": {
                 "block": "options",
                 "description": "keyword to indicate that general-head boundary flow terms will be written to the file specified with 'budget fileout' in output control.",
-                "longname": "save chd flows to budget file",
+                "longname": "save ghbg flows to budget file",
                 "mf6internal": "ipakcb",
                 "name": "save_flows",
                 "optional": True,
                 "reader": "urword",
                 "type": "keyword",
             },
-            "timeseries": {
-                "block": "options",
-                "description": "Contains data for the ts package. Data can be passed as a dictionary to the ts package with variable names as keys and package data as values. Data for the timeseries variable is also acceptable. See ts package documentation for more information.",
-                "name": "timeseries",
-                "optional": True,
-                "reader": "urword",
-                "ref": {
-                    "abbr": "ts",
-                    "description": "xxx",
-                    "key": "ts_filerecord",
-                    "param": "timeseries",
-                    "parent": "parent_package",
-                    "val": "timeseries",
-                },
-                "type": "record ts6 filein ts6_filename",
-            },
         },
         "period": {
-            "stress_period_data": {
+            "aux": {
                 "block": "period",
-                "item": {
-                    "block": "period",
-                    "fields": {
-                        "aux": {
-                            "block": "period",
-                            "description": "represents the values of the auxiliary variables for each general-head boundary. The values of auxiliary variables must be present for each general-head boundary. The values must be specified in the order of the auxiliary variables specified in the OPTIONS block.  If the package supports time series and the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
-                            "longname": "auxiliary variables",
-                            "mf6internal": "auxvar",
-                            "name": "aux",
-                            "optional": "true",
-                            "reader": "urword",
-                            "shape": "(naux)",
-                            "time_series": "true",
-                            "type": "double precision",
-                        },
-                        "bhead": {
-                            "block": "period",
-                            "description": "is the boundary head. If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
-                            "longname": "boundary head",
-                            "name": "bhead",
-                            "reader": "urword",
-                            "time_series": "true",
-                            "type": "double precision",
-                        },
-                        "boundname": {
-                            "block": "period",
-                            "description": "name of the general-head boundary cell.  BOUNDNAME is an ASCII character variable that can contain as many as 40 characters.  If BOUNDNAME contains spaces in it, then the entire name must be enclosed within single quotes.",
-                            "longname": "general-head boundary name",
-                            "name": "boundname",
-                            "optional": "true",
-                            "reader": "urword",
-                            "type": "string",
-                        },
-                        "cellid": {
-                            "block": "period",
-                            "description": "is the cell identifier, and depends on the type of grid that is used for the simulation.  For a structured grid that uses the DIS input file, CELLID is the layer, row, and column.   For a grid that uses the DISV input file, CELLID is the layer and CELL2D number.  If the model uses the unstructured discretization (DISU) input file, CELLID is the node number for the cell.",
-                            "longname": "cell identifier",
-                            "name": "cellid",
-                            "reader": "urword",
-                            "shape": "(ncelldim)",
-                            "type": "integer",
-                        },
-                        "cond": {
-                            "block": "period",
-                            "description": "is the hydraulic conductance of the interface between the aquifer cell and the boundary. If the Options block includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be obtained from a time series by entering the time-series name in place of a numeric value.",
-                            "longname": "boundary conductance",
-                            "name": "cond",
-                            "reader": "urword",
-                            "time_series": "true",
-                            "type": "double precision",
-                        },
-                    },
-                    "mf6internal": "spd",
-                    "name": "stress_period_data",
-                    "reader": "urword",
-                    "type": "record",
-                },
-                "mf6internal": "spd",
-                "name": "stress_period_data",
-                "reader": "urword",
-                "shape": "(maxbound)",
-                "type": "recarray",
+                "description": "is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  a separate array can be specified for each auxiliary variable. if the value specified here for the auxiliary variable is the same as auxmultname, then the conductance array will be multiplied by this array.",
+                "layered": True,
+                "longname": "general-head boundary auxiliary variable iaux",
+                "mf6internal": "auxvar",
+                "name": "aux",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "bhead": {
+                "block": "period",
+                "default": 3e30,
+                "description": "is the boundary head.",
+                "layered": True,
+                "longname": "boundary head",
+                "name": "bhead",
+                "netcdf": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "cond": {
+                "block": "period",
+                "default": 3e30,
+                "description": "is the hydraulic conductance of the interface between the aquifer cell and the boundary.",
+                "layered": True,
+                "longname": "boundary conductance",
+                "name": "cond",
+                "netcdf": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
             },
             "transient_block": True,
         },
@@ -531,23 +424,24 @@ class ModflowGwfghb(MFPackage):
         loading_package=False,
         auxiliary=None,
         auxmultname=None,
-        boundnames=None,
         print_input=None,
         print_flows=None,
         save_flows=None,
-        timeseries=None,
         observations=None,
         mover=None,
+        export_array_netcdf=None,
         maxbound=None,
-        stress_period_data=None,
+        bhead=3e30,
+        cond=3e30,
+        aux=None,
         filename=None,
         pname=None,
         **kwargs,
     ):
-        """Initialize ModflowGwfghb."""
+        """Initialize ModflowGwfghbg."""
         super().__init__(
             parent=model,
-            package_type="ghb",
+            package_type="ghbg",
             filename=filename,
             pname=pname,
             loading_package=loading_package,
@@ -556,22 +450,20 @@ class ModflowGwfghb(MFPackage):
 
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
-        self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)
         self.print_flows = self.build_mfdata("print_flows", print_flows)
         self.save_flows = self.build_mfdata("save_flows", save_flows)
-        self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
-        self._ts_package = self.build_child_package(
-            "ts", timeseries, "timeseries", self._ts_filerecord
-        )
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
         )
         self.mover = self.build_mfdata("mover", mover)
-        self.maxbound = self.build_mfdata("maxbound", maxbound)
-        self.stress_period_data = self.build_mfdata(
-            "stress_period_data", stress_period_data
+        self.export_array_netcdf = self.build_mfdata(
+            "export_array_netcdf", export_array_netcdf
         )
+        self.maxbound = self.build_mfdata("maxbound", maxbound)
+        self.bhead = self.build_mfdata("bhead", bhead)
+        self.cond = self.build_mfdata("cond", cond)
+        self.aux = self.build_mfdata("aux", aux)
 
         self._init_complete = True

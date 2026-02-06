@@ -46,8 +46,11 @@ class ModflowGwtmst(MFPackage):
         keyword that specifies input griddata arrays should be written to layered ascii
         output files.
     export_array_netcdf : keyword
-        keyword that specifies input griddata arrays should be written to the model
-        output netcdf file.
+        keyword that specifies input gridded arrays should be written to the model
+        output netcdf file with attributes that support using the generated file as a
+        modflow 6 simulation input.  this option only has an effect when an output
+        model netcdf file is configured and the simulation is run in validate mode,
+        otherwise it is ignored.
     porosity : [double precision]
         is the mobile domain porosity, defined as the mobile domain pore volume per
         mobile domain volume.  additional information on porosity within the context of
@@ -259,6 +262,165 @@ class ModflowGwtmst(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "griddata": {
+            "bulk_density": {
+                "block": "griddata",
+                "description": "is the bulk density of the aquifer in mass per length cubed.  bulk_density is not required unless the sorption keyword is specified.  bulk density is defined as the mobile domain solid mass per mobile domain volume.  additional information on bulk density is included in the modflow 6 supplemental technical information document.",
+                "layered": True,
+                "longname": "bulk density",
+                "name": "bulk_density",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "decay": {
+                "block": "griddata",
+                "description": "is the rate coefficient for first or zero-order decay for the aqueous phase of the mobile domain.  a negative value indicates solute production.  the dimensions of decay for first-order decay is one over time.  the dimensions of decay for zero-order decay is mass per length cubed per time.  decay will have no effect on simulation results unless either first- or zero-order decay is specified in the options block.",
+                "layered": True,
+                "longname": "aqueous phase decay rate coefficient",
+                "name": "decay",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "decay_sorbed": {
+                "block": "griddata",
+                "description": "is the rate coefficient for first or zero-order decay for the sorbed phase of the mobile domain.  a negative value indicates solute production.  the dimensions of decay_sorbed for first-order decay is one over time.  the dimensions of decay_sorbed for zero-order decay is mass of solute per mass of aquifer per time.  if decay_sorbed is not specified and both decay and sorption are active, then the program will terminate with an error.  decay_sorbed will have no effect on simulation results unless the sorption keyword and either first- or zero-order decay are specified in the options block.",
+                "layered": True,
+                "longname": "sorbed phase decay rate coefficient",
+                "name": "decay_sorbed",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "distcoef": {
+                "block": "griddata",
+                "description": "is the distribution coefficient for the equilibrium-controlled linear sorption isotherm in dimensions of length cubed per mass.  if the freunchlich isotherm is specified, then discoef is the freundlich constant.  if the langmuir isotherm is specified, then distcoef is the langmuir constant.  distcoef is not required unless the sorption keyword is specified.",
+                "layered": True,
+                "longname": "distribution coefficient",
+                "name": "distcoef",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "porosity": {
+                "block": "griddata",
+                "description": "is the mobile domain porosity, defined as the mobile domain pore volume per mobile domain volume.  additional information on porosity within the context of mobile and immobile domain transport simulations is included in the modflow 6 supplemental technical information document.",
+                "layered": True,
+                "longname": "porosity",
+                "name": "porosity",
+                "netcdf": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+            "sp2": {
+                "block": "griddata",
+                "description": "is the exponent for the freundlich isotherm and the sorption capacity for the langmuir isotherm.  sp2 is not required unless the sorption keyword is specified in the options block.  if the sorption keyword is not specified in the options block, sp2 will have no effect on simulation results.",
+                "layered": True,
+                "longname": "second sorption parameter",
+                "name": "sp2",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(nodes)",
+                "type": "double precision",
+            },
+        },
+        "multi": False,
+        "name": "gwt-mst",
+        "options": {
+            "export_array_ascii": {
+                "block": "options",
+                "description": "keyword that specifies input griddata arrays should be written to layered ascii output files.",
+                "longname": "export array variables to layered ascii files.",
+                "mf6internal": "export_ascii",
+                "name": "export_array_ascii",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "export_array_netcdf": {
+                "block": "options",
+                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
+                "extended": True,
+                "longname": "export array variables to netcdf output files.",
+                "mf6internal": "export_nc",
+                "name": "export_array_netcdf",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "first_order_decay": {
+                "block": "options",
+                "description": "is a text keyword to indicate that first-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block.",
+                "longname": "activate first-order decay",
+                "mf6internal": "order1_decay",
+                "name": "first_order_decay",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that mst flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save calculated flows to budget file",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "sorbate_filerecord": {
+                "block": "options",
+                "fields": {
+                    "sorbatefile": {
+                        "block": "options",
+                        "description": "name of the output file to write sorbate concentration information.  Sorbate concentrations will be written whenever aqueous concentrations are saved, as determined by settings in the Output Control option.",
+                        "longname": "file keyword",
+                        "name": "sorbatefile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "sorbate_rec",
+                "name": "sorbate_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "sorption": {
+                "block": "options",
+                "description": "is a text keyword to indicate that sorption will be activated.  valid sorption options include linear, freundlich, and langmuir.  use of this keyword requires that bulk_density and distcoef are specified in the griddata block.  if sorption is specified as freundlich or langmuir then sp2 is also required in the griddata block.",
+                "longname": "activate sorption",
+                "name": "sorption",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+                "valid": "linear freundlich langmuir",
+            },
+            "zero_order_decay": {
+                "block": "options",
+                "description": "is a text keyword to indicate that zero-order decay will occur.  use of this keyword requires that decay and decay_sorbed (if sorption is active) are specified in the griddata block.",
+                "longname": "activate zero-order decay",
+                "mf6internal": "order0_decay",
+                "name": "zero_order_decay",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+        },
+    }
 
     def __init__(
         self,

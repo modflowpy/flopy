@@ -20,8 +20,8 @@ class ModflowGwtadv(MFPackage):
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     scheme : string
-        scheme used to solve the advection term.  can be upstream, central, or tvd.  if
-        not specified, upstream weighting is the default weighting scheme.
+        scheme used to solve the advection term.  can be upstream, central, tvd or
+        utvd.  if not specified, upstream weighting is the default weighting scheme.
     ats_percel : double precision
         fractional cell distance submitted by the adv package to the adaptive time
         stepping (ats) package.  if ats_percel is specified and the ats package is
@@ -53,7 +53,7 @@ class ModflowGwtadv(MFPackage):
             "block options",
             "name scheme",
             "type string",
-            "valid central upstream tvd",
+            "valid central upstream tvd utvd",
             "reader urword",
             "optional true",
         ],
@@ -65,6 +65,32 @@ class ModflowGwtadv(MFPackage):
             "optional true",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "gwt-adv",
+        "options": {
+            "ats_percel": {
+                "block": "options",
+                "description": "fractional cell distance submitted by the adv package to the adaptive time stepping (ats) package.  if ats_percel is specified and the ats package is active, a time step calculation will be made for each cell based on flow through the cell and cell properties.  the largest time step will be calculated such that the advective fractional cell distance (ats_percel) is not exceeded for any active cell in the grid.  this time-step constraint will be submitted to the ats package, perhaps with constraints submitted by other packages, in the calculation of the time step.  ats_percel must be greater than zero.  if a value of zero is specified for ats_percel the program will automatically reset it to an internal no data value to indicate that time steps should not be subject to this constraint.",
+                "longname": "fractional cell distance used for time step calculation",
+                "name": "ats_percel",
+                "optional": True,
+                "reader": "urword",
+                "type": "double precision",
+            },
+            "scheme": {
+                "block": "options",
+                "description": "scheme used to solve the advection term.  can be upstream, central, tvd or utvd.  if not specified, upstream weighting is the default weighting scheme.",
+                "longname": "advective scheme",
+                "name": "scheme",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+                "valid": "central upstream tvd utvd",
+            },
+        },
+    }
 
     def __init__(
         self,

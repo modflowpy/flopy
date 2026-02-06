@@ -92,6 +92,67 @@ class ModflowPrtfmi(MFPackage):
             "reader urword",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "prt-fmi",
+        "options": {
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that fmi flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save cell-by-cell flows to budget file",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            }
+        },
+        "packagedata": {
+            "packagedata": {
+                "block": "packagedata",
+                "item": {
+                    "block": "packagedata",
+                    "fields": {
+                        "filein": {
+                            "block": "packagedata",
+                            "description": "keyword to specify that an input filename is expected next.",
+                            "longname": "file keyword",
+                            "name": "filein",
+                            "optional": "false",
+                            "reader": "urword",
+                            "type": "keyword",
+                        },
+                        "flowtype": {
+                            "block": "packagedata",
+                            "description": "is the word GWFBUDGET, GWFHEAD, or GWFGRID.  If GWFBUDGET is specified, then the corresponding file must be a budget file.  If GWFHEAD is specified, the file must be a head file.  If GWFGRID is specified, the file must be a binary grid file.",
+                            "longname": "flow type",
+                            "name": "flowtype",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                        "fname": {
+                            "block": "packagedata",
+                            "description": "is the name of the file containing flows.  The path to the file should be included if the file is not located in the folder where the program was run.",
+                            "longname": "file name",
+                            "name": "fname",
+                            "reader": "urword",
+                            "type": "string",
+                        },
+                    },
+                    "longname": "flowtype list",
+                    "name": "packagedata",
+                    "optional": True,
+                    "reader": "urword",
+                    "type": "record",
+                },
+                "longname": "flowtype list",
+                "name": "packagedata",
+                "optional": True,
+                "reader": "urword",
+                "type": "recarray",
+            }
+        },
+    }
 
     def __init__(
         self,

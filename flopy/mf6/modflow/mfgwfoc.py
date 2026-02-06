@@ -92,6 +92,7 @@ class ModflowGwfoc(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -132,6 +133,7 @@ class ModflowGwfoc(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -162,6 +164,7 @@ class ModflowGwfoc(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal headfilerec",
         ],
         [
             "block options",
@@ -191,6 +194,7 @@ class ModflowGwfoc(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal headprintrec",
         ],
         [
             "block options",
@@ -364,6 +368,169 @@ class ModflowGwfoc(MFPackage):
             "reader urword",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "gwf-oc",
+        "options": {
+            "budget_filerecord": {
+                "block": "options",
+                "fields": {
+                    "budgetfile": {
+                        "block": "options",
+                        "description": "name of the output file to write budget information.",
+                        "longname": "file keyword",
+                        "name": "budgetfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "budfilerec",
+                "name": "budget_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "budgetcsv_filerecord": {
+                "block": "options",
+                "fields": {
+                    "budgetcsvfile": {
+                        "block": "options",
+                        "description": "name of the comma-separated value (CSV) output file to write budget summary information.  A budget summary record will be written to this file for each time step of the simulation.",
+                        "longname": "file keyword",
+                        "name": "budgetcsvfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "budcsvfilerec",
+                "name": "budgetcsv_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "head_filerecord": {
+                "block": "options",
+                "fields": {
+                    "headfile": {
+                        "block": "options",
+                        "description": "name of the output file to write head information.",
+                        "longname": "file keyword",
+                        "name": "headfile",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    }
+                },
+                "mf6internal": "headfilerec",
+                "name": "head_filerecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "headprintrecord": {
+                "block": "options",
+                "fields": {
+                    "head": {
+                        "block": "options",
+                        "description": "keyword to specify that record corresponds to head.",
+                        "longname": "head keyword",
+                        "name": "head",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                    "print_format": {
+                        "block": "options",
+                        "description": "keyword to specify format for printing to the listing file.",
+                        "longname": "keyword to indicate that a print format follows",
+                        "name": "print_format",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                },
+                "mf6internal": "headprintrec",
+                "name": "headprintrecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+        },
+        "period": {
+            "printrecord": {
+                "block": "period",
+                "fields": {
+                    "ocsetting": {
+                        "block": "period",
+                        "description": "specifies the steps for which the data will be saved.",
+                        "name": "ocsetting",
+                        "reader": "urword",
+                        "type": "keystring all first last frequency steps",
+                    },
+                    "print": {
+                        "block": "period",
+                        "description": "keyword to indicate that information will be printed this stress period.",
+                        "longname": "keyword to save",
+                        "name": "print",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                    "rtype": {
+                        "block": "period",
+                        "description": "type of information to save or print.  Can be BUDGET or HEAD.",
+                        "longname": "record type",
+                        "name": "rtype",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    },
+                },
+                "name": "printrecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "saverecord": {
+                "block": "period",
+                "fields": {
+                    "ocsetting": {
+                        "block": "period",
+                        "description": "specifies the steps for which the data will be saved.",
+                        "name": "ocsetting",
+                        "reader": "urword",
+                        "type": "keystring all first last frequency steps",
+                    },
+                    "rtype": {
+                        "block": "period",
+                        "description": "type of information to save or print.  Can be BUDGET or HEAD.",
+                        "longname": "record type",
+                        "name": "rtype",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "string",
+                    },
+                    "save": {
+                        "block": "period",
+                        "description": "keyword to indicate that information will be saved this stress period.",
+                        "longname": "keyword to save",
+                        "name": "save",
+                        "optional": "false",
+                        "reader": "urword",
+                        "type": "keyword",
+                    },
+                },
+                "name": "saverecord",
+                "optional": True,
+                "reader": "urword",
+                "type": "record",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,

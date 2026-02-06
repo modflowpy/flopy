@@ -33,6 +33,12 @@ class ModflowEms(MFPackage):
     _package_type = "ems"
     dfn_file_name = "sln-ems.dfn"
     dfn = [["header", ["solution_package", "*"]]]
+    spec = {
+        "advanced": False,
+        "multi": False,
+        "name": "sln-ems",
+        "sln": {"abbr": "ems", "pattern": "*"},
+    }
 
     def __init__(
         self,

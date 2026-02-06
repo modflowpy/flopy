@@ -40,6 +40,7 @@ class ModflowGwfgwt(MFPackage):
     _package_type = "gwfgwt"
     dfn_file_name = "exg-gwfgwt.dfn"
     dfn = [["header"]]
+    spec = {"advanced": False, "multi": False, "name": "exg-gwfgwt"}
 
     def __init__(
         self,

@@ -65,8 +65,11 @@ class ModflowGwfrcha(MFPackage):
         the observations variable is also acceptable. See obs package documentation for
         more information.
     export_array_netcdf : keyword
-        keyword that specifies input griddata arrays should be written to the model
-        output netcdf file.
+        keyword that specifies input gridded arrays should be written to the model
+        output netcdf file with attributes that support using the generated file as a
+        modflow 6 simulation input.  this option only has an effect when an output
+        model netcdf file is configured and the simulation is run in validate mode,
+        otherwise it is ignored.
     irch : [integer]
         irch is the layer number that defines the layer in each vertical column where
         recharge is applied. if irch is omitted, recharge by default is applied to
@@ -270,6 +273,7 @@ class ModflowGwfrcha(MFPackage):
             "reader readarray",
             "numeric_index true",
             "optional true",
+            "netcdf true",
         ],
         [
             "block period",
@@ -278,6 +282,7 @@ class ModflowGwfrcha(MFPackage):
             "shape (ncol*nrow; ncpl)",
             "reader readarray",
             "time_series true",
+            "netcdf true",
             "default 1.e-3",
         ],
         [
@@ -288,9 +293,182 @@ class ModflowGwfrcha(MFPackage):
             "reader readarray",
             "time_series true",
             "optional true",
+            "netcdf true",
             "mf6internal auxvar",
         ],
     ]
+    spec = {
+        "advanced": False,
+        "fkeys": {
+            "obs_filerecord": {
+                "abbr": "obs",
+                "key": "obs_filerecord",
+                "param": "continuous",
+                "parent": "parent_model_or_package",
+                "val": "observations",
+            },
+            "tas_filerecord": {
+                "abbr": "tas",
+                "key": "tas_filerecord",
+                "param": "tas_array",
+                "parent": "parent_package",
+                "val": "timearrayseries",
+            },
+        },
+        "multi": True,
+        "name": "gwf-rcha",
+        "options": {
+            "auxiliary": {
+                "block": "options",
+                "description": "defines an array of one or more auxiliary variable names.  there is no limit on the number of auxiliary variables that can be provided on this line; however, lists of information provided in subsequent blocks must have a column of data for each auxiliary variable name defined here.   the number of auxiliary variables detected on this line determines the value for naux.  comments cannot be provided anywhere on this line as they will be interpreted as auxiliary variable names.  auxiliary variables may not be used by the package, but they will be available for use by other parts of the program.  the program will terminate with an error if auxiliary variables are specified on more than one line in the options block.",
+                "longname": "keyword to specify aux variables",
+                "name": "auxiliary",
+                "optional": True,
+                "reader": "urword",
+                "shape": "(naux)",
+                "type": "string",
+            },
+            "auxmultname": {
+                "block": "options",
+                "description": "name of auxiliary variable to be used as multiplier of recharge.",
+                "longname": "name of auxiliary variable for multiplier",
+                "name": "auxmultname",
+                "optional": True,
+                "reader": "urword",
+                "type": "string",
+            },
+            "export_array_netcdf": {
+                "block": "options",
+                "description": "keyword that specifies input gridded arrays should be written to the model output netcdf file with attributes that support using the generated file as a modflow 6 simulation input.  this option only has an effect when an output model netcdf file is configured and the simulation is run in validate mode, otherwise it is ignored.",
+                "extended": True,
+                "longname": "export array variables to netcdf output files.",
+                "mf6internal": "export_nc",
+                "name": "export_array_netcdf",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "fixed_cell": {
+                "block": "options",
+                "description": "indicates that recharge will not be reassigned to a cell underlying the cell specified in the list if the specified cell is inactive.",
+                "longname": "if cell is dry do not apply recharge to underlying cell",
+                "name": "fixed_cell",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "observations": {
+                "block": "options",
+                "description": "Contains data for the obs package. Data can be passed as a dictionary to the obs package with variable names as keys and package data as values. Data for the observations variable is also acceptable. See obs package documentation for more information.",
+                "name": "observations",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "obs",
+                    "key": "obs_filerecord",
+                    "param": "continuous",
+                    "parent": "parent_model_or_package",
+                    "val": "observations",
+                },
+                "type": "record obs6 filein obs6_filename",
+            },
+            "print_flows": {
+                "block": "options",
+                "description": "keyword to indicate that the list of recharge flow rates will be printed to the listing file for every stress period time step in which 'budget print' is specified in output control.  if there is no output control option and 'print_flows' is specified, then flow rates are printed for the last time step of each stress period.",
+                "longname": "print recharge rates to listing file",
+                "mf6internal": "iprflow",
+                "name": "print_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "print_input": {
+                "block": "options",
+                "description": "keyword to indicate that the list of recharge information will be written to the listing file immediately after it is read.",
+                "longname": "print input to listing file",
+                "mf6internal": "iprpak",
+                "name": "print_input",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "readasarrays": {
+                "block": "options",
+                "default": True,
+                "description": "indicates that array-based input will be used for the recharge package.  this keyword must be specified to use array-based input.  when readasarrays is specified, values must be provided for every cell within a model layer, even those cells that have an idomain value less than one.  values assigned to cells with idomain values less than one are not used and have no effect on simulation results.",
+                "longname": "use array-based input",
+                "name": "readasarrays",
+                "optional": False,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "save_flows": {
+                "block": "options",
+                "description": "keyword to indicate that recharge flow terms will be written to the file specified with 'budget fileout' in output control.",
+                "longname": "save chd flows to budget file",
+                "mf6internal": "ipakcb",
+                "name": "save_flows",
+                "optional": True,
+                "reader": "urword",
+                "type": "keyword",
+            },
+            "timearrayseries": {
+                "block": "options",
+                "description": "Contains data for the tas package. Data can be passed as a dictionary to the tas package with variable names as keys and package data as values. Data for the timearrayseries variable is also acceptable. See tas package documentation for more information.",
+                "name": "timearrayseries",
+                "optional": True,
+                "reader": "urword",
+                "ref": {
+                    "abbr": "tas",
+                    "key": "tas_filerecord",
+                    "param": "tas_array",
+                    "parent": "parent_package",
+                    "val": "timearrayseries",
+                },
+                "type": "record tas6 filein tas6_filename",
+            },
+        },
+        "period": {
+            "aux": {
+                "block": "period",
+                "description": "is an array of values for auxiliary variable aux(iaux), where iaux is a value from 1 to naux, and aux(iaux) must be listed as part of the auxiliary variables.  a separate array can be specified for each auxiliary variable.  if an array is not specified for an auxiliary variable, then a value of zero is assigned.  if the value specified here for the auxiliary variable is the same as auxmultname, then the recharge array will be multiplied by this array.",
+                "longname": "recharge auxiliary variable iaux",
+                "mf6internal": "auxvar",
+                "name": "aux",
+                "netcdf": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(ncol*nrow; ncpl)",
+                "time_series": True,
+                "type": "double precision",
+            },
+            "irch": {
+                "block": "period",
+                "description": "irch is the layer number that defines the layer in each vertical column where recharge is applied. if irch is omitted, recharge by default is applied to cells in layer 1.  irch can only be used if readasarrays is specified in the options block.  if irch is specified, it must be specified as the first variable in the period block or modflow will terminate with an error.",
+                "longname": "layer number for recharge",
+                "name": "irch",
+                "netcdf": True,
+                "numeric_index": True,
+                "optional": True,
+                "reader": "readarray",
+                "shape": "(ncol*nrow; ncpl)",
+                "type": "integer",
+            },
+            "recharge": {
+                "block": "period",
+                "default": 0.001,
+                "description": "is the recharge flux rate ($lt^{-1}$).  this rate is multiplied inside the program by the surface area of the cell to calculate the volumetric recharge rate. the recharge array may be defined by a time-array series (see the 'using time-array series in a package' section).",
+                "longname": "recharge rate",
+                "name": "recharge",
+                "netcdf": True,
+                "reader": "readarray",
+                "shape": "(ncol*nrow; ncpl)",
+                "time_series": True,
+                "type": "double precision",
+            },
+            "transient_block": True,
+        },
+    }
 
     def __init__(
         self,
