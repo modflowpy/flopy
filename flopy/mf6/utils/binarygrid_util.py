@@ -152,7 +152,10 @@ class MfGrdFile(FlopyBinaryData):
             self._datadict[key] = v
 
             if self.verbose:
-                if nd == 0:
+                if (
+                    nd == 0 or
+                    dt == str
+                ):
                     print(f"  {key} = {v}")
                 else:
                     print(f"  {key}: min = {v.min()} max = {v.max()}")

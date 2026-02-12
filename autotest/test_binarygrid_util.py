@@ -31,6 +31,22 @@ def test_mfgrddis_MfGrdFile(mfgrd_test_path):
     assert isinstance(modelgrid, StructuredGrid)
 
 
+def test_mfgrddis_MfGrdFile_v2(mfgrd_test_path):
+    grb = MfGrdFile(mfgrd_test_path / "gwf_uzf01.dis.grb", verbose=True)
+    nodes = grb.nodes
+    ia = grb.ia
+    shape = ia.shape[0]
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
+
+    nnz = ia[-1]
+    ja = grb.ja
+    shape = ja.shape[0]
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
+
+    modelgrid = grb.modelgrid
+    assert isinstance(modelgrid, StructuredGrid)
+
+
 def test_mfgrddis_modelgrid(mfgrd_test_path):
     fn = mfgrd_test_path / "nwtp3.dis.grb"
     modelgrid = StructuredGrid.from_binary_grid_file(fn, verbose=True)
