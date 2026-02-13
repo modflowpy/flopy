@@ -354,7 +354,7 @@ class MfGrdFile(FlopyBinaryData):
 
         Returns
         -------
-        version : str
+        version : int
         """
         return self._version
 
