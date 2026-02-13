@@ -81,7 +81,7 @@ class MfGrdFile(FlopyBinaryData):
         # version
         line = self.read_text(self._initial_len).strip()
         t = line.split()
-        self._version = t[1]
+        self._version = int(t[1])
 
         # ntxt
         line = self.read_text(self._initial_len).strip()
@@ -347,6 +347,17 @@ class MfGrdFile(FlopyBinaryData):
         return xycellcenters
 
     # properties
+    @property
+    def version(self):
+        """
+        MODFLOW 6 grid file version.
+
+        Returns
+        -------
+        version : str
+        """
+        return self._version
+
     @property
     def grid_type(self):
         """
@@ -934,3 +945,17 @@ class MfGrdFile(FlopyBinaryData):
 
         if verbose:
             print(f"Successfully wrote {filename}")
+
+    @property
+    def crs(self):
+        """
+        CRS user input string (version 2 GRB file only).
+
+        Returns
+        -------
+        crs : str or None
+        """
+        crs = None
+        if "CRS" in self._datadict:
+            crs = self._datadict["CRS"]
+        return crs

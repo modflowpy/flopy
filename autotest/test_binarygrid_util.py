@@ -17,6 +17,8 @@ def mfgrd_test_path(example_data_path):
 
 def test_mfgrddis_MfGrdFile(mfgrd_test_path):
     grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=True)
+    assert grb.version == 1
+
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
@@ -29,10 +31,14 @@ def test_mfgrddis_MfGrdFile(mfgrd_test_path):
 
     modelgrid = grb.modelgrid
     assert isinstance(modelgrid, StructuredGrid)
+
+    assert grb.crs is None
 
 
 def test_mfgrddis_MfGrdFile_v2(mfgrd_test_path):
-    grb = MfGrdFile(mfgrd_test_path / "gwf_uzf01.dis.grb", verbose=True)
+    grb = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=True)
+    assert grb.version == 2
+
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
@@ -45,6 +51,8 @@ def test_mfgrddis_MfGrdFile_v2(mfgrd_test_path):
 
     modelgrid = grb.modelgrid
     assert isinstance(modelgrid, StructuredGrid)
+
+    assert grb.crs == "EPSG:26916"
 
 
 def test_mfgrddis_modelgrid(mfgrd_test_path):
@@ -78,6 +86,7 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
 def test_mfgrddisv_MfGrdFile(mfgrd_test_path):
     fn = mfgrd_test_path / "flow.disv.grb"
     grb = MfGrdFile(fn, verbose=True)
+    assert grb.version == 1
 
     nodes = grb.nodes
     ia = grb.ia
@@ -130,6 +139,7 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
 def test_mfgrddisu_MfGrdFile(mfgrd_test_path):
     fn = mfgrd_test_path / "keating.disu.grb"
     grb = MfGrdFile(fn, verbose=True)
+    assert grb.version == 1
 
     nodes = grb.nodes
     ia = grb.ia
