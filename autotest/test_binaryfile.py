@@ -16,6 +16,7 @@ from modflow_devtools.markers import requires_exe
 import flopy
 from flopy.utils import (
     BinaryHeader,
+    BinaryLayerFile,
     CellBudgetFile,
     HeadFile,
     HeadUFile,
@@ -148,20 +149,33 @@ def test_headfile_build_index(example_data_path):
     )
 
 
+def test_headfile_examples(example_data_path):
+    # HeadFile with default text='head'
+    pth = example_data_path / "mf6-freyberg/freyberg.hds"
+    with HeadFile(pth) as obj:
+        assert obj.precision == "double"
+        assert (obj.nlay, obj.nrow, obj.ncol) == (1, 40, 20)
+        assert obj.text == "head"
+        assert obj.text_bytes == b"HEAD".ljust(16)
+        assert len(obj) == 1
+
+    # HeadFile with explicit text='drawdown' for a drawdown file
+    pth = example_data_path / "mfusg_test/03A_conduit_unconfined/output/ex3A.ddn"
+    with HeadFile(pth, text="drawdown") as obj:
+        assert obj.precision == "single"
+        assert (obj.nlay, obj.nrow, obj.ncol) == (2, 100, 100)
+        assert obj.text == "drawdown"
+        assert obj.text_bytes == b"DRAWDOWN".rjust(16)
+        assert len(obj) == 2
+
+    # HeadFile with default text='head' raises on non-head file
+    with pytest.raises(ValueError, match="no records with text='head'"):
+        HeadFile(pth)
+
+
 @pytest.mark.parametrize(
     "pth, expected",
     [
-        pytest.param(
-            "mf6-freyberg/freyberg.hds",
-            {
-                "precision": "double",
-                "nlay, nrow, ncol": (1, 40, 20),
-                "text": "head",
-                "text_bytes": b"HEAD".ljust(16),
-                "len(obj)": 1,
-            },
-            id="freyberg.hds",
-        ),
         pytest.param(
             "mf6/create_tests/test_transport/expected_output/gwt_mst03.ucn",
             {
@@ -197,8 +211,9 @@ def test_headfile_build_index(example_data_path):
         ),
     ],
 )
-def test_headfile_examples(example_data_path, pth, expected):
-    with HeadFile(example_data_path / pth) as obj:
+def test_binarylayerfile_examples(example_data_path, pth, expected):
+    # BinaryLayerFile auto-detects text from file
+    with BinaryLayerFile(example_data_path / pth) as obj:
         assert obj.precision == expected["precision"]
         assert (obj.nlay, obj.nrow, obj.ncol) == expected["nlay, nrow, ncol"]
         assert obj.text == expected["text"]
@@ -206,19 +221,74 @@ def test_headfile_examples(example_data_path, pth, expected):
         assert len(obj) == expected["len(obj)"]
 
 
-@pytest.mark.parametrize(
-    "pth",
-    [
-        "mt3d_test/mf96mt3d/P01/case1b/MT3D001.UCN",
-        "unstructured/headu.githds",
-    ],
-)
-def test_not_headfile(example_data_path, pth):
-    # These examples pass get_headfile_precision, but are not HeadFiles
-    with pytest.raises(ValueError, match="cannot read file with HeadFile"):
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            HeadFile(example_data_path / pth)
+def _write_binary_layer_record(f, data, kstp=1, kper=1, totim=1.0, text="HEAD"):
+    """Write one single-precision binary layer record to open file f."""
+    nrow, ncol = data.shape
+    text_bytes = text.encode("ascii").ljust(16)[:16]
+    header = np.array(
+        [(kstp, kper, totim, totim, text_bytes, ncol, nrow, 1)],
+        dtype=[
+            ("kstp", "<i4"),
+            ("kper", "<i4"),
+            ("pertim", "<f4"),
+            ("totim", "<f4"),
+            ("text", "S16"),
+            ("ncol", "<i4"),
+            ("nrow", "<i4"),
+            ("ilay", "<i4"),
+        ],
+    )
+    header.tofile(f)
+    data.astype(np.float32).tofile(f)
+
+
+def test_binarylayerfile_mixed_text(tmp_path):
+    """BinaryLayerFile warns on multiple text types and scopes to first found."""
+    fname = tmp_path / "mixed.bin"
+    data = np.ones((3, 3), dtype=np.float32)
+    with open(fname, "wb") as f:
+        _write_binary_layer_record(
+            f, data, kstp=1, kper=1, totim=1.0, text="            HEAD"
+        )
+        _write_binary_layer_record(
+            f, data, kstp=1, kper=1, totim=1.0, text="        DRAWDOWN"
+        )
+
+    with pytest.warns(UserWarning, match="multiple record types"):
+        obj = BinaryLayerFile(fname)
+
+    assert obj.text == "head"
+    assert len(obj) == 1  # only HEAD record in recordarray
+    assert len(obj.headers) == 2  # both records in headers DataFrame
+    assert set(obj.unique_records) == {"DRAWDOWN", "HEAD"}
+
+    # re-open scoped to drawdown
+    with BinaryLayerFile(fname, text="drawdown") as obj2:
+        assert obj2.text == "drawdown"
+        assert len(obj2) == 1
+    obj.close()
+
+
+def test_binarylayerfile_wrong_text(tmp_path):
+    """BinaryLayerFile raises clearly when requested text is absent."""
+    fname = tmp_path / "head_only.bin"
+    data = np.ones((3, 3), dtype=np.float32)
+    with open(fname, "wb") as f:
+        _write_binary_layer_record(
+            f, data, kstp=1, kper=1, totim=1.0, text="            HEAD"
+        )
+
+    with pytest.raises(ValueError, match="no records with text='drawdown'"):
+        BinaryLayerFile(fname, text="drawdown")
+
+
+def test_unique_records(example_data_path):
+    """unique_records returns sorted array of text labels in the file."""
+    pth = example_data_path / "mf6-freyberg/freyberg.hds"
+    with HeadFile(pth) as obj:
+        ur = obj.unique_records
+        assert isinstance(ur, np.ndarray)
+        assert list(ur) == ["HEAD"]
 
 
 def test_ucnfile_build_index(example_data_path):
