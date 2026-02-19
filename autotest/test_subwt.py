@@ -105,7 +105,7 @@ def test_subwt(function_tmpdir, ibound_path):
 
     hds_geo = HeadFile(
         function_tmpdir / f"{ml.name}.swt_geostatic_stress.hds",
-        text="stress",
+        text="geostatic stress",
     ).get_alldata()
     hds_eff = HeadFile(
         function_tmpdir / f"{ml.name}.swt_eff_stress.hds",
