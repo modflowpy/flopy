@@ -370,45 +370,81 @@ To allow optional separation of performance from correctness concerns, performan
 
 #### Benchmarking
 
-Any test function can be turned into a benchmark by requesting the `benchmark` fixture (i.e. declaring a `benchmark` argument), which can be used to wrap any function call. For instance:
+FloPy includes a benchmark suite to track performance over time and validate optimization efforts. Benchmarking focuses on I/O operations, data structure manipulations, and utility functions.
 
-```python
-def test_benchmark(benchmark):
-    def sleep_1s():
-        import time
-        time.sleep(1)
-        return True
+**Note**: Benchmarks test FloPy code performance only, not the runtime of the various executables FloPy drives.
 
-    assert benchmark(sleep_1s)
+Benchmarks use [CodSpeed](https://codspeed.io) to automatically track performance in CI. Benchmarks written using `pytest-benchmark` syntax are compatible. Benchmarks are organized in `autotest/benchmarks/` by functional area.
+
+##### Running Benchmarks
+
+```bash
+# Run all benchmarks
+pytest autotest/benchmarks --benchmark-only
+
+# Run specific benchmark file
+pytest autotest/benchmarks/benchmark_io_mf6.py --benchmark-only
+
+# Run benchmarks by marker
+pytest -m "benchmark and not slow" --benchmark-only
+
+# Save results to file
+pytest autotest/benchmarks --benchmark-only --benchmark-autosave
+
+# Compare against saved baseline
+pytest autotest/benchmarks --benchmark-only --benchmark-compare
 ```
 
-Arguments can be provided to the function as well:
+##### Writing Benchmarks
+
+Any test function can be turned into a benchmark by requesting the `benchmark` fixture:
 
 ```python
-def test_benchmark(benchmark):
-    def sleep_s(s):
-        import time
-        time.sleep(s)
-        return True
+@pytest.mark.benchmark
+def test_model_load_time(benchmark, function_tmpdir):
+    """
+    Benchmark model loading time.
 
-    assert benchmark(sleep_s, 1)
+    Measures time to load a MODFLOW model from disk.
+    """
+    model = create_test_model(function_tmpdir)
+    model.write_input()
+
+    benchmark(lambda: Modflow.load(f"{model.name}.nam", model_ws=function_tmpdir))
 ```
 
-Rather than alter an existing function call to use this syntax, a lambda can be used to wrap the call unmodified:
+**Best Practices:**
+- Use descriptive test names (e.g., `test_mf6_sim_load_large`, not `test_load1`)
+- Include docstrings explaining what is benchmarked and why
+- Use fixtures for setup (not timed)
+- Mark all benchmarks `@pytest.mark.benchmark`
+- Mark slow benchmarks with `@pytest.mark.slow`
+
+##### Advanced Usage
+
+Arguments can be provided to benchmark functions:
 
 ```python
-def test_benchmark(benchmark):
-    def sleep_s(s):
-        import time
-        time.sleep(s)
-        return True
-
-    assert benchmark(lambda: sleep_s(1))
+def test_benchmark_with_args(benchmark):
+    benchmark(some_function, arg1, arg2)
 ```
 
-This can be convenient when the function call is complicated or passes many arguments.
+For fine-grained control over iterations and rounds:
 
-Benchmarked functions are repeated several times (the number of iterations depending on the test's runtime, with faster tests generally getting more reps) to compute summary statistics. To control the number of repetitions and rounds (repetitions of repetitions) use `benchmark.pedantic`, e.g. `benchmark.pedantic(some_function(), iterations=1, rounds=1)`.
+```python
+def test_benchmark_controlled(benchmark):
+    benchmark.pedantic(some_function, iterations=10, rounds=5)
+```
+
+Lambda functions are convenient for wrapping complex calls:
+
+```python
+def test_complex_benchmark(benchmark):
+    result = benchmark(lambda: complex_function(many, different, args))
+    assert result is not None
+```
+
+##### Configuration
 
 Benchmarking is incompatible with `pytest-xdist` and is disabled automatically when tests are run in parallel. When tests are not run in parallel, benchmarking is enabled by default. Benchmarks can be disabled with the `--benchmark-disable` flag.
 

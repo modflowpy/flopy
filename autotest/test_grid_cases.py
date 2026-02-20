@@ -59,6 +59,30 @@ class GridCases:
         )
 
     @staticmethod
+    def structured_medium():
+        nlay, nrow, ncol = 5, 50, 50
+        return StructuredGrid(
+            delc=np.ones(nrow),
+            delr=np.ones(ncol),
+            top=np.ones((nrow, ncol)) * 100.0,
+            botm=np.array(
+                [np.ones((nrow, ncol)) * (100.0 - (i + 1) * 10.0) for i in range(nlay)]
+            ),
+        )
+
+    @staticmethod
+    def structured_large():
+        nlay, nrow, ncol = 10, 100, 100
+        return StructuredGrid(
+            delc=np.ones(nrow),
+            delr=np.ones(ncol),
+            top=np.ones((nrow, ncol)) * 100.0,
+            botm=np.array(
+                [np.ones((nrow, ncol)) * (100.0 - (i + 1) * 10.0) for i in range(nlay)]
+            ),
+        )
+
+    @staticmethod
     def vertex_small():
         nlay, ncpl = 3, 5
         vertices = [

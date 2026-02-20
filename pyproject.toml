@@ -54,6 +54,7 @@ test = [
     "modflow-devtools>=1.7.0",
     "pytest !=8.1.0",
     "pytest-benchmark",
+    "pytest-codspeed",
     "pytest-cov",
     "pytest-dotenv",
     "pytest-xdist",
@@ -218,3 +219,35 @@ ignore-words-list = [
     "vertx",
     "nd",
 ]
+
+[tool.pytest.ini_options]
+addopts = "-ra --color=yes"
+python_files = [
+    "test_*.py",
+    "profile_*.py",
+    "benchmark_*.py",
+    "*_test*.py",
+    "*_profile*.py",
+    "*_benchmark*.py",
+]
+env_files = [".env"]
+markers = [
+    "benchmark: performance benchmarks",
+    "external: uses models from external repositories",
+    "example: exercise scripts, tutorials, notebooks",
+    "generation: tests for code generation utilities",
+    "meta: tests run by other tests",
+    "mf6: tests for MODFLOW 6 support",
+    "regression: tests comparing multiple versions",
+    "slow: tests not completing in a few seconds",
+]
+filterwarnings = [
+    "ignore:datetime.datetime.utcfromtimestamp",
+    "ignore:\n.*Pyarrow",
+]
+
+[tool.pytest.benchmark]
+# Default settings for pytest-benchmark (ignored by pytest-codspeed)
+min_rounds = 5
+warmup = false
+disable_gc = false
