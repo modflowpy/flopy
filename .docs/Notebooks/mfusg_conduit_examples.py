@@ -104,7 +104,7 @@ success, buff = mf.run_model(silent=True, report=True)
 assert success, pformat(buff)
 
 head_file = os.path.join(mf.model_ws, "ex3.clnhds")
-headobj = flopy.utils.BinaryLayerFile(head_file)
+headobj = flopy.utils.HeadFile(head_file)
 
 # +
 simtimes = headobj.get_times()
@@ -298,7 +298,7 @@ else:
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
-headobj = flopy.utils.BinaryLayerFile(head_file)
+headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
 nper = len(simtimes)
@@ -394,7 +394,7 @@ else:
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
-headobj = flopy.utils.BinaryLayerFile(head_file)
+headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
 nper = len(simtimes)
@@ -489,7 +489,7 @@ else:
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
-headobj = flopy.utils.BinaryLayerFile(head_file)
+headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
 nper = len(simtimes)
@@ -583,7 +583,7 @@ else:
 
 # +
 head_file = os.path.join(mf.model_ws, f"{modelname}.clnhd")
-headobj = flopy.utils.BinaryLayerFile(head_file)
+headobj = flopy.utils.HeadFile(head_file)
 
 simtimes = headobj.get_times()
 nper = len(simtimes)

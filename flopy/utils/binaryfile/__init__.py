@@ -394,6 +394,7 @@ class BinaryLayerFile(LayerFile):
         all_headers = []  # every record → headers DataFrame
         all_ipos = []
         text_types_seen: dict = {}  # normalised text → count
+        text_types_matched: set = set()  # text labels matching the substring filter
         warn_threshold = 10000000
         ipos = 0
 
@@ -414,7 +415,9 @@ class BinaryLayerFile(LayerFile):
             all_headers.append(header)
             all_ipos.append(ipos_data)
 
-            if header_text == self.text:
+            # substring match for backward compatibility
+            if self.text in header_text:
+                text_types_matched.add(header_text)
                 if self.text_bytes is None:
                     # first matching record: capture bytes and grid dimensions
                     self.text_bytes = header["text"]
@@ -444,6 +447,16 @@ class BinaryLayerFile(LayerFile):
                 f"file contains multiple record types: "
                 f"{sorted(text_types_seen)!r}; scoped to {self.text!r}. "
                 f"Use text= to access: {other!r}",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        # warn if substring matched multiple distinct text labels (ambiguous)
+        if len(text_types_matched) > 1:
+            warnings.warn(
+                f"text={self.text!r} (substring match) matched multiple record types: "
+                f"{sorted(text_types_matched)!r}. For precise filtering, use the "
+                f"exact label or BinaryLayerFile with text=None to auto-detect.",
                 UserWarning,
                 stacklevel=2,
             )
