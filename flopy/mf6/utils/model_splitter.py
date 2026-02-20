@@ -2648,8 +2648,6 @@ class Mf6Splitter:
 
                     if records:
                         mapped_data[mkey]["sources"] = records
-                    else:
-                        mapped_data[mkey]["sources"] = None
 
         return mapped_data
 

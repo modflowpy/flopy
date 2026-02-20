@@ -578,6 +578,53 @@ def test_empty_packages(function_tmpdir):
     )
 
 
+def test_empty_ssm(function_tmpdir):
+    nlay, nrow, ncol = 1, 1, 10
+    gwfname = "gwf"
+    gwtname = "gwt"
+
+    sim = flopy.mf6.MFSimulation(sim_ws=function_tmpdir)
+    flopy.mf6.ModflowIms(sim)
+    flopy.mf6.ModflowTdis(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=gwfname)
+    flopy.mf6.ModflowGwfdis(gwf, nlay=nlay, nrow=nrow, ncol=ncol)
+    flopy.mf6.ModflowGwfnpf(gwf)
+    flopy.mf6.ModflowGwfic(gwf, strt=1.0)
+    flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data=[((0, 0, 0), 1.0), ((0, 0, ncol - 1), 0.0)]
+    )
+    flopy.mf6.ModflowGwfwel(
+        gwf,
+        auxiliary=["CONCENTRATION"],
+        stress_period_data=[((0, 0, 2), -1.0, 0.0)],
+    )
+
+    gwt = flopy.mf6.ModflowGwt(sim, modelname=gwtname)
+    flopy.mf6.ModflowGwtdis(gwt, nlay=nlay, nrow=nrow, ncol=ncol)
+    flopy.mf6.ModflowGwtic(gwt, strt=0.0)
+    flopy.mf6.ModflowGwtmst(gwt, porosity=0.3)
+    flopy.mf6.ModflowGwtssm(gwt, sources=[("wel", "AUX", "CONCENTRATION")])
+
+    flopy.mf6.ModflowGwfgwt(
+        sim, exgtype="GWF6-GWT6", exgmnamea=gwfname, exgmnameb=gwtname
+    )
+
+    # Split: partition 0 = cols 0-4 (contains WEL at col 2)
+    #        partition 1 = cols 5-9 (no WEL)
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[0, 5:] = 1
+
+    mfs = Mf6Splitter(sim)
+    new_sim = mfs.split_multi_model(array)
+
+    gwt0 = new_sim.get_model(f"{gwtname}_0")
+    gwt1 = new_sim.get_model(f"{gwtname}_1")
+
+    assert gwt0.get_package("ssm") is not None
+    assert gwt1.get_package("ssm") is None
+
+
 @requires_exe("mf6")
 def test_transient_array(function_tmpdir):
     name = "tarr"
