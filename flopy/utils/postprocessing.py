@@ -939,3 +939,200 @@ def get_specific_discharge(
         qz[noflo_or_dry] = np.nan
 
     return qx, qy, qz
+
+
+def get_saturation(head, top, botm, icelltype, hdry=-999.0, hnoflo=-9999.0):
+    """
+    Calculate cell saturation from head values.
+
+    Computes the fraction of each cell that is saturated based on head,
+    cell top/bottom elevations, and cell type.
+
+    Parameters
+    ----------
+    head : np.ndarray
+        Head values, shape (nlay, nrow, ncol) or (ncells,)
+    top : np.ndarray
+        Top elevation of cells, shape (nrow, ncol) for top layer or
+        (nlay, nrow, ncol) for all layers, or (ncells,)
+    botm : np.ndarray
+        Bottom elevation of cells, shape (nlay, nrow, ncol) or (ncells,)
+    icelltype : np.ndarray
+        Cell type indicator:
+        - 0: confined (always fully saturated)
+        - >0: convertible/unconfined (saturation varies with head)
+        Shape: (nlay, nrow, ncol) or (ncells,)
+    hdry : float, optional
+        Head value indicating dry cell (default -999.0)
+    hnoflo : float, optional
+        Head value indicating inactive cell (default -9999.0)
+
+    Returns
+    -------
+    saturation : np.ndarray
+        Cell saturation values (0.0 to 1.0), same shape as head.
+        - 1.0 for fully saturated cells (confined or head >= top)
+        - 0.0 to 1.0 for partially saturated cells
+        - NaN for inactive or dry cells
+
+    Notes
+    -----
+    Saturation calculation:
+
+    For confined cells (icelltype == 0):
+        sat = 1.0
+
+    For convertible cells (icelltype > 0):
+        sat = (head - botm) / (top - botm)
+        Clamped to [0.0, 1.0]
+
+    For dry or inactive cells:
+        sat = NaN
+
+    The top elevation for layer k is:
+    - Layer 0: top array (model top)
+    - Layer k>0: botm[k-1] (bottom of layer above)
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from flopy.utils.postprocessing import calculate_saturation
+    >>> nlay, nrow, ncol = 3, 10, 10
+    >>> head = np.full((nlay, nrow, ncol), 50.0)
+    >>> top = np.full((nrow, ncol), 100.0)
+    >>> botm = np.array([
+    ...     np.full((nrow, ncol), 75.0),
+    ...     np.full((nrow, ncol), 50.0),
+    ...     np.full((nrow, ncol), 25.0)
+    ... ])
+    >>> icelltype = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+    >>> icelltype[0] = 1  # Top layer convertible
+    >>> sat = calculate_saturation(head, top, botm, icelltype)
+    >>> print(f"Layer 0 saturation: {sat[0,0,0]:.2f}")  # Partially saturated
+    Layer 0 saturation: 0.00
+    >>> print(f"Layer 1 saturation: {sat[1,0,0]:.2f}")  # Fully saturated (confined)
+    Layer 1 saturation: 1.00
+    """
+    # Convert to arrays
+    head = np.asarray(head, dtype=np.float64)
+    top = np.asarray(top, dtype=np.float64)
+    botm = np.asarray(botm, dtype=np.float64)
+    icelltype = np.asarray(icelltype, dtype=np.int32)
+
+    # Determine if arrays are 3D or 1D
+    is_3d = head.ndim == 3
+
+    if is_3d:
+        nlay, nrow, ncol = head.shape
+        ncells = nlay * nrow * ncol
+
+        # Ensure top is 2D for structured grids
+        if top.ndim == 3:
+            # If top is 3D, use first layer
+            top2d = top[0]
+        elif top.ndim == 2:
+            top2d = top
+        else:
+            raise ValueError(
+                f"top must be 2D (nrow, ncol) or 3D (nlay, nrow, ncol), "
+                f"got shape {top.shape}"
+            )
+
+        # Ensure botm is 3D
+        if botm.ndim == 3:
+            botm3d = botm
+        else:
+            raise ValueError(
+                f"botm must be 3D (nlay, nrow, ncol), got shape {botm.shape}"
+            )
+
+        # Ensure icelltype matches head shape
+        if icelltype.shape != head.shape:
+            raise ValueError(
+                f"icelltype shape {icelltype.shape} does not match "
+                f"head shape {head.shape}"
+            )
+
+        # Initialize saturation
+        sat = np.ones_like(head, dtype=np.float64)
+
+        # Process each cell
+        for k in range(nlay):
+            for i in range(nrow):
+                for j in range(ncol):
+                    h = head[k, i, j]
+
+                    # Check for inactive or dry cells
+                    if h <= hnoflo or h <= hdry:
+                        sat[k, i, j] = np.nan
+                        continue
+
+                    # Confined cells are always fully saturated
+                    if icelltype[k, i, j] == 0:
+                        sat[k, i, j] = 1.0
+                        continue
+
+                    # Convertible cell - calculate saturation
+                    if k == 0:
+                        top_elev = top2d[i, j]
+                    else:
+                        top_elev = botm3d[k - 1, i, j]
+
+                    bot_elev = botm3d[k, i, j]
+                    thickness = top_elev - bot_elev
+
+                    if thickness <= 0:
+                        # Invalid cell geometry
+                        sat[k, i, j] = np.nan
+                        continue
+
+                    # Calculate saturated thickness
+                    sat_thickness = max(0.0, min(h - bot_elev, thickness))
+                    sat[k, i, j] = sat_thickness / thickness
+
+    else:
+        # 1D arrays (unstructured or flattened)
+        ncells = len(head)
+
+        # All arrays must be 1D
+        if top.ndim != 1 or botm.ndim != 1 or icelltype.ndim != 1:
+            raise ValueError("For 1D head, top, botm, and icelltype must all be 1D")
+
+        if len(top) != ncells or len(botm) != ncells or len(icelltype) != ncells:
+            raise ValueError(
+                f"All arrays must have same length: head={ncells}, "
+                f"top={len(top)}, botm={len(botm)}, icelltype={len(icelltype)}"
+            )
+
+        # Initialize saturation
+        sat = np.ones(ncells, dtype=np.float64)
+
+        # Process each cell
+        for n in range(ncells):
+            h = head[n]
+
+            # Check for inactive or dry cells
+            if h <= hnoflo or h <= hdry:
+                sat[n] = np.nan
+                continue
+
+            # Confined cells are always fully saturated
+            if icelltype[n] == 0:
+                sat[n] = 1.0
+                continue
+
+            # Convertible cell - calculate saturation
+            top_elev = top[n]
+            bot_elev = botm[n]
+            thickness = top_elev - bot_elev
+
+            if thickness <= 0:
+                # Invalid cell geometry
+                sat[n] = np.nan
+                continue
+
+            # Calculate saturated thickness
+            sat_thickness = max(0.0, min(h - bot_elev, thickness))
+            sat[n] = sat_thickness / thickness
+
+    return sat

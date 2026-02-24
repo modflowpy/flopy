@@ -40,6 +40,7 @@ from .mflistfile import (
 from .mfreadnam import parsenamefile
 from .modpathfile import EndpointFile, PathlineFile, TimeseriesFile
 from .mtlistfile import MtListBudget
+from .nwt_to_mf6 import NwtToMf6Converter, get_icelltype_from_laytyp
 from .observationfile import HydmodObs, Mf6Obs, SwrObs
 from .optionblock import OptionBlock
 from .postprocessing import get_specific_discharge, get_transmissivities

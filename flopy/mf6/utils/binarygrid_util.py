@@ -931,3 +931,313 @@ class MfGrdFile(FlopyBinaryData):
 
         if verbose:
             print(f"Successfully wrote {filename}")
+
+    @staticmethod
+    def write_dis(
+        filename,
+        nlay,
+        nrow,
+        ncol,
+        delr,
+        delc,
+        top,
+        botm,
+        ia,
+        ja,
+        idomain=None,
+        icelltype=None,
+        xorigin=0.0,
+        yorigin=0.0,
+        angrot=0.0,
+        precision="double",
+        version=1,
+        verbose=False,
+    ):
+        """
+        Write a MODFLOW 6 binary grid file (.grb) for a structured (DIS) grid.
+
+        Parameters
+        ----------
+        filename : str or PathLike
+            Path to output .grb file
+        nlay : int
+            Number of layers
+        nrow : int
+            Number of rows
+        ncol : int
+            Number of columns
+        delr : array_like
+            Column spacing, shape (ncol,)
+        delc : array_like
+            Row spacing, shape (nrow,)
+        top : array_like
+            Top elevation, shape (nrow, ncol) or (ncells,)
+        botm : array_like
+            Bottom elevation, shape (nlay, nrow, ncol) or (ncells,)
+        ia : array_like
+            CSR row pointers, shape (ncells + 1,), 0-based indexing.
+            Will be converted to 1-based for the file.
+        ja : array_like
+            CSR column indices, shape (nja,), 0-based indexing.
+            Will be converted to 1-based for the file.
+        idomain : array_like, optional
+            Domain array, shape (nlay, nrow, ncol) or (ncells,).
+            If None, defaults to all active (1).
+        icelltype : array_like, optional
+            Cell type array, shape (nlay, nrow, ncol) or (ncells,).
+            0 = confined, >0 = convertible.
+            If None, defaults to all confined (0).
+        xorigin : float, optional
+            X-coordinate of grid origin (default 0.0)
+        yorigin : float, optional
+            Y-coordinate of grid origin (default 0.0)
+        angrot : float, optional
+            Rotation angle in degrees (default 0.0)
+        precision : str, optional
+            'single' or 'double' (default 'double')
+        version : int, optional
+            Grid file version (default 1)
+        verbose : bool, optional
+            Print progress messages (default False)
+
+        Notes
+        -----
+        The IA and JA arrays should use 0-based indexing (Python convention).
+        They will be automatically converted to 1-based indexing when written
+        to the file (Fortran convention).
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from flopy.mf6.utils import MfGrdFile, get_structured_connectivity
+        >>> nlay, nrow, ncol = 2, 10, 10
+        >>> delr = np.ones(ncol) * 100.0
+        >>> delc = np.ones(nrow) * 100.0
+        >>> top = np.ones((nrow, ncol)) * 10.0
+        >>> botm = np.zeros((nlay, nrow, ncol))
+        >>> botm[0] = 5.0
+        >>> ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+        >>> icelltype = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+        >>> icelltype[0] = 1  # Top layer convertible
+        >>> MfGrdFile.write(
+        ...     'model.dis.grb',
+        ...     nlay, nrow, ncol,
+        ...     delr, delc, top, botm,
+        ...     ia, ja,
+        ...     icelltype=icelltype
+        ... )
+        """
+        from pathlib import Path
+
+        import numpy as np
+
+        from ...utils.utils_def import FlopyBinaryData
+
+        # Convert to numpy arrays and handle shapes
+        delr = np.atleast_1d(delr).astype(np.float64)
+        delc = np.atleast_1d(delc).astype(np.float64)
+        ia = np.atleast_1d(ia).astype(np.int32)
+        ja = np.atleast_1d(ja).astype(np.int32)
+
+        # Handle top - can be (nrow, ncol) or (ncells,)
+        top = np.asarray(top, dtype=np.float64)
+        if top.ndim == 2:
+            if top.shape != (nrow, ncol):
+                raise ValueError(
+                    f"top shape {top.shape} does not match (nrow, ncol) = ({nrow}, {ncol})"
+                )
+            top = top.flatten(order="F")
+        elif top.ndim == 1:
+            # Already flattened
+            pass
+        else:
+            raise ValueError(f"top must be 1D or 2D, got {top.ndim}D")
+
+        # Handle botm - can be (nlay, nrow, ncol) or (ncells,)
+        botm = np.asarray(botm, dtype=np.float64)
+        if botm.ndim == 3:
+            if botm.shape != (nlay, nrow, ncol):
+                raise ValueError(
+                    f"botm shape {botm.shape} does not match (nlay, nrow, ncol) = ({nlay}, {nrow}, {ncol})"
+                )
+            botm = botm.flatten(order="F")
+        elif botm.ndim == 1:
+            # Already flattened
+            pass
+        else:
+            raise ValueError(f"botm must be 1D or 3D, got {botm.ndim}D")
+
+        # Calculate derived values
+        ncells = nlay * nrow * ncol
+        nja = len(ja)
+
+        # Set defaults
+        if idomain is None:
+            idomain = np.ones(ncells, dtype=np.int32)
+        else:
+            idomain = np.atleast_1d(idomain).astype(np.int32)
+            if idomain.ndim > 1:
+                idomain = idomain.flatten(order="F")
+
+        if icelltype is None:
+            icelltype = np.zeros(ncells, dtype=np.int32)
+        else:
+            icelltype = np.atleast_1d(icelltype).astype(np.int32)
+            if icelltype.ndim > 1:
+                icelltype = icelltype.flatten(order="F")
+
+        # Expand top to all cells if needed
+        # MF6 expects TOP for every cell (ncells), not just top layer
+        if len(top) == nrow * ncol:
+            # Top is model surface only - expand to all layers
+            # Both TOP and BOTM are in Fortran order (layer-interleaved)
+            top_all = np.zeros(ncells, dtype=np.float64)
+
+            # For each (row, col) position, set TOP for all layers
+            # In Fortran order: cells are indexed as (layer, row, col) but
+            # stored as [L0[0,0], L1[0,0], L2[0,0], L0[0,1], L1[0,1], ...]
+            for i in range(nrow * ncol):
+                # Layer 0: use model top
+                top_all[i * nlay] = top[i]
+                # Layers 1+: use bottom of layer above
+                for k in range(1, nlay):
+                    # BOTM is also in Fortran order
+                    # botm[i * nlay + k - 1] = bottom of layer (k-1) at position i
+                    top_all[i * nlay + k] = botm[i * nlay + (k - 1)]
+            top = top_all
+        elif len(top) != ncells:
+            raise ValueError(
+                f"top length {len(top)} must be nrow*ncol ({nrow * ncol}) or ncells ({ncells})"
+            )
+
+        # Validate shapes
+        if len(delr) != ncol:
+            raise ValueError(f"delr length {len(delr)} != ncol {ncol}")
+        if len(delc) != nrow:
+            raise ValueError(f"delc length {len(delc)} != nrow {nrow}")
+        if len(botm) != ncells:
+            raise ValueError(f"botm length {len(botm)} != ncells {ncells}")
+        if len(ia) != ncells + 1:
+            raise ValueError(f"ia length {len(ia)} != ncells + 1 ({ncells + 1})")
+        if len(idomain) != ncells:
+            raise ValueError(f"idomain length {len(idomain)} != ncells {ncells}")
+        if len(icelltype) != ncells:
+            raise ValueError(
+                f"icelltype length {len(icelltype)} != ncells {ncells}"
+            )
+
+        if verbose:
+            print(f"Writing binary grid file: {filename}")
+            print(f"  Grid type: DIS")
+            print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            print(f"  Cells: {ncells}, Connections: {nja}")
+            print(f"  Precision: {precision}")
+
+        # Convert IA/JA to 1-based indexing for file
+        ia_fortran = ia + 1
+        ja_fortran = ja + 1
+
+        # Build data dictionary
+        data_dict = {
+            "NCELLS": ncells,
+            "NLAY": nlay,
+            "NROW": nrow,
+            "NCOL": ncol,
+            "NJA": nja,
+            "XORIGIN": xorigin,
+            "YORIGIN": yorigin,
+            "ANGROT": angrot,
+            "DELR": delr,
+            "DELC": delc,
+            "TOP": top,
+            "BOTM": botm,
+            "IA": ia_fortran,
+            "JA": ja_fortran,
+            "IDOMAIN": idomain,
+            "ICELLTYPE": icelltype,
+        }
+
+        # Define variable metadata
+        float_type = "SINGLE" if precision.lower() == "single" else "DOUBLE"
+        var_list = [
+            ("NCELLS", "INTEGER", 0, []),
+            ("NLAY", "INTEGER", 0, []),
+            ("NROW", "INTEGER", 0, []),
+            ("NCOL", "INTEGER", 0, []),
+            ("NJA", "INTEGER", 0, []),
+            ("XORIGIN", float_type, 0, []),
+            ("YORIGIN", float_type, 0, []),
+            ("ANGROT", float_type, 0, []),
+            ("DELR", float_type, 1, [ncol]),
+            ("DELC", float_type, 1, [nrow]),
+            ("TOP", float_type, 1, [ncells]),
+            ("BOTM", float_type, 1, [ncells]),
+            ("IA", "INTEGER", 1, [ncells + 1]),
+            ("JA", "INTEGER", 1, [nja]),
+            ("IDOMAIN", "INTEGER", 1, [ncells]),
+            ("ICELLTYPE", "INTEGER", 1, [ncells]),
+        ]
+
+        # Create writer with appropriate precision
+        writer = FlopyBinaryData()
+        writer.precision = precision
+
+        # Write the file
+        with open(filename, "wb") as f:
+            writer.file = f
+
+            # Write header
+            writer.write_text(f"GRID DIS", nchar=50)
+            writer.write_text(f"VERSION {version}", nchar=50)
+            ntxt = len(var_list)
+            writer.write_text(f"NTXT {ntxt}", nchar=50)
+            writer.write_text("LENTXT 100", nchar=50)
+
+            # Write variable definitions
+            for name, dtype_str, ndim, shape in var_list:
+                if ndim == 0:
+                    # Scalar
+                    defn = f"{name} {dtype_str} NDIM 0"
+                else:
+                    # Array
+                    shape_str = " ".join(str(s) for s in shape)
+                    defn = f"{name} {dtype_str} NDIM {ndim} {shape_str}"
+                writer.write_text(defn, nchar=100)
+
+            # Write data
+            for name, dtype_str, ndim, shape in var_list:
+                value = data_dict[name]
+
+                if verbose:
+                    if ndim == 0:
+                        print(f"  Writing {name} = {value}")
+                    else:
+                        if hasattr(value, "min"):
+                            print(
+                                f"  Writing {name}: min = {value.min()}, max = {value.max()}"
+                            )
+                        else:
+                            print(f"  Writing {name}")
+
+                # Write scalar or array data
+                if ndim == 0:
+                    # Scalar value
+                    if dtype_str == "INTEGER":
+                        writer.write_integer(int(value))
+                    elif dtype_str in ("DOUBLE", "SINGLE"):
+                        writer.write_real(float(value))
+                else:
+                    # Array data
+                    arr = np.asarray(value)
+                    if dtype_str == "INTEGER":
+                        arr = arr.astype(np.int32)
+                    elif dtype_str == "DOUBLE":
+                        arr = arr.astype(np.float64)
+                    elif dtype_str == "SINGLE":
+                        arr = arr.astype(np.float32)
+
+                    # Write array (already in correct order from data_dict)
+                    writer.write_record(arr, dtype=arr.dtype)
+
+        if verbose:
+            print(f"Successfully wrote {filename}")
