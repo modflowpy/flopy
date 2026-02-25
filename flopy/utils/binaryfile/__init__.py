@@ -296,6 +296,78 @@ def get_headfile_precision(filename: Union[str, PathLike]):
     return result
 
 
+def get_concentration_file_type(filename: Union[str, PathLike], precision):
+    """
+    Method to check header and determine if the concentration file is a MT3D like
+    file or a MF6 GWT like concentration file
+
+    Parameters
+    ----------
+    filename : str or PathLike
+        Path of binary MODFLOW file to determine precision.
+    precision : str
+        double or single
+    
+    Returns
+    -------
+    str
+        Result will be ucn or head
+
+    """
+    f = open(filename, "rb")
+    f.seek(0, 2)
+    totalbytes = f.tell()
+    f.seek(0, 0)  # reset to beginning
+    assert f.tell() == 0
+    if totalbytes == 0:
+        raise ValueError(f"datafile error: file is empty: {filename}")
+
+    floattype = "f4"
+    if precision == "double":
+        floattype = "f8"
+
+    # first try mt3d ucn
+    vartype = [
+        ("ntrans", "i4"),
+        ("kstp", "i4"),
+        ("kper", "i4"),
+        ("totim", floattype),
+        ("text", "S16"),
+    ]
+    hdr = binaryread(f, vartype)
+
+    try:
+        s = hdr[0][4].decode()
+        if not s.strip().lower().startswith("c"):
+            success = False
+        else:
+            success = True
+            result = "ucn"
+    except ValueError:
+        success = False
+
+    if not success:
+        f.seek(0)
+        vartype = [
+            ("kstp", "<i4"),
+            ("kper", "<i4"),
+            ("pertim", floattype),
+            ("totim", floattype),
+            ("text", "S16"),
+        ]
+        hdr = binaryread(f, vartype)
+        s = hdr[0][4].decode()
+        if not s.strip().lower().startswith("c"):
+            f.close()
+            raise ValueError(
+                f"Could not determine the header type of the concentration {filename}"
+            )
+        else:
+            result = "head"
+
+    return result
+
+
 class BinaryLayerFile(LayerFile):
     """
     The BinaryLayerFile class is a parent class from which concrete
@@ -699,7 +771,8 @@ class UcnFile(BinaryLayerFile):
             precision = get_headfile_precision(filename)
         if precision == "unknown":
             raise ValueError(f"Error. Precision could not be determined for {filename}")
-        self.header_dtype = BinaryHeader.set_dtype(bintype="Ucn", precision=precision)
+        bintype = get_concentration_file_type(filename, precision)
+        self.header_dtype = BinaryHeader.set_dtype(bintype=bintype, precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
         return
 

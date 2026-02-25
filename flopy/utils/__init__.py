@@ -23,7 +23,14 @@ Examples
 
 from .utl_import import import_optional_dependency  # isort:skip
 from . import get_modflow as get_modflow_module
-from .binaryfile import BinaryHeader, CellBudgetFile, HeadFile, HeadUFile, UcnFile
+from .binaryfile import (
+    BinaryHeader,
+    CellBudgetFile,
+    ConcentrationFile,
+    HeadFile,
+    HeadUFile,
+    UcnFile,
+)
 from .check import check
 from .flopy_io import read_fixed_var, write_fixed_var
 from .formattedfile import FormattedHeadFile

@@ -198,6 +198,38 @@ def test_concentration_build_index(example_data_path):
     )
 
 
+def test_mf6_concentration_build_index(example_data_path):
+    # test low-level BinaryLayerFile._build_index() method with UCN file
+    pth = (
+        example_data_path
+        / "mf6/create_tests/test_transport/expected_output/gwt_mst03.ucn"
+    )
+    with UcnFile(pth) as ucn:
+        pass
+    assert ucn.nrow == 1
+    assert ucn.ncol == 1
+    assert ucn.nlay == 1
+    assert not hasattr(ucn, "ntrans")
+    assert ucn.totalbytes == 1680
+    assert len(ucn.recordarray) == 28
+    assert type(ucn.recordarray) == np.ndarray
+    assert ucn.recordarray.dtype == np.dtype(
+        [
+            ("kstp", "i4"),
+            ("kper", "i4"),
+            ("pertim", "f8"),
+            ("totim", "f8"),
+            ("text", "S16"),
+            ("ncol", "i4"),
+            ("nrow", "i4"),
+            ("ilay", "i4"),
+        ]
+    )
+
+    assert np.max(ucn.times) == 4.0
+    assert ucn.kstpkper[-1] == (14, 2)
+
+
 def test_binaryfile_writeread(function_tmpdir, nwt_model_path):
     model = "Pr3_MFNWT_lower.nam"
     ml = flopy.modflow.Modflow.load(model, version="mfnwt", model_ws=nwt_model_path)
