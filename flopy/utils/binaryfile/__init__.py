@@ -685,7 +685,9 @@ class HeadFile(BinaryLayerFile):
                 ksp_tuple = (kstp, kper)
 
                 # Find the totim for this kstpkper
-                mask = (self.recordarray["kstp"] == kstp) & (self.recordarray["kper"] == kper)
+                mask = (self.recordarray["kstp"] == kstp) & (
+                    self.recordarray["kper"] == kper
+                )
                 matching_records = self.recordarray[mask]
                 if len(matching_records) == 0:
                     if kwargs.get("verbose", False):
@@ -2544,11 +2546,14 @@ class CellBudgetFile:
 
             for txt in textlist:
                 # Get matching text from file (case-insensitive, padded)
-                txt_str = txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
+                txt_str = (
+                    txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
+                )
 
                 # Find matching records
                 matching_records = [
-                    t for t in self.textlist
+                    t
+                    for t in self.textlist
                     if txt_str.upper() in t.decode().strip().upper()
                 ]
 
@@ -2587,12 +2592,14 @@ class CellBudgetFile:
 
                         # Add model/package names if imeth=6
                         if imeth == 6:
-                            budget_dict[key].update({
-                                "modelnam": record["modelnam"].decode().strip(),
-                                "paknam": record["paknam"].decode().strip(),
-                                "modelnam2": record["modelnam2"].decode().strip(),
-                                "paknam2": record["paknam2"].decode().strip(),
-                            })
+                            budget_dict[key].update(
+                                {
+                                    "modelnam": record["modelnam"].decode().strip(),
+                                    "paknam": record["paknam"].decode().strip(),
+                                    "modelnam2": record["modelnam2"].decode().strip(),
+                                    "paknam2": record["paknam2"].decode().strip(),
+                                }
+                            )
 
                     except Exception as e:
                         if kwargs.get("verbose", False):
