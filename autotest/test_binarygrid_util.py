@@ -537,3 +537,68 @@ def test_write_grb_precision(tmp_path):
 
     # Single precision file should be smaller
     assert single_file.stat().st_size < double_file.stat().st_size
+
+
+def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
+    """Test MfGrdFile.write() instance method."""
+    from flopy.mf6.utils.binarygrid_util import MfGrdFile
+
+    # Read an existing GRB file
+    original_file = mfgrd_test_path / "nwtp3.dis.grb"
+    grb_orig = MfGrdFile(original_file, verbose=False)
+
+    # Write using instance method
+    output_file = tmp_path / "test_instance.dis.grb"
+    grb_orig.write(output_file, verbose=False)
+
+    # Read it back
+    grb_new = MfGrdFile(output_file, verbose=False)
+
+    # Verify all properties match
+    assert grb_new.grid_type == grb_orig.grid_type
+    assert grb_new.nodes == grb_orig.nodes
+    assert grb_new.nlay == grb_orig.nlay
+    assert grb_new.nrow == grb_orig.nrow
+    assert grb_new.ncol == grb_orig.ncol
+    assert grb_new.nja == grb_orig.nja
+
+    np.testing.assert_allclose(grb_new.xorigin, grb_orig.xorigin)
+    np.testing.assert_allclose(grb_new.yorigin, grb_orig.yorigin)
+    np.testing.assert_allclose(grb_new.angrot, grb_orig.angrot)
+
+    np.testing.assert_allclose(grb_new.delr, grb_orig.delr)
+    np.testing.assert_allclose(grb_new.delc, grb_orig.delc)
+    np.testing.assert_allclose(grb_new.top, grb_orig.top)
+    np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
+    np.testing.assert_array_equal(grb_new.idomain, grb_orig.idomain)
+
+
+def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_path):
+    """Test MfGrdFile.write() with precision conversion."""
+    from flopy.mf6.utils.binarygrid_util import MfGrdFile
+
+    # Read an existing GRB file (presumably double precision)
+    original_file = mfgrd_test_path / "nwtp3.dis.grb"
+    grb = MfGrdFile(original_file, verbose=False)
+
+    # Write as single precision
+    single_file = tmp_path / "test_single.grb"
+    grb.write(single_file, precision="single", verbose=False)
+
+    # Write as double precision
+    double_file = tmp_path / "test_double.grb"
+    grb.write(double_file, precision="double", verbose=False)
+
+    # Read them back
+    grb_single = MfGrdFile(single_file, verbose=False)
+    grb_double = MfGrdFile(double_file, verbose=False)
+
+    # Verify both work and have same basic properties
+    assert grb_single.nodes == grb.nodes
+    assert grb_double.nodes == grb.nodes
+
+    # Single precision file should be smaller
+    assert single_file.stat().st_size < double_file.stat().st_size

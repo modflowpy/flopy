@@ -747,6 +747,60 @@ class MfGrdFile(FlopyBinaryData):
             vertices, cell2d = None, None
         return vertices, cell2d
 
+    def write(self, filename, precision=None, verbose=False):
+        """
+        Write the binary grid file to a new file.
+
+        Parameters
+        ----------
+        filename : str or PathLike
+            Path to output .grb file
+        precision : str, optional
+            'single' or 'double'. If None, uses the precision from the
+            original file (default None)
+        verbose : bool, optional
+            Print progress messages (default False)
+
+        Examples
+        --------
+        >>> from flopy.mf6.utils import MfGrdFile
+        >>> grb = MfGrdFile('model.dis.grb')
+        >>> grb.write('model_copy.dis.grb')
+        """
+        if precision is None:
+            precision = self.precision
+
+        # Extract all data from this instance
+        data_dict = {
+            "NCELLS": self.nodes,
+            "NLAY": self.nlay,
+            "NROW": self.nrow,
+            "NCOL": self.ncol,
+            "NJA": self.nja,
+            "XORIGIN": self.xorigin,
+            "YORIGIN": self.yorigin,
+            "ANGROT": self.angrot,
+            "DELR": self.delr,
+            "DELC": self.delc,
+            "TOP": self.top,
+            "BOTM": self.bot,
+            "IA": self._datadict["IA"],  # Use 1-based from original file
+            "JA": self._datadict["JA"],  # Use 1-based from original file
+            "IDOMAIN": self.idomain,
+        }
+
+        # Add ICELLTYPE if it exists
+        if "ICELLTYPE" in self._datadict:
+            data_dict["ICELLTYPE"] = self._datadict["ICELLTYPE"]
+        else:
+            # Provide default if not in original file
+            data_dict["ICELLTYPE"] = np.zeros(self.nodes, dtype=np.int32)
+
+        # Call static method
+        MfGrdFile.write_grb(
+            filename, self.grid_type, data_dict, precision=precision, verbose=verbose
+        )
+
     @staticmethod
     def write_grb(
         filename,
