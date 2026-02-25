@@ -317,8 +317,7 @@ class MfGrdFile(FlopyBinaryData):
             if self._grid_type == "DISU":
                 # modify verts
                 verts = [
-                    [idx, verts[idx, 0], verts[idx, 1]]
-                    for idx in range(shpvert[0])
+                    [idx, verts[idx, 0], verts[idx, 1]] for idx in range(shpvert[0])
                 ]
             if self.verbose:
                 print(f"returning verts from {self.file.name}")
@@ -747,3 +746,281 @@ class MfGrdFile(FlopyBinaryData):
         else:
             vertices, cell2d = None, None
         return vertices, cell2d
+
+    @staticmethod
+    def write_grb(
+        filename,
+        grid_type,
+        data_dict,
+        version=1,
+        precision="double",
+        verbose=False,
+    ):
+        """
+        Write a MODFLOW 6 binary grid file (.grb).
+
+        Parameters
+        ----------
+        filename : str or PathLike
+            Path to output .grb file
+        grid_type : str
+            Grid type: 'DIS', 'DISV', or 'DISU'
+        data_dict : dict
+            Dictionary with grid data arrays. Required keys depend on grid_type.
+            For DIS grids: NCELLS, NLAY, NROW, NCOL, NJA, XORIGIN, YORIGIN, ANGROT,
+                          DELR, DELC, TOP, BOTM, IA, JA, IDOMAIN, ICELLTYPE
+        version : int, optional
+            Grid file version (default 1)
+        precision : str, optional
+            'single' or 'double' (default 'double')
+        verbose : bool, optional
+            Print progress messages (default False)
+
+        Notes
+        -----
+        The binary grid file format consists of:
+        1. Text header lines (50 chars each):
+           - "GRID {grid_type}"
+           - "VERSION {version}"
+           - "NTXT {ntxt}"
+           - "LENTXT {lentxt}"
+        2. Variable definition lines (100 chars each):
+           - "{NAME} {TYPE} NDIM {ndim} {dimensions...}"
+        3. Binary data for each variable
+
+        Arrays should be in Python (row-major) order and will be written
+        in Fortran (column-major) order as required by MF6.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from flopy.mf6.utils import MfGrdFile
+        >>> data = {
+        ...     'NCELLS': 800,
+        ...     'NLAY': 1,
+        ...     'NROW': 40,
+        ...     'NCOL': 20,
+        ...     'NJA': 3367,
+        ...     'XORIGIN': 0.0,
+        ...     'YORIGIN': 0.0,
+        ...     'ANGROT': 0.0,
+        ...     'DELR': np.full(20, 250.0),
+        ...     'DELC': np.full(40, 250.0),
+        ...     'TOP': np.full(800, 35.0),
+        ...     'BOTM': np.random.rand(800),
+        ...     'IA': ia_array,
+        ...     'JA': ja_array,
+        ...     'IDOMAIN': np.ones(800, dtype=np.int32),
+        ...     'ICELLTYPE': np.zeros(800, dtype=np.int32)
+        ... }
+        >>> MfGrdFile.write_grb('model.dis.grb', 'DIS', data)
+        """
+        import os
+
+        # Create FlopyBinaryData instance for write helpers
+        writer = FlopyBinaryData()
+        writer.precision = precision
+
+        # Define variable metadata based on grid type
+        if grid_type.upper() == "DIS":
+            var_list = [
+                ("NCELLS", "INTEGER", 0, []),
+                ("NLAY", "INTEGER", 0, []),
+                ("NROW", "INTEGER", 0, []),
+                ("NCOL", "INTEGER", 0, []),
+                ("NJA", "INTEGER", 0, []),
+                ("XORIGIN", "DOUBLE", 0, []),
+                ("YORIGIN", "DOUBLE", 0, []),
+                ("ANGROT", "DOUBLE", 0, []),
+                ("DELR", "DOUBLE", 1, [data_dict.get("NCOL", 0)]),
+                ("DELC", "DOUBLE", 1, [data_dict.get("NROW", 0)]),
+                ("TOP", "DOUBLE", 1, [data_dict.get("NCELLS", 0)]),
+                ("BOTM", "DOUBLE", 1, [data_dict.get("NCELLS", 0)]),
+                ("IA", "INTEGER", 1, [data_dict.get("NCELLS", 0) + 1]),
+                ("JA", "INTEGER", 1, [data_dict.get("NJA", 0)]),
+                ("IDOMAIN", "INTEGER", 1, [data_dict.get("NCELLS", 0)]),
+                ("ICELLTYPE", "INTEGER", 1, [data_dict.get("NCELLS", 0)]),
+            ]
+        else:
+            raise NotImplementedError(
+                f"Grid type {grid_type} not yet implemented. "
+                "Currently only DIS grids are supported."
+            )
+
+        ntxt = len(var_list)
+        lentxt = 100
+
+        if verbose:
+            print(f"Writing binary grid file: {filename}")
+            print(f"  Grid type: {grid_type}")
+            print(f"  Version: {version}")
+            print(f"  Number of variables: {ntxt}")
+
+        with open(filename, "wb") as f:
+            writer.file = f
+
+            # Write text header lines (50 chars each, newline terminated)
+            header_len = 50
+            writer.write_text(f"GRID {grid_type.upper()}\n", header_len)
+            writer.write_text(f"VERSION {version}\n", header_len)
+            writer.write_text(f"NTXT {ntxt}\n", header_len)
+            writer.write_text(f"LENTXT {lentxt}\n", header_len)
+
+            # Write variable definition lines (100 chars each)
+            for name, dtype_str, ndim, dims in var_list:
+                if ndim == 0:
+                    line = f"{name} {dtype_str} NDIM {ndim}\n"
+                else:
+                    dims_str = " ".join(
+                        str(d) for d in dims[::-1]
+                    )  # Reverse for Fortran order
+                    line = f"{name} {dtype_str} NDIM {ndim} {dims_str}\n"
+                writer.write_text(line, lentxt)
+
+            # Write binary data for each variable
+            for name, dtype_str, ndim, dims in var_list:
+                if name not in data_dict:
+                    raise ValueError(
+                        f"Required variable '{name}' not found in data_dict"
+                    )
+
+                value = data_dict[name]
+
+                if verbose:
+                    if ndim == 0:
+                        print(f"  Writing {name} = {value}")
+                    else:
+                        if hasattr(value, "min"):
+                            print(
+                                f"  Writing {name}: min = {value.min()} max = {value.max()}"
+                            )
+                        else:
+                            print(f"  Writing {name}")
+
+                # Write scalar or array data
+                if ndim == 0:
+                    # Scalar value
+                    if dtype_str == "INTEGER":
+                        writer.write_integer(int(value))
+                    elif dtype_str in ("DOUBLE", "SINGLE"):
+                        writer.write_real(float(value))
+                else:
+                    # Array data
+                    arr = np.asarray(value)
+                    if dtype_str == "INTEGER":
+                        arr = arr.astype(np.int32)
+                    elif dtype_str == "DOUBLE":
+                        arr = arr.astype(np.float64)
+                    elif dtype_str == "SINGLE":
+                        arr = arr.astype(np.float32)
+
+                    # Write array in column-major (Fortran) order
+                    writer.write_record(arr, dtype=arr.dtype)
+
+        if verbose:
+            print(f"Successfully wrote {filename}")
+
+
+def build_structured_connectivity(nlay, nrow, ncol, idomain=None):
+    """
+    Build IA and JA connectivity arrays for a structured (DIS) grid.
+
+    Parameters
+    ----------
+    nlay : int
+        Number of layers
+    nrow : int
+        Number of rows
+    ncol : int
+        Number of columns
+    idomain : np.ndarray, optional
+        Domain array indicating active (>0) and inactive (<=0) cells.
+        Shape: (nlay, nrow, ncol). If None, all cells are active.
+
+    Returns
+    -------
+    ia : np.ndarray
+        Index array (CSR format), shape (ncells + 1,), dtype int32.
+        ia[n] is the starting position in ja for cell n's connections.
+        ia[ncells] is the total number of connections.
+    ja : np.ndarray
+        Connection array (CSR format), shape (nja,), dtype int32.
+        Contains cell numbers for each connection (0-based).
+    nja : int
+        Total number of connections
+
+    Notes
+    -----
+    Connectivity order for structured grids (upper triangle only):
+    1. Diagonal (self connection)
+    2. Right (+1 in j, same k, i)
+    3. Front (+1 in i, same k, j)
+    4. Lower (+1 in k, same i, j)
+
+    The IA/JA arrays use 0-based indexing (Python convention).
+    When writing to MF6 binary files, add 1 to convert to Fortran 1-based indexing.
+
+    Examples
+    --------
+    >>> import numpy as np
+    >>> from flopy.mf6.utils import build_structured_connectivity
+    >>> nlay, nrow, ncol = 2, 3, 3
+    >>> ia, ja, nja = build_structured_connectivity(nlay, nrow, ncol)
+    >>> print(f"Total cells: {nlay * nrow * ncol}, connections: {nja}")
+    Total cells: 18, connections: 42
+    """
+    ncells = nlay * nrow * ncol
+
+    # Default to all active cells if idomain not provided
+    if idomain is None:
+        idomain = np.ones((nlay, nrow, ncol), dtype=np.int32)
+    else:
+        idomain = np.asarray(idomain, dtype=np.int32)
+        if idomain.shape != (nlay, nrow, ncol):
+            raise ValueError(
+                f"idomain shape {idomain.shape} does not match grid shape "
+                f"({nlay}, {nrow}, {ncol})"
+            )
+
+    ia = np.zeros(ncells + 1, dtype=np.int32)
+    ja_list = []
+    nja = 0
+
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                node = k * nrow * ncol + i * ncol + j
+
+                # Skip inactive cells - they still get an entry in IA
+                if idomain[k, i, j] <= 0:
+                    ia[node + 1] = nja
+                    continue
+
+                # Add diagonal (self connection)
+                ja_list.append(node)
+                nja += 1
+
+                # Add connections to neighbors (upper triangle only)
+                # Right neighbor (j+1)
+                if j + 1 < ncol and idomain[k, i, j + 1] > 0:
+                    m = k * nrow * ncol + i * ncol + (j + 1)
+                    ja_list.append(m)
+                    nja += 1
+
+                # Front neighbor (i+1)
+                if i + 1 < nrow and idomain[k, i + 1, j] > 0:
+                    m = k * nrow * ncol + (i + 1) * ncol + j
+                    ja_list.append(m)
+                    nja += 1
+
+                # Lower neighbor (k+1)
+                if k + 1 < nlay and idomain[k + 1, i, j] > 0:
+                    m = (k + 1) * nrow * ncol + i * ncol + j
+                    ja_list.append(m)
+                    nja += 1
+
+                ia[node + 1] = nja
+
+    ja = np.array(ja_list, dtype=np.int32)
+
+    return ia, ja, nja
