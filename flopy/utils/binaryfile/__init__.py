@@ -307,7 +307,7 @@ def get_concentration_file_type(filename: Union[str, PathLike], precision):
         Path of binary MODFLOW file to determine precision.
     precision : str
         double or single
-    
+
     Returns
     -------
     str
