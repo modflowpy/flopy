@@ -747,7 +747,7 @@ class MfGrdFile(FlopyBinaryData):
             vertices, cell2d = None, None
         return vertices, cell2d
 
-    def write(self, filename, precision=None, verbose=False):
+    def write(self, filename, precision=None, version=1, verbose=False):
         """
         Write the binary grid file to a new file.
 
@@ -758,6 +758,8 @@ class MfGrdFile(FlopyBinaryData):
         precision : str, optional
             'single' or 'double'. If None, uses the precision from the
             original file (default None)
+        version : int, optional
+            Grid file version (default 1)
         verbose : bool, optional
             Print progress messages (default False)
 
@@ -766,120 +768,29 @@ class MfGrdFile(FlopyBinaryData):
         >>> from flopy.mf6.utils import MfGrdFile
         >>> grb = MfGrdFile('model.dis.grb')
         >>> grb.write('model_copy.dis.grb')
+        >>> # Convert to single precision
+        >>> grb.write('model_single.dis.grb', precision='single')
         """
         if precision is None:
             precision = self.precision
 
-        # Extract all data from this instance
-        data_dict = {
-            "NCELLS": self.nodes,
-            "NLAY": self.nlay,
-            "NROW": self.nrow,
-            "NCOL": self.ncol,
-            "NJA": self.nja,
-            "XORIGIN": self.xorigin,
-            "YORIGIN": self.yorigin,
-            "ANGROT": self.angrot,
-            "DELR": self.delr,
-            "DELC": self.delc,
-            "TOP": self.top,
-            "BOTM": self.bot,
-            "IA": self._datadict["IA"],  # Use 1-based from original file
-            "JA": self._datadict["JA"],  # Use 1-based from original file
-            "IDOMAIN": self.idomain,
-        }
-
-        # Add ICELLTYPE if it exists
-        if "ICELLTYPE" in self._datadict:
-            data_dict["ICELLTYPE"] = self._datadict["ICELLTYPE"]
-        else:
-            # Provide default if not in original file
-            data_dict["ICELLTYPE"] = np.zeros(self.nodes, dtype=np.int32)
-
-        # Call static method
-        MfGrdFile.write_grb(
-            filename, self.grid_type, data_dict, precision=precision, verbose=verbose
-        )
-
-    @staticmethod
-    def write_grb(
-        filename,
-        grid_type,
-        data_dict,
-        version=1,
-        precision="double",
-        verbose=False,
-    ):
-        """
-        Write a MODFLOW 6 binary grid file (.grb).
-
-        Parameters
-        ----------
-        filename : str or PathLike
-            Path to output .grb file
-        grid_type : str
-            Grid type: 'DIS', 'DISV', or 'DISU'
-        data_dict : dict
-            Dictionary with grid data arrays. Required keys depend on grid_type.
-            For DIS grids: NCELLS, NLAY, NROW, NCOL, NJA, XORIGIN, YORIGIN, ANGROT,
-                          DELR, DELC, TOP, BOTM, IA, JA, IDOMAIN, ICELLTYPE
-        version : int, optional
-            Grid file version (default 1)
-        precision : str, optional
-            'single' or 'double' (default 'double')
-        verbose : bool, optional
-            Print progress messages (default False)
-
-        Notes
-        -----
-        The binary grid file format consists of:
-        1. Text header lines (50 chars each):
-           - "GRID {grid_type}"
-           - "VERSION {version}"
-           - "NTXT {ntxt}"
-           - "LENTXT {lentxt}"
-        2. Variable definition lines (100 chars each):
-           - "{NAME} {TYPE} NDIM {ndim} {dimensions...}"
-        3. Binary data for each variable
-
-        Arrays should be in Python (row-major) order and will be written
-        in Fortran (column-major) order as required by MF6.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from flopy.mf6.utils import MfGrdFile
-        >>> data = {
-        ...     'NCELLS': 800,
-        ...     'NLAY': 1,
-        ...     'NROW': 40,
-        ...     'NCOL': 20,
-        ...     'NJA': 3367,
-        ...     'XORIGIN': 0.0,
-        ...     'YORIGIN': 0.0,
-        ...     'ANGROT': 0.0,
-        ...     'DELR': np.full(20, 250.0),
-        ...     'DELC': np.full(40, 250.0),
-        ...     'TOP': np.full(800, 35.0),
-        ...     'BOTM': np.random.rand(800),
-        ...     'IA': ia_array,
-        ...     'JA': ja_array,
-        ...     'IDOMAIN': np.ones(800, dtype=np.int32),
-        ...     'ICELLTYPE': np.zeros(800, dtype=np.int32)
-        ... }
-        >>> MfGrdFile.write_grb('model.dis.grb', 'DIS', data)
-        """
-        import os
-
-        # Create FlopyBinaryData instance for write helpers
-        writer = FlopyBinaryData()
-        writer.precision = precision
+        # Build data dictionary from instance
+        data_dict = {}
+        for key in self._recordkeys:
+            if key in ("IA", "JA"):
+                # Use original 1-based arrays
+                data_dict[key] = self._datadict[key]
+            elif key == "TOP":
+                data_dict[key] = self.top
+            elif key == "BOTM":
+                data_dict[key] = self.bot
+            elif key in self._datadict:
+                data_dict[key] = self._datadict[key]
 
         # Define variable metadata based on grid type
-        # Use precision parameter to determine floating point type
         float_type = "SINGLE" if precision.lower() == "single" else "DOUBLE"
 
-        if grid_type.upper() == "DIS":
+        if self.grid_type == "DIS":
             var_list = [
                 ("NCELLS", "INTEGER", 0, []),
                 ("NLAY", "INTEGER", 0, []),
@@ -889,18 +800,18 @@ class MfGrdFile(FlopyBinaryData):
                 ("XORIGIN", float_type, 0, []),
                 ("YORIGIN", float_type, 0, []),
                 ("ANGROT", float_type, 0, []),
-                ("DELR", float_type, 1, [data_dict.get("NCOL", 0)]),
-                ("DELC", float_type, 1, [data_dict.get("NROW", 0)]),
-                ("TOP", float_type, 1, [data_dict.get("NCELLS", 0)]),
-                ("BOTM", float_type, 1, [data_dict.get("NCELLS", 0)]),
-                ("IA", "INTEGER", 1, [data_dict.get("NCELLS", 0) + 1]),
-                ("JA", "INTEGER", 1, [data_dict.get("NJA", 0)]),
-                ("IDOMAIN", "INTEGER", 1, [data_dict.get("NCELLS", 0)]),
-                ("ICELLTYPE", "INTEGER", 1, [data_dict.get("NCELLS", 0)]),
+                ("DELR", float_type, 1, [self.ncol]),
+                ("DELC", float_type, 1, [self.nrow]),
+                ("TOP", float_type, 1, [self.nodes]),
+                ("BOTM", float_type, 1, [self.nodes]),
+                ("IA", "INTEGER", 1, [self.nodes + 1]),
+                ("JA", "INTEGER", 1, [self.nja]),
+                ("IDOMAIN", "INTEGER", 1, [self.nodes]),
+                ("ICELLTYPE", "INTEGER", 1, [self.nodes]),
             ]
         else:
             raise NotImplementedError(
-                f"Grid type {grid_type} not yet implemented. "
+                f"Grid type {self.grid_type} not yet implemented. "
                 "Currently only DIS grids are supported."
             )
 
@@ -909,7 +820,7 @@ class MfGrdFile(FlopyBinaryData):
 
         if verbose:
             print(f"Writing binary grid file: {filename}")
-            print(f"  Grid type: {grid_type}")
+            print(f"  Grid type: {self.grid_type}")
             print(f"  Version: {version}")
             print(f"  Number of variables: {ntxt}")
 
@@ -926,7 +837,7 @@ class MfGrdFile(FlopyBinaryData):
         with open(filename, "wb") as f:
             # Write text header lines (50 chars each, newline terminated)
             header_len = 50
-            write_text(f, f"GRID {grid_type.upper()}\n", header_len)
+            write_text(f, f"GRID {self.grid_type}\n", header_len)
             write_text(f, f"VERSION {version}\n", header_len)
             write_text(f, f"NTXT {ntxt}\n", header_len)
             write_text(f, f"LENTXT {lentxt}\n", header_len)
@@ -945,9 +856,7 @@ class MfGrdFile(FlopyBinaryData):
             # Write binary data for each variable
             for name, dtype_str, ndim, dims in var_list:
                 if name not in data_dict:
-                    raise ValueError(
-                        f"Required variable '{name}' not found in data_dict"
-                    )
+                    raise ValueError(f"Required variable '{name}' not found in grid file")
 
                 value = data_dict[name]
 

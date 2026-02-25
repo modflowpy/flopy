@@ -660,7 +660,7 @@ class HeadFile(BinaryLayerFile):
         **kwargs
             Additional keyword arguments passed to write_head():
             - text : str, identifier for head data (default uses current file's text)
-            - precision : str, 'single' or 'double' (default uses current file's precision)
+            - precision : str, 'single' or 'double' (default is the file's precision)
             - verbose : bool, print progress messages
 
         Examples
@@ -2506,7 +2506,7 @@ class CellBudgetFile:
             Examples: 'FLOW-JA-FACE', ['STORAGE', 'CONSTANT HEAD']
         **kwargs
             Additional keyword arguments passed to write_budget():
-            - precision : str, 'single' or 'double' (default uses current file's precision)
+            - precision : str, 'single' or 'double' (default is the file's precision)
             - verbose : bool, print progress messages
 
         Examples
