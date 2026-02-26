@@ -711,70 +711,14 @@ class HeadFile(BinaryLayerFile):
                 continue
 
         # Set defaults from current file if not provided
-        if "text" not in kwargs:
+        text = kwargs.get("text")
+        if text is None:
             # Use first text entry from file
-            kwargs["text"] = self.recordarray["text"][0].decode().strip()
-        if "precision" not in kwargs:
-            kwargs["precision"] = self.precision
+            text = self.recordarray["text"][0].decode().strip()
 
-        # Write using static method
-        HeadFile.write_head(filename, data_dict, **kwargs)
+        precision = kwargs.get("precision", self.precision)
+        verbose = kwargs.get("verbose", False)
 
-    @staticmethod
-    def write_head(
-        filename,
-        data_dict,
-        text="HEAD",
-        precision="double",
-        verbose=False,
-    ):
-        """
-        Write a MODFLOW binary head file (.hds).
-
-        Parameters
-        ----------
-        filename : str or PathLike
-            Path to output head file
-        data_dict : dict
-            Dictionary with head data and metadata. Each entry should be:
-            {(kstp, kper): {'head': array, 'pertim': float, 'totim': float}}
-            where head array has shape (nlay, nrow, ncol) or (nrow, ncol)
-            for single layer
-        text : str, optional
-            Text identifier for head data (default "HEAD"). Can also be "DRAWDOWN", etc.
-            Will be padded/truncated to 16 characters.
-        precision : str, optional
-            'single' or 'double' (default 'double')
-        verbose : bool, optional
-            Print progress messages (default False)
-
-        Notes
-        -----
-        The head file format consists of repeating records, one per layer per time step:
-        1. Header (8 values):
-           - kstp (int32): time step number (1-based)
-           - kper (int32): stress period number (1-based)
-           - pertim (float32 or float64): time in current stress period
-           - totim (float32 or float64): total elapsed time
-           - text (16 char): text identifier (e.g., "HEAD")
-           - ncol (int32): number of columns
-           - nrow (int32): number of rows
-           - ilay (int32): layer number (1-based)
-        2. Data: head array (ncol, nrow) as float32 or float64
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from flopy.utils.binaryfile import HeadFile
-        >>> data = {
-        ...     (1, 1): {
-        ...         'head': np.full((3, 10, 10), 35.0),
-        ...         'pertim': 1.0,
-        ...         'totim': 1.0
-        ...     }
-        ... }
-        >>> HeadFile.write_head('model.hds', data)
-        """
         # Set precision
         if precision == "single":
             realtype = np.float32
@@ -2621,137 +2565,14 @@ class CellBudgetFile:
             restructured_dict[ksp_tuple][text] = value_with_imeth
 
         # Set defaults from current file if not provided
-        if "precision" not in kwargs:
-            kwargs["precision"] = self.precision
+        precision = kwargs.get("precision", self.precision)
+        verbose = kwargs.get("verbose", False)
 
-        # Write using static method
         # Only pass grid dimensions if they're set (non-zero)
-        grid_kwargs = {}
-        if self.nlay > 0:
-            grid_kwargs["nlay"] = self.nlay
-        if self.nrow > 0:
-            grid_kwargs["nrow"] = self.nrow
-        if self.ncol > 0:
-            grid_kwargs["ncol"] = self.ncol
+        nlay = self.nlay if self.nlay > 0 else None
+        nrow = self.nrow if self.nrow > 0 else None
+        ncol = self.ncol if self.ncol > 0 else None
 
-        CellBudgetFile.write_budget(
-            filename,
-            restructured_dict,
-            **grid_kwargs,
-            **kwargs,
-        )
-
-    @staticmethod
-    def write_budget(
-        filename,
-        budget_dict,
-        nlay=None,
-        nrow=None,
-        ncol=None,
-        precision="double",
-        verbose=False,
-    ):
-        """
-        Write a MODFLOW 6 style binary budget file (.bud or .cbc).
-
-        Parameters
-        ----------
-        filename : str or PathLike
-            Path to output budget file
-        budget_dict : dict
-            Nested dictionary with budget data. Structure:
-            {
-                (kstp, kper): {
-                    'text': {
-                        'imeth': int (1 for array, 6 for list),
-                        'data': np.ndarray,
-                        'delt': float,
-                        'pertim': float,
-                        'totim': float,
-                        'modelnam': str (optional, for imeth=6),
-                        'paknam': str (optional, for imeth=6),
-                        'modelnam2': str (optional, for imeth=6),
-                        'paknam2': str (optional, for imeth=6),
-                        'ndat': int (optional, for imeth=6, number of data columns),
-                        'auxtxt': list of str (optional, for imeth=6, auxiliary names)
-                    }
-                }
-            }
-
-            For imeth=1 (array format):
-                data should be shape (nlay, nrow, ncol)
-
-            For imeth=6 (list format):
-                data should be a numpy recarray with fields:
-                - 'node' (int32): source node number (1-based)
-                - 'node2' (int32): destination node number (1-based)
-                - 'q' (float): flow value
-                - optional auxiliary fields (float)
-        nlay : int, optional
-            Number of layers. Required for non-FLOW-JA-FACE budget terms.
-            Can be None for files containing only FLOW-JA-FACE data (default None).
-        nrow : int, optional
-            Number of rows. Required for non-FLOW-JA-FACE budget terms.
-            Can be None for files containing only FLOW-JA-FACE data (default None).
-        ncol : int, optional
-            Number of columns. Required for non-FLOW-JA-FACE budget terms.
-            Can be None for files containing only FLOW-JA-FACE data (default None).
-        precision : str, optional
-            'single' or 'double' (default 'double')
-        verbose : bool, optional
-            Print progress messages (default False)
-
-        Examples
-        --------
-        Write FLOW-JA-FACE array data:
-
-        >>> import numpy as np
-        >>> from flopy.utils.binaryfile import CellBudgetFile
-        >>> flowja = np.random.rand(3367)  # Connection flows
-        >>> data = {
-        ...     (1, 1): {
-        ...         'FLOW-JA-FACE': {
-        ...             'imeth': 1,
-        ...             'data': flowja,
-        ...             'delt': 1.0,
-        ...             'pertim': 1.0,
-        ...             'totim': 1.0
-        ...         }
-        ...     }
-        ... }
-        >>> CellBudgetFile.write_budget('model.bud', data, nlay=1, nrow=40, ncol=20)
-
-        Write DATA-SPDIS list data:
-
-        >>> ncells = 800
-        >>> active = np.ones(ncells, dtype=bool)
-        >>> dt = np.dtype([('node', np.int32), ('node2', np.int32), ('q', np.float64),
-        ...                ('qx', np.float64), ('qy', np.float64), ('qz', np.float64)])
-        >>> data_list = np.zeros(ncells, dtype=dt)
-        >>> data_list['node'] = np.arange(1, ncells+1)
-        >>> data_list['node2'] = np.arange(1, ncells+1)
-        >>> data_list['qx'] = np.random.rand(ncells)
-        >>> data_list['qy'] = np.random.rand(ncells)
-        >>> data_list['qz'] = np.random.rand(ncells)
-        >>> data = {
-        ...     (1, 1): {
-        ...         'DATA-SPDIS': {
-        ...             'imeth': 6,
-        ...             'data': data_list,
-        ...             'delt': 1.0,
-        ...             'pertim': 1.0,
-        ...             'totim': 1.0,
-        ...             'modelnam': 'GWF',
-        ...             'paknam': '',
-        ...             'modelnam2': 'GWF',
-        ...             'paknam2': '',
-        ...             'ndat': 3,
-        ...             'auxtxt': ['qx', 'qy', 'qz']
-        ...         }
-        ...     }
-        ... }
-        >>> CellBudgetFile.write_budget('model.bud', data, nlay=1, nrow=40, ncol=20)
-        """
         # Set precision
         if precision == "single":
             realtype = np.float32
@@ -2768,11 +2589,11 @@ class CellBudgetFile:
 
         with open(filename, "wb") as f:
             # Sort by time step for consistent output
-            sorted_keys = sorted(budget_dict.keys())
+            sorted_keys = sorted(restructured_dict.keys())
 
             for kstpkper in sorted_keys:
                 kstp, kper = kstpkper
-                time_data = budget_dict[kstpkper]
+                time_data = restructured_dict[kstpkper]
 
                 if verbose:
                     print(f"\n  Writing kstp={kstp}, kper={kper}")
