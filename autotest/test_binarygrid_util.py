@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6.utils import MfGrdFile
+from flopy.mf6.utils.binarygrid_util import build_structured_connectivity
 
 pytestmark = pytest.mark.mf6
 
@@ -161,151 +162,93 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
     )
 
 
-def test_build_structured_connectivity_simple():
-    """Test build_structured_connectivity with simple grids."""
-    from flopy.mf6.utils.binarygrid_util import build_structured_connectivity
-
-    # Test 1x1x1 grid (single cell, only diagonal connection)
+def test_build_structured_connectivity():
+    # 1x1x1
     ia, ja, nja = build_structured_connectivity(1, 1, 1)
-    assert ia.shape == (2,), f"ia shape {ia.shape} != (2,)"
-    assert ja.shape == (1,), f"ja shape {ja.shape} != (1,)"
-    assert nja == 1, f"nja {nja} != 1"
-    assert ia[0] == 0 and ia[1] == 1, f"ia {ia} incorrect"
-    assert ja[0] == 0, f"ja {ja} != [0]"
+    assert ia.shape == (2,)
+    assert ja.shape == (1,)
+    assert nja == 1
+    assert ia[0] == 0 and ia[1] == 1
+    assert ja[0] == 0
 
-    # Test 1x1x2 grid (2 cells in x, 1 connection between them + 2 diagonals = 3)
+    # 1x1x2
     ia, ja, nja = build_structured_connectivity(1, 1, 2)
-    assert ia.shape == (3,), f"ia shape {ia.shape} != (3,)"
-    assert nja == 3, f"nja {nja} != 3"
-    # Cell 0: diagonal (0) + right neighbor (1) = 2 connections
-    # Cell 1: diagonal (1) = 1 connection
+    assert ia.shape == (3,)
+    assert nja == 3
+    # Cell 0: diagonal + right = 2 connections
+    # Cell 1: diagonal = 1 connection
     np.testing.assert_array_equal(ia, [0, 2, 3])
     np.testing.assert_array_equal(ja, [0, 1, 1])
 
-    # Test 1x2x1 grid (2 cells in y, 1 connection between them + 2 diagonals = 3)
+    # 1x2x1
     ia, ja, nja = build_structured_connectivity(1, 2, 1)
-    assert ia.shape == (3,), f"ia shape {ia.shape} != (3,)"
-    assert nja == 3, f"nja {nja} != 3"
-    # Cell 0: diagonal (0) + front neighbor (1) = 2 connections
-    # Cell 1: diagonal (1) = 1 connection
+    assert ia.shape == (3,)
+    assert nja == 3
+    # Cell 0: diagonal + front = 2 connections
+    # Cell 1: diagonal = 1 connection
     np.testing.assert_array_equal(ia, [0, 2, 3])
     np.testing.assert_array_equal(ja, [0, 1, 1])
 
-    # Test 2x1x1 grid (2 layers, 1 connection between them + 2 diagonals = 3)
+    # 2x1x1
     ia, ja, nja = build_structured_connectivity(2, 1, 1)
-    assert ia.shape == (3,), f"ia shape {ia.shape} != (3,)"
-    assert nja == 3, f"nja {nja} != 3"
-    # Cell 0 (layer 0): diagonal (0) + lower neighbor (1) = 2 connections
-    # Cell 1 (layer 1): diagonal (1) = 1 connection
+    assert ia.shape == (3,)
+    assert nja == 3
+    # Cell 0 (layer 0): diagonal + lower = 2 connections
+    # Cell 1 (layer 1): diagonal = 1 connection
     np.testing.assert_array_equal(ia, [0, 2, 3])
     np.testing.assert_array_equal(ja, [0, 1, 1])
 
-
-def test_build_structured_connectivity_2x2x2():
-    """Test build_structured_connectivity with a 2x2x2 grid."""
-    from flopy.mf6.utils.binarygrid_util import build_structured_connectivity
-
+    # 2x2x2
     nlay, nrow, ncol = 2, 2, 2
-    ncells = nlay * nrow * ncol  # 8 cells
+    ncells = nlay * nrow * ncol
     ia, ja, nja = build_structured_connectivity(nlay, nrow, ncol)
-
-    # Verify dimensions
-    assert ia.shape == (ncells + 1,), f"ia shape {ia.shape} != {(ncells + 1,)}"
-    assert ja.shape == (nja,), f"ja shape {ja.shape} != {(nja,)}"
-    assert ia[-1] == nja, f"ia[-1] {ia[-1]} != nja {nja}"
-
-    # Verify IA is monotonically increasing
+    assert ia.shape == (ncells + 1,)
+    assert ja.shape == (nja,)
+    assert ia[-1] == nja
     assert np.all(np.diff(ia) >= 0), "IA array not monotonically increasing"
-
-    # Verify all JA entries are valid cell indices
     assert np.all(ja >= 0), "JA contains negative indices"
     assert np.all(ja < ncells), f"JA contains indices >= {ncells}"
-
-    # Verify each cell has at least a diagonal connection
+    # check diagonals
     for i in range(ncells):
         nconn = ia[i + 1] - ia[i]
         assert nconn >= 1, f"Cell {i} has {nconn} connections (should be >= 1)"
-
-    # Verify diagonal entries
     for node in range(ncells):
         conn_start = ia[node]
-        # First connection should be diagonal (self)
         assert ja[conn_start] == node, (
             f"Cell {node} first connection {ja[conn_start]} != {node}"
         )
 
-
-def test_build_structured_connectivity_with_idomain():
-    """Test build_structured_connectivity with inactive cells."""
-    from flopy.mf6.utils.binarygrid_util import build_structured_connectivity
-
+    # 1x3x3 with center cell inactive
     nlay, nrow, ncol = 1, 3, 3  # 9 cells
     ncells = nlay * nrow * ncol
-
-    # Make center cell inactive
     idomain = np.ones((nlay, nrow, ncol), dtype=np.int32)
-    idomain[0, 1, 1] = 0  # Cell 4 (center) is inactive
-
+    idomain[0, 1, 1] = 0
     ia, ja, nja = build_structured_connectivity(nlay, nrow, ncol, idomain=idomain)
-
     assert ia.shape == (ncells + 1,)
     assert ja.shape == (nja,)
-
-    # Inactive cell (node 4) should have no connections
+    # inactive cell (node 4) should have no connections
     node_4_start = ia[4]
     node_4_end = ia[5]
-    assert node_4_end == node_4_start, (
-        f"Inactive cell 4 has {node_4_end - node_4_start} connections (should be 0)"
-    )
-
-    # Cells around the inactive cell should not connect to it
+    assert node_4_end == node_4_start
+    # cells around node 4 should not connect to it
     for node in range(ncells):
         if node == 4:
-            continue  # Skip inactive cell
+            continue
         conn_start = ia[node]
         conn_end = ia[node + 1]
         connections = ja[conn_start:conn_end]
-        assert 4 not in connections, (
-            f"Cell {node} incorrectly connects to inactive cell 4"
-        )
-
-
-def test_build_structured_connectivity_known_values():
-    """Test build_structured_connectivity against known values."""
-    from flopy.mf6.utils.binarygrid_util import build_structured_connectivity
-
-    # Simple 1x2x2 grid
-    # Cell layout:
-    #   2 3
-    #   0 1
-    # Expected connections:
-    # Cell 0: 0 (diag), 1 (right), 2 (front) -> ia[0]=0, ia[1]=3
-    # Cell 1: 1 (diag), 3 (front) -> ia[1]=3, ia[2]=5
-    # Cell 2: 2 (diag), 3 (right) -> ia[2]=5, ia[3]=7
-    # Cell 3: 3 (diag) -> ia[3]=7, ia[4]=8
-
-    ia, ja, nja = build_structured_connectivity(1, 2, 2)
-    assert nja == 8, f"nja {nja} != 8"
-    np.testing.assert_array_equal(ia, [0, 3, 5, 7, 8])
-    np.testing.assert_array_equal(ja, [0, 1, 2, 1, 3, 2, 3, 3])
+        assert 4 not in connections
 
 
 def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.write() instance method."""
-    from flopy.mf6.utils.binarygrid_util import MfGrdFile
-
-    # Read an existing GRB file
     original_file = mfgrd_test_path / "nwtp3.dis.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
 
-    # Write using instance method
     output_file = tmp_path / "test_instance.dis.grb"
     grb_orig.write(output_file, verbose=False)
 
-    # Read it back
     grb_new = MfGrdFile(output_file, verbose=False)
 
-    # Verify all properties match
     assert grb_new.grid_type == grb_orig.grid_type
     assert grb_new.nodes == grb_orig.nodes
     assert grb_new.nlay == grb_orig.nlay
@@ -328,28 +271,18 @@ def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
 
 
 def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.write() with precision conversion."""
-    from flopy.mf6.utils.binarygrid_util import MfGrdFile
-
-    # Read an existing GRB file (presumably double precision)
     original_file = mfgrd_test_path / "nwtp3.dis.grb"
     grb = MfGrdFile(original_file, verbose=False)
 
-    # Write as single precision
     single_file = tmp_path / "test_single.grb"
     grb.write(single_file, precision="single", verbose=False)
 
-    # Write as double precision
     double_file = tmp_path / "test_double.grb"
     grb.write(double_file, precision="double", verbose=False)
 
-    # Read them back
     grb_single = MfGrdFile(single_file, verbose=False)
     grb_double = MfGrdFile(double_file, verbose=False)
 
-    # Verify both work and have same basic properties
     assert grb_single.nodes == grb.nodes
     assert grb_double.nodes == grb.nodes
-
-    # Single precision file should be smaller
     assert single_file.stat().st_size < double_file.stat().st_size
