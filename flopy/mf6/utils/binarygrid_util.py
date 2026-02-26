@@ -146,9 +146,9 @@ class MfGrdFile(FlopyBinaryData):
                 if dt == np.int32:
                     v = self.read_integer()
                 elif dt == np.float32:
-                    v = self.read_real()
+                    v = self._read_values(dt, 1)[0]
                 elif dt == np.float64:
-                    v = self.read_real()
+                    v = self._read_values(dt, 1)[0]
             self._datadict[key] = v
 
             if self.verbose:

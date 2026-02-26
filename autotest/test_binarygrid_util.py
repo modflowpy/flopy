@@ -376,8 +376,26 @@ def test_write_grb_disv_precision_conversion(tmp_path):
     # Single precision file should be smaller
     assert single_file.stat().st_size < double_file.stat().st_size
 
-    # NOTE: Data value verification is disabled due to known issue with
-    # precision conversion - see DISV_PRECISION_ISSUE.md
+    # Verify data values are preserved (with appropriate tolerances)
+    # Single precision has ~7 decimal digits of precision
+    np.testing.assert_allclose(grb_single.top, grb.top, rtol=1e-6)
+    np.testing.assert_allclose(grb_single.bot, grb.bot, rtol=1e-6)
+    np.testing.assert_allclose(
+        grb_single._datadict["VERTICES"], grb._datadict["VERTICES"], rtol=1e-6
+    )
+    np.testing.assert_allclose(
+        grb_single._datadict["CELLX"], grb._datadict["CELLX"], rtol=1e-6
+    )
+    np.testing.assert_allclose(
+        grb_single._datadict["CELLY"], grb._datadict["CELLY"], rtol=1e-6
+    )
+
+    # Double precision should match exactly (same precision as original)
+    np.testing.assert_allclose(grb_double.top, grb.top, rtol=1e-12)
+    np.testing.assert_allclose(grb_double.bot, grb.bot, rtol=1e-12)
+    np.testing.assert_allclose(
+        grb_double._datadict["VERTICES"], grb._datadict["VERTICES"], rtol=1e-12
+    )
 
 
 def test_write_grb_disu_roundtrip(tmp_path):
@@ -457,5 +475,11 @@ def test_write_grb_disu_precision_conversion(tmp_path):
     # Single precision file should be smaller
     assert single_file.stat().st_size < double_file.stat().st_size
 
-    # NOTE: Data value verification is disabled due to known issue with
-    # precision conversion - see DISV_PRECISION_ISSUE.md
+    # Verify data values are preserved (with appropriate tolerances)
+    # Single precision has ~7 decimal digits of precision
+    np.testing.assert_allclose(grb_single.top, grb.top, rtol=1e-6)
+    np.testing.assert_allclose(grb_single.bot, grb.bot, rtol=1e-6)
+
+    # Double precision should match exactly (same precision as original)
+    np.testing.assert_allclose(grb_double.top, grb.top, rtol=1e-12)
+    np.testing.assert_allclose(grb_double.bot, grb.bot, rtol=1e-12)
