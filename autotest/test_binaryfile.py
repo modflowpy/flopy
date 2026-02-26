@@ -775,5 +775,3 @@ def test_headfile_get_ts_disu_grid(dis_sim, function_tmpdir):
         ts_old_list,
         err_msg="DISU HeadFile: old list format should match new list format",
     )
-
-
