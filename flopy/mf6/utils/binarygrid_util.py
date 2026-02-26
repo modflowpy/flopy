@@ -809,10 +809,52 @@ class MfGrdFile(FlopyBinaryData):
                 ("IDOMAIN", "INTEGER", 1, [self.nodes]),
                 ("ICELLTYPE", "INTEGER", 1, [self.nodes]),
             ]
+        elif self.grid_type == "DISV":
+            # Get dimensions for DISV arrays
+            nvert = self._datadict["NVERT"]
+            njavert = self._datadict["NJAVERT"]
+            var_list = [
+                ("NCELLS", "INTEGER", 0, []),
+                ("NLAY", "INTEGER", 0, []),
+                ("NCPL", "INTEGER", 0, []),
+                ("NVERT", "INTEGER", 0, []),
+                ("NJAVERT", "INTEGER", 0, []),
+                ("NJA", "INTEGER", 0, []),
+                ("XORIGIN", float_type, 0, []),
+                ("YORIGIN", float_type, 0, []),
+                ("ANGROT", float_type, 0, []),
+                ("TOP", float_type, 1, [self.nodes]),
+                ("BOTM", float_type, 1, [self.nodes]),
+                ("VERTICES", float_type, 2, [nvert, 2]),
+                ("CELLX", float_type, 1, [self.nodes]),
+                ("CELLY", float_type, 1, [self.nodes]),
+                ("IAVERT", "INTEGER", 1, [self.nodes + 1]),
+                ("JAVERT", "INTEGER", 1, [njavert]),
+                ("IA", "INTEGER", 1, [self.nodes + 1]),
+                ("JA", "INTEGER", 1, [self.nja]),
+                ("IDOMAIN", "INTEGER", 1, [self.nodes]),
+                ("ICELLTYPE", "INTEGER", 1, [self.nodes]),
+            ]
+        elif self.grid_type == "DISU":
+            var_list = [
+                ("NODES", "INTEGER", 0, []),
+                ("NJA", "INTEGER", 0, []),
+                ("XORIGIN", float_type, 0, []),
+                ("YORIGIN", float_type, 0, []),
+                ("ANGROT", float_type, 0, []),
+                ("TOP", float_type, 1, [self.nodes]),
+                ("BOT", float_type, 1, [self.nodes]),
+                ("IA", "INTEGER", 1, [self.nodes + 1]),
+                ("JA", "INTEGER", 1, [self.nja]),
+                ("ICELLTYPE", "INTEGER", 1, [self.nodes]),
+            ]
+            # IDOMAIN is optional for DISU
+            if "IDOMAIN" in self._datadict:
+                var_list.insert(-1, ("IDOMAIN", "INTEGER", 1, [self.nodes]))
         else:
             raise NotImplementedError(
                 f"Grid type {self.grid_type} not yet implemented. "
-                "Currently only DIS grids are supported."
+                "Supported grid types: DIS, DISV, DISU"
             )
 
         ntxt = len(var_list)
