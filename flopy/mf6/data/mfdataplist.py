@@ -676,9 +676,11 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 if len(data[0]) == len(self._data_item_names):
                     # data most likely being stored with cellids as tuples,
                     # create a dataframe and untuple the cellids
-                    data = pandas.DataFrame(
-                        data, columns=self._data_item_names
-                    )
+                    # In pandas 3+, DataFrame() with recarray requires columns to match
+                    # field names, so create without columns param then rename if needed
+                    data = pandas.DataFrame(data)
+                    if list(data.columns) != self._data_item_names:
+                        data.columns = self._data_item_names
                     data = self._untuple_cellids(data)[0]
                     # make sure columns are still in correct order
                     data = pandas.DataFrame(data, columns=self._header_names)
@@ -691,19 +693,21 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
             else:
                 # data size matches the expected header names, create a pandas
                 # dataframe from the data
-                data_new = pandas.DataFrame(data, columns=self._header_names)
+                # In pandas 3+, DataFrame() with recarray requires columns to match
+                # field names, so create without columns param then rename if needed
+                data_new = pandas.DataFrame(data)
+                if list(data_new.columns) != self._header_names:
+                    data_new.columns = self._header_names
                 if not self._dataframe_check(data_new):
                     data_list = self._untuple_recarray(data)
-                    data = pandas.DataFrame(
-                        data_list, columns=self._header_names
-                    )
+                    data = pandas.DataFrame(data_list)
+                    if list(data.columns) != self._header_names:
+                        data.columns = self._header_names
                 else:
                     data, count = self._untuple_cellids(data_new)
                     if count > 0:
                         # make sure columns are still in correct order
-                        data = pandas.DataFrame(
-                            data, columns=self._header_names
-                        )
+                        data = pandas.DataFrame(data, columns=self._header_names)
         elif isinstance(data, list) or isinstance(data, tuple):
             if not (isinstance(data[0], list) or isinstance(data[0], tuple)):
                 # get data in the format of a tuple of lists (or tuples)
