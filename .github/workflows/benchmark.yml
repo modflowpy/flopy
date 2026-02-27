@@ -91,7 +91,7 @@ jobs:
         run: uv pip install seaborn
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           path: autotest/.benchmarks
 
