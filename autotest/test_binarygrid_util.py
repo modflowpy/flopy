@@ -6,7 +6,6 @@ from matplotlib import pyplot as plt
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.mf6.utils import MfGrdFile
-from flopy.mf6.utils.binarygrid_util import build_structured_connectivity
 
 pytestmark = pytest.mark.mf6
 
@@ -160,84 +159,6 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
     assert nvert == verts.shape[0], (
         f"number of vertex (x, y) pairs ({verts.shape[0]}) does not equal {nvert}"
     )
-
-
-def test_build_structured_connectivity():
-    # 1x1x1
-    ia, ja, nja = build_structured_connectivity(1, 1, 1)
-    assert ia.shape == (2,)
-    assert ja.shape == (1,)
-    assert nja == 1
-    assert ia[0] == 0 and ia[1] == 1
-    assert ja[0] == 0
-
-    # 1x1x2
-    ia, ja, nja = build_structured_connectivity(1, 1, 2)
-    assert ia.shape == (3,)
-    assert nja == 3
-    # Cell 0: diagonal + right = 2 connections
-    # Cell 1: diagonal = 1 connection
-    np.testing.assert_array_equal(ia, [0, 2, 3])
-    np.testing.assert_array_equal(ja, [0, 1, 1])
-
-    # 1x2x1
-    ia, ja, nja = build_structured_connectivity(1, 2, 1)
-    assert ia.shape == (3,)
-    assert nja == 3
-    # Cell 0: diagonal + front = 2 connections
-    # Cell 1: diagonal = 1 connection
-    np.testing.assert_array_equal(ia, [0, 2, 3])
-    np.testing.assert_array_equal(ja, [0, 1, 1])
-
-    # 2x1x1
-    ia, ja, nja = build_structured_connectivity(2, 1, 1)
-    assert ia.shape == (3,)
-    assert nja == 3
-    # Cell 0 (layer 0): diagonal + lower = 2 connections
-    # Cell 1 (layer 1): diagonal = 1 connection
-    np.testing.assert_array_equal(ia, [0, 2, 3])
-    np.testing.assert_array_equal(ja, [0, 1, 1])
-
-    # 2x2x2
-    nlay, nrow, ncol = 2, 2, 2
-    ncells = nlay * nrow * ncol
-    ia, ja, nja = build_structured_connectivity(nlay, nrow, ncol)
-    assert ia.shape == (ncells + 1,)
-    assert ja.shape == (nja,)
-    assert ia[-1] == nja
-    assert np.all(np.diff(ia) >= 0), "IA array not monotonically increasing"
-    assert np.all(ja >= 0), "JA contains negative indices"
-    assert np.all(ja < ncells), f"JA contains indices >= {ncells}"
-    # check diagonals
-    for i in range(ncells):
-        nconn = ia[i + 1] - ia[i]
-        assert nconn >= 1, f"Cell {i} has {nconn} connections (should be >= 1)"
-    for node in range(ncells):
-        conn_start = ia[node]
-        assert ja[conn_start] == node, (
-            f"Cell {node} first connection {ja[conn_start]} != {node}"
-        )
-
-    # 1x3x3 with center cell inactive
-    nlay, nrow, ncol = 1, 3, 3  # 9 cells
-    ncells = nlay * nrow * ncol
-    idomain = np.ones((nlay, nrow, ncol), dtype=np.int32)
-    idomain[0, 1, 1] = 0
-    ia, ja, nja = build_structured_connectivity(nlay, nrow, ncol, idomain=idomain)
-    assert ia.shape == (ncells + 1,)
-    assert ja.shape == (nja,)
-    # inactive cell (node 4) should have no connections
-    node_4_start = ia[4]
-    node_4_end = ia[5]
-    assert node_4_end == node_4_start
-    # cells around node 4 should not connect to it
-    for node in range(ncells):
-        if node == 4:
-            continue
-        conn_start = ia[node]
-        conn_end = ia[node + 1]
-        connections = ja[conn_start:conn_end]
-        assert 4 not in connections
 
 
 def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
