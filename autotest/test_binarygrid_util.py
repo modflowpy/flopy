@@ -288,14 +288,12 @@ def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_pat
     assert single_file.stat().st_size < double_file.stat().st_size
 
 
-def test_write_grb_disv_roundtrip(tmp_path):
+def test_write_grb_disv_roundtrip(tmp_path, mfgrd_test_path):
     """Test MfGrdFile.write() for DISV grid with roundtrip validation."""
-    from pathlib import Path
-
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISV grb file
-    original_file = Path("examples/data/mfgrd_test/flow.disv.grb")
+    original_file = mfgrd_test_path / "flow.disv.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
 
     # Write using instance method
@@ -346,14 +344,12 @@ def test_write_grb_disv_roundtrip(tmp_path):
     )
 
 
-def test_write_grb_disv_precision_conversion(tmp_path):
+def test_write_grb_disv_precision_conversion(tmp_path, mfgrd_test_path):
     """Test MfGrdFile.write() for DISV grid with precision conversion."""
-    from pathlib import Path
-
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISV grb file
-    original_file = Path("examples/data/mfgrd_test/flow.disv.grb")
+    original_file = mfgrd_test_path / "flow.disv.grb"
     grb = MfGrdFile(original_file, verbose=False)
 
     # Write in single and double precision
@@ -398,14 +394,12 @@ def test_write_grb_disv_precision_conversion(tmp_path):
     )
 
 
-def test_write_grb_disu_roundtrip(tmp_path):
+def test_write_grb_disu_roundtrip(tmp_path, mfgrd_test_path):
     """Test MfGrdFile.write() for DISU grid with roundtrip validation."""
-    from pathlib import Path
-
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISU grb file
-    original_file = Path("examples/data/mfgrd_test/flow.disu.grb")
+    original_file = mfgrd_test_path / "flow.disu.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
 
     # Write using instance method
@@ -445,14 +439,12 @@ def test_write_grb_disu_roundtrip(tmp_path):
         np.testing.assert_array_equal(grb_new.idomain, grb_orig.idomain)
 
 
-def test_write_grb_disu_precision_conversion(tmp_path):
+def test_write_grb_disu_precision_conversion(tmp_path, mfgrd_test_path):
     """Test MfGrdFile.write() for DISU grid with precision conversion."""
-    from pathlib import Path
-
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISU grb file
-    original_file = Path("examples/data/mfgrd_test/flow.disu.grb")
+    original_file = mfgrd_test_path / "flow.disu.grb"
     grb = MfGrdFile(original_file, verbose=False)
 
     # Write in single and double precision
