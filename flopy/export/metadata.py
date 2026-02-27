@@ -188,7 +188,7 @@ class acdd:
             mlen = self.model_time.perlen.sum()
             tunits = self.model_time.time_units
             tc["duration"] = f"{mlen} {tunits}"
-            end = strt + pd.Timedelta(mlen, unit="d")
+            end = strt + pd.Timedelta(mlen, unit="D")
             tc["end"] = str(end)
         return tc
 

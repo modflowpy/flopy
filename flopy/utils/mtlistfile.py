@@ -51,7 +51,7 @@ class MtListBudget:
 
         return
 
-    def parse(self, forgive=True, diff=True, start_datetime=None, time_unit="d"):
+    def parse(self, forgive=True, diff=True, start_datetime=None, time_unit="D"):
         """
         Main entry point for parsing the list file.
 
