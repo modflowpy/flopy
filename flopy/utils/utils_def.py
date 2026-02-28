@@ -101,6 +101,36 @@ class FlopyBinaryData:
     def _read_values(self, dtype, count):
         return np.fromfile(self.file, dtype, count)
 
+    def write_text(self, text, nchar=20):
+        """Write text to binary file, padding or truncating to nchar bytes."""
+        if isinstance(text, str):
+            text = text.encode("ascii")
+        if len(text) > nchar:
+            text = text[:nchar]
+        elif len(text) < nchar:
+            text = text + b" " * (nchar - len(text))
+        self.file.write(text)
+
+    def write_integer(self, value):
+        """Write a single integer to binary file."""
+        self._write_values(np.array([value], dtype=self.integer))
+
+    def write_real(self, value):
+        """Write a single real number to binary file."""
+        self._write_values(np.array([value], dtype=self.real))
+
+    def write_record(self, array, dtype=None):
+        """Write an array to binary file."""
+        if dtype is None:
+            dtype = self.real
+        if not isinstance(array, np.ndarray):
+            array = np.array(array, dtype=dtype)
+        self._write_values(array.astype(dtype))
+
+    def _write_values(self, array):
+        """Write numpy array to file."""
+        array.tofile(self.file)
+
 
 def totim_to_datetime(totim, start="1-1-1970", timeunit="D"):
     """

@@ -866,23 +866,19 @@ class MfGrdFile(FlopyBinaryData):
             print(f"  Version: {version}")
             print(f"  Number of variables: {ntxt}")
 
-        # Helper function to write text with fixed width
-        def write_text(f, text, width):
-            """Write text padded to fixed width."""
-            text_bytes = text.encode("ascii")
-            if len(text_bytes) > width:
-                text_bytes = text_bytes[:width]
-            else:
-                text_bytes = text_bytes.ljust(width)
-            f.write(text_bytes)
+        # Create writer with appropriate precision
+        writer = FlopyBinaryData()
+        writer.precision = precision
 
         with open(filename, "wb") as f:
+            writer.file = f
+
             # Write text header lines (50 chars each, newline terminated)
             header_len = 50
-            write_text(f, f"GRID {self.grid_type}\n", header_len)
-            write_text(f, f"VERSION {version}\n", header_len)
-            write_text(f, f"NTXT {ntxt}\n", header_len)
-            write_text(f, f"LENTXT {lentxt}\n", header_len)
+            writer.write_text(f"GRID {self.grid_type}\n", header_len)
+            writer.write_text(f"VERSION {version}\n", header_len)
+            writer.write_text(f"NTXT {ntxt}\n", header_len)
+            writer.write_text(f"LENTXT {lentxt}\n", header_len)
 
             # Write variable definition lines (100 chars each)
             for name, dtype_str, ndim, dims in var_list:
@@ -893,7 +889,7 @@ class MfGrdFile(FlopyBinaryData):
                         str(d) for d in dims[::-1]
                     )  # Reverse for Fortran order
                     line = f"{name} {dtype_str} NDIM {ndim} {dims_str}\n"
-                write_text(f, line, lentxt)
+                writer.write_text(line, lentxt)
 
             # Write binary data for each variable
             for name, dtype_str, ndim, dims in var_list:
@@ -917,11 +913,9 @@ class MfGrdFile(FlopyBinaryData):
                 if ndim == 0:
                     # Scalar value
                     if dtype_str == "INTEGER":
-                        f.write(np.array(int(value), dtype=np.int32).tobytes())
-                    elif dtype_str == "DOUBLE":
-                        f.write(np.array(float(value), dtype=np.float64).tobytes())
-                    elif dtype_str == "SINGLE":
-                        f.write(np.array(float(value), dtype=np.float32).tobytes())
+                        writer.write_integer(int(value))
+                    elif dtype_str in ("DOUBLE", "SINGLE"):
+                        writer.write_real(float(value))
                 else:
                     # Array data
                     arr = np.asarray(value)
@@ -933,7 +927,7 @@ class MfGrdFile(FlopyBinaryData):
                         arr = arr.astype(np.float32)
 
                     # Write array in column-major (Fortran) order
-                    f.write(arr.flatten(order="F").tobytes())
+                    writer.write_record(arr.flatten(order="F"), dtype=arr.dtype)
 
         if verbose:
             print(f"Successfully wrote {filename}")
