@@ -3,6 +3,7 @@
 See also test_cellbudgetfile.py for similar tests.
 """
 
+import warnings
 from itertools import repeat
 
 import numpy as np
@@ -15,6 +16,7 @@ from modflow_devtools.markers import requires_exe
 import flopy
 from flopy.utils import (
     BinaryHeader,
+    BinaryLayerFile,
     CellBudgetFile,
     HeadFile,
     HeadUFile,
@@ -99,6 +101,8 @@ def test_headfile_build_index(example_data_path):
     assert hds.ncol == 20
     assert hds.nlay == 3
     assert not hasattr(hds, "nper")
+    assert hds.text == "head"
+    assert hds.text_bytes == b"HEAD".rjust(16)
     assert hds.totalbytes == 10_676_004
     assert len(hds.recordarray) == 3291
     assert type(hds.recordarray) == np.ndarray
@@ -145,7 +149,149 @@ def test_headfile_build_index(example_data_path):
     )
 
 
-def test_concentration_build_index(example_data_path):
+def test_headfile_examples(example_data_path):
+    # HeadFile with default text='head'
+    pth = example_data_path / "mf6-freyberg/freyberg.hds"
+    with HeadFile(pth) as obj:
+        assert obj.precision == "double"
+        assert (obj.nlay, obj.nrow, obj.ncol) == (1, 40, 20)
+        assert obj.text == "head"
+        assert obj.text_bytes == b"HEAD".ljust(16)
+        assert len(obj) == 1
+
+    # HeadFile with explicit text='drawdown' for a drawdown file
+    pth = example_data_path / "mfusg_test/03A_conduit_unconfined/output/ex3A.ddn"
+    with HeadFile(pth, text="drawdown") as obj:
+        assert obj.precision == "single"
+        assert (obj.nlay, obj.nrow, obj.ncol) == (2, 100, 100)
+        assert obj.text == "drawdown"
+        assert obj.text_bytes == b"DRAWDOWN".rjust(16)
+        assert len(obj) == 2
+
+    # HeadFile with default text='head' raises on non-head file
+    with pytest.raises(ValueError, match="no records with text='head'"):
+        HeadFile(pth)
+
+
+@pytest.mark.parametrize(
+    "pth, expected",
+    [
+        pytest.param(
+            "mf6/create_tests/test_transport/expected_output/gwt_mst03.ucn",
+            {
+                "precision": "double",
+                "nlay, nrow, ncol": (1, 1, 1),
+                "text": "concentration",
+                "text_bytes": b"CONCENTRATION".ljust(16),
+                "len(obj)": 28,
+            },
+            id="gwt_mst03.ucn",
+        ),
+        pytest.param(
+            "mfusg_test/03A_conduit_unconfined/output/ex3A.cln.hds",
+            {
+                "precision": "single",
+                "nlay, nrow, ncol": (1, 1, 2),
+                "text": "cln_heads",
+                "text_bytes": b"CLN HEADS".rjust(16),
+                "len(obj)": 1,
+            },
+            id="ex3A.cln.hds",
+        ),
+        pytest.param(
+            "mfusg_test/03A_conduit_unconfined/output/ex3A.ddn",
+            {
+                "precision": "single",
+                "nlay, nrow, ncol": (2, 100, 100),
+                "text": "drawdown",
+                "text_bytes": b"DRAWDOWN".rjust(16),
+                "len(obj)": 2,
+            },
+            id="ex3A.ddn",
+        ),
+    ],
+)
+def test_binarylayerfile_examples(example_data_path, pth, expected):
+    # BinaryLayerFile auto-detects text from file
+    with BinaryLayerFile(example_data_path / pth) as obj:
+        assert obj.precision == expected["precision"]
+        assert (obj.nlay, obj.nrow, obj.ncol) == expected["nlay, nrow, ncol"]
+        assert obj.text == expected["text"]
+        assert obj.text_bytes == expected["text_bytes"]
+        assert len(obj) == expected["len(obj)"]
+
+
+def _write_binary_layer_record(f, data, kstp=1, kper=1, totim=1.0, text="HEAD"):
+    """Write one single-precision binary layer record to open file f."""
+    nrow, ncol = data.shape
+    text_bytes = text.encode("ascii").ljust(16)[:16]
+    header = np.array(
+        [(kstp, kper, totim, totim, text_bytes, ncol, nrow, 1)],
+        dtype=[
+            ("kstp", "<i4"),
+            ("kper", "<i4"),
+            ("pertim", "<f4"),
+            ("totim", "<f4"),
+            ("text", "S16"),
+            ("ncol", "<i4"),
+            ("nrow", "<i4"),
+            ("ilay", "<i4"),
+        ],
+    )
+    header.tofile(f)
+    data.astype(np.float32).tofile(f)
+
+
+def test_binarylayerfile_mixed_text(tmp_path):
+    """BinaryLayerFile warns on multiple text types and scopes to first found."""
+    fname = tmp_path / "mixed.bin"
+    data = np.ones((3, 3), dtype=np.float32)
+    with open(fname, "wb") as f:
+        _write_binary_layer_record(
+            f, data, kstp=1, kper=1, totim=1.0, text="            HEAD"
+        )
+        _write_binary_layer_record(
+            f, data, kstp=1, kper=1, totim=1.0, text="        DRAWDOWN"
+        )
+
+    with pytest.warns(UserWarning, match="multiple record types"):
+        obj = BinaryLayerFile(fname)
+
+    assert obj.text == "head"
+    assert len(obj) == 1  # only HEAD record in recordarray
+    assert len(obj.headers) == 2  # both records in headers DataFrame
+    assert set(obj.unique_records) == {"DRAWDOWN", "HEAD"}
+
+    # re-open scoped to drawdown
+    with BinaryLayerFile(fname, text="drawdown") as obj2:
+        assert obj2.text == "drawdown"
+        assert len(obj2) == 1
+    obj.close()
+
+
+def test_binarylayerfile_wrong_text(tmp_path):
+    """BinaryLayerFile raises clearly when requested text is absent."""
+    fname = tmp_path / "head_only.bin"
+    data = np.ones((3, 3), dtype=np.float32)
+    with open(fname, "wb") as f:
+        _write_binary_layer_record(
+            f, data, kstp=1, kper=1, totim=1.0, text="            HEAD"
+        )
+
+    with pytest.raises(ValueError, match="no records with text='drawdown'"):
+        BinaryLayerFile(fname, text="drawdown")
+
+
+def test_unique_records(example_data_path):
+    """unique_records returns sorted array of text labels in the file."""
+    pth = example_data_path / "mf6-freyberg/freyberg.hds"
+    with HeadFile(pth) as obj:
+        ur = obj.unique_records
+        assert isinstance(ur, np.ndarray)
+        assert list(ur) == ["HEAD"]
+
+
+def test_ucnfile_build_index(example_data_path):
     # test low-level BinaryLayerFile._build_index() method with UCN file
     pth = example_data_path / "mt3d_test/mf2005mt3d/P07/MT3D001.UCN"
     with UcnFile(pth) as ucn:
@@ -154,6 +300,8 @@ def test_concentration_build_index(example_data_path):
     assert ucn.ncol == 21
     assert ucn.nlay == 8
     assert not hasattr(ucn, "nper")
+    assert ucn.text == "concentration"
+    assert ucn.text_bytes == b"CONCENTRATION".ljust(16)
     assert ucn.totalbytes == 10_432
     assert len(ucn.recordarray) == 8
     assert type(ucn.recordarray) == np.ndarray
@@ -286,6 +434,8 @@ def test_headu_file_data(function_tmpdir, example_data_path):
     headobj = HeadUFile(fname)
     assert isinstance(headobj, HeadUFile)
     assert headobj.nlay == 3
+    assert headobj.text == "headu"
+    assert headobj.text_bytes == b"HEADU".rjust(16)
 
     # ensure recordarray is has correct data
     ra = headobj.recordarray

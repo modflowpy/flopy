@@ -213,8 +213,11 @@ class LayerFile:
             args = ",".join(kwargs.keys())
             raise ValueError(f"LayerFile error: unrecognized kwargs: {args}")
 
-        # read through the file and build the pointer index
-        self._build_index()
+        try:
+            # read through the file and build the pointer index
+            self._build_index()
+        except EOFError:
+            raise ValueError(f"cannot read file with {self.__class__.__name__}")
 
         # now that we read the data and know nrow and ncol,
         # we can make a generic modelgrid if needed

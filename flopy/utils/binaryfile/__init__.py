@@ -298,32 +298,85 @@ def get_headfile_precision(filename: Union[str, PathLike]):
 
 class BinaryLayerFile(LayerFile):
     """
-    The BinaryLayerFile class is a parent class from which concrete
-    classes inherit. This class should not be instantiated directly.
+    Reads layered MODFLOW binary output files (head, drawdown, stage, etc.).
+
+    This class can be instantiated directly and is the recommended entry
+    point for MF6 advanced package output (LAK stage, SFR flow, UZF depth,
+    MAW head, etc.) where the text label varies by package.
+
+    Parameters
+    ----------
+    filename : str or PathLike
+        Path of the binary output file.
+    text : str or None, optional
+        Text label to scope this instance to. If None (default), the label
+        is read from the first record in the file. If the file contains
+        multiple record types a warning is issued and the first type found
+        is used; pass ``text=`` explicitly to select a different type.
+    precision : {'auto', 'single', 'double'}
+        Floating-point precision. Default ``'auto'`` detects from the file.
+    verbose : bool, default False
+        Toggle logging output.
 
     Notes
     -----
-
-    The BinaryLayerFile class is built on a record array consisting of
-    headers, which are record arrays of the modflow header information
-    (kstp, kper, pertim, totim, text, nrow, ncol, ilay), and long ints
-    pointing to the 1st byte of data for the corresponding data arrays.
+    The class is built on a record array of headers (kstp, kper, pertim,
+    totim, text, nrow, ncol, ilay) and an integer array of byte offsets
+    pointing to the first byte of each data record.  Only records whose
+    text label matches ``self.text`` appear in ``recordarray``; all records
+    in the file appear in the ``headers`` DataFrame.
     """
 
-    def __init__(self, filename: Union[str, PathLike], precision, verbose, **kwargs):
+    def __init__(
+        self,
+        filename: Union[str, PathLike],
+        text: Optional[str] = None,
+        precision: str = "auto",
+        verbose: bool = False,
+        **kwargs,
+    ):
+        self._requested_text = text
+        if precision == "auto":
+            precision = get_headfile_precision(filename)
+            if precision == "unknown":
+                s = f"Error. Precision could not be determined for {filename}"
+                print(s)
+                raise Exception()
+        if not hasattr(self, "header_dtype"):
+            self.header_dtype = BinaryHeader.set_dtype(
+                bintype="Head", precision=precision
+            )
         super().__init__(filename, precision, verbose, **kwargs)
+
+    @staticmethod
+    def _decode_text(text_bytes: bytes) -> str:
+        """Decode raw 16-byte text field to a normalised string.
+
+        Raises EOFError on non-ASCII bytes so that LayerFile.__init__ can
+        convert it to a clear ValueError (wrong file format / precision).
+        """
+        try:
+            return text_bytes.decode("ascii").strip().lower().replace(" ", "_")
+        except UnicodeDecodeError:
+            raise EOFError(f"non-ASCII text field: {text_bytes!r}")
 
     def _build_index(self):
         """
         Build the recordarray and iposarray, which maps the header information
         to the position in the binary file.
 
+        recordarray / iposarray contain only records whose text label matches
+        self.text (used by all query methods).  The headers DataFrame contains
+        every record in the file regardless of text label.
         """
-        header = self._get_header()
-        self.nrow = header["nrow"]
-        self.ncol = header["ncol"]
-        if header["ilay"] > self.nlay:
-            self.nlay = header["ilay"]
+        requested = self._requested_text
+        # target text in normalised form; None means auto-detect from file
+        self.text = (
+            self._decode_text(requested.encode("ascii"))
+            if requested is not None
+            else None
+        )
+        self.text_bytes = None  # set when first matching record is found
 
         if self.nrow < 0 or self.ncol < 0:
             raise ValueError("negative nrow, ncol")
@@ -337,33 +390,92 @@ class BinaryLayerFile(LayerFile):
         self.file.seek(0, 2)
         self.totalbytes = self.file.tell()
         self.file.seek(0, 0)
+
+        all_headers = []  # every record → headers DataFrame
+        all_ipos = []
+        text_types_seen: dict = {}  # normalised text → count
+        text_types_matched: set = set()  # text labels matching the substring filter
+        warn_threshold = 10000000
         ipos = 0
+
         while ipos < self.totalbytes:
             header = self._get_header()
-            self.recordarray.append(header)
-            if self.text.upper() not in header["text"]:
-                continue
-            if ipos == 0:
-                self.times.append(header["totim"])
-                self.kstpkper.append((header["kstp"], header["kper"]))
-            else:
+            ipos_data = self.file.tell()  # byte position of this record's data
+
+            if header["nrow"] < 0 or header["ncol"] < 0:
+                raise Exception("negative nrow, ncol")
+
+            header_text = self._decode_text(header["text"])
+            text_types_seen[header_text] = text_types_seen.get(header_text, 0) + 1
+
+            # auto-detect: adopt the first record's text as the target
+            if self.text is None:
+                self.text = header_text
+
+            all_headers.append(header)
+            all_ipos.append(ipos_data)
+
+            # substring match for backward compatibility
+            if self.text in header_text:
+                text_types_matched.add(header_text)
+                if self.text_bytes is None:
+                    # first matching record: capture bytes and grid dimensions
+                    self.text_bytes = header["text"]
+                    self.nrow = header["nrow"]
+                    self.ncol = header["ncol"]
+                    if self.nrow > 1 and self.nrow * self.ncol > warn_threshold:
+                        warnings.warn(
+                            f"Very large grid, ncol ({self.ncol}) * nrow"
+                            f" ({self.nrow}) > {warn_threshold}"
+                        )
+                self.recordarray.append(header)
+                self.iposarray.append(ipos_data)
                 totim = header["totim"]
-                if totim != self.times[-1]:
+                if not self.times or totim != self.times[-1]:
                     self.times.append(totim)
                     self.kstpkper.append((header["kstp"], header["kper"]))
-            ipos = self.file.tell()
-            self.iposarray.append(ipos)
+
             databytes = self.get_databytes(header)
+            if ipos_data + databytes > self.totalbytes:
+                raise EOFError(f"attempting to seek {ipos_data + databytes}")
             self.file.seek(databytes, 1)
             ipos = self.file.tell()
 
-        # self.recordarray contains a recordarray of all the headers.
+        if len(text_types_seen) > 1 and self._requested_text is None:
+            other = sorted(t for t in text_types_seen if t != self.text)
+            warnings.warn(
+                f"file contains multiple record types: "
+                f"{sorted(text_types_seen)!r}; scoped to {self.text!r}. "
+                f"Use text= to access: {other!r}",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        # warn if substring matched multiple distinct text labels (ambiguous)
+        if len(text_types_matched) > 1:
+            warnings.warn(
+                f"text={self.text!r} (substring match) matched multiple record types: "
+                f"{sorted(text_types_matched)!r}. For precise filtering, use the "
+                f"exact label or BinaryLayerFile with text=None to auto-detect.",
+                UserWarning,
+                stacklevel=2,
+            )
+
+        if not self.recordarray:
+            raise ValueError(
+                f"no records with text={self.text!r} found in file; "
+                f"file contains: {sorted(text_types_seen)!r}"
+            )
+
+        # convert to arrays
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
         self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nlay = np.max(self.recordarray["ilay"])
 
-        # provide headers as a pandas frame
-        self.headers = pd.DataFrame(self.recordarray, index=self.iposarray)
+        # headers DataFrame contains every record in the file
+        all_arr = np.array(all_headers, dtype=self.header_dtype)
+        all_ipos_arr = np.array(all_ipos, dtype=np.int64)
+        self.headers = pd.DataFrame(all_arr, index=all_ipos_arr)
         self.headers["text"] = (
             self.headers["text"].str.decode("ascii", "strict").str.strip()
         )
@@ -398,6 +510,21 @@ class BinaryLayerFile(LayerFile):
         """
         header = binaryread(self.file, self.header_dtype, (1,))
         return header[0]
+
+    @property
+    def unique_records(self) -> np.ndarray:
+        """
+        Unique text record types present in the file.
+
+        Returns
+        -------
+        numpy.ndarray
+            Sorted array of unique, stripped text strings found across all
+            records in the file (e.g. ``['HEAD', 'DRAWDOWN']``).  Useful for
+            discovering which record types are available before opening
+            additional instances with ``text=``.
+        """
+        return np.sort(self.headers["text"].unique())
 
     def get_ts(self, idx):
         """
@@ -509,14 +636,17 @@ class HeadFile(BinaryLayerFile):
     ----------
     filename : str or PathLike
         Path of the head file.
-    text : string
-        Name of the text string in the head file. Default is 'head'.
-    precision : string
-        Precision of floating point head data in the value. Accepted
-        values are 'auto', 'single' or 'double'. Default is 'auto',
-        which enables automatic detection of precision.
-    verbose : bool
-        Toggle logging output. Default is False.
+    text : str, default 'head'
+        Text label of the records to read. Defaults to ``'head'``; raises
+        an error if the file contains no records with that label. Pass a
+        different value (e.g. ``text='drawdown'``) to scope the instance
+        to a different record type, or use :class:`BinaryLayerFile`
+        directly for files whose label is not known in advance.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point head data in the value. Default
+        'auto' enables automatic detection of precision.
+    verbose : bool, default False
+        Toggle logging output.
 
     Examples
     --------
@@ -528,6 +658,7 @@ class HeadFile(BinaryLayerFile):
 
     >>> ddnobj = bf.HeadFile('model.ddn', text='drawdown', precision='single')
     >>> ddnobj.headers
+    >>> ddnobj.unique_records
     >>> rec = ddnobj.get_data(totim=100.)
 
     """
@@ -535,12 +666,11 @@ class HeadFile(BinaryLayerFile):
     def __init__(
         self,
         filename: Union[str, PathLike],
-        text="head",
-        precision="auto",
-        verbose=False,
+        text: str = "head",
+        precision: str = "auto",
+        verbose: bool = False,
         **kwargs,
     ):
-        self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
@@ -548,7 +678,9 @@ class HeadFile(BinaryLayerFile):
                     f"Error. Precision could not be determined for {filename}"
                 )
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
-        super().__init__(filename, precision, verbose, **kwargs)
+        super().__init__(
+            filename, text=text, precision=precision, verbose=verbose, **kwargs
+        )
 
     def reverse(self, filename: Optional[PathLike] = None):
         """
@@ -635,9 +767,13 @@ class HeadFile(BinaryLayerFile):
                 data.tofile(f)
 
         # if we rewrote the original file, reinitialize
-        if inplace:
-            move(target, filename)
-            super().__init__(filename, self.precision, self.verbose)
+        if filename == self.filename:
+            super().__init__(
+                self.filename,
+                text=self._requested_text,
+                precision=self.precision,
+                verbose=self.verbose,
+            )
 
 
 class UcnFile(BinaryLayerFile):
@@ -646,14 +782,16 @@ class UcnFile(BinaryLayerFile):
 
     Parameters
     ----------
-    filename : string
-        Name of the concentration file
-    text : string
-        Name of the text string in the ucn file.  Default is 'CONCENTRATION'
-    precision : string
-        'auto', 'single' or 'double'.  Default is 'auto'.
-    verbose : bool
-        Write information to the screen.  Default is False.
+    filename : str or PathLike
+        Path of the concentration file.
+    text : str, default 'concentration'
+        Text label of the records to read. Raises an error if the file
+        contains no records with that label.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point values. Default 'auto' enables automatic
+        detection of precision.
+    verbose : bool, default False
+        Write information to the screen.
 
     Attributes
     ----------
@@ -689,19 +827,19 @@ class UcnFile(BinaryLayerFile):
     def __init__(
         self,
         filename,
-        text="concentration",
-        precision="auto",
-        verbose=False,
+        text: str = "concentration",
+        precision: str = "auto",
+        verbose: bool = False,
         **kwargs,
     ):
-        self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
         if precision == "unknown":
             raise ValueError(f"Error. Precision could not be determined for {filename}")
         self.header_dtype = BinaryHeader.set_dtype(bintype="Ucn", precision=precision)
-        super().__init__(filename, precision, verbose, **kwargs)
-        return
+        super().__init__(
+            filename, text=text, precision=precision, verbose=verbose, **kwargs
+        )
 
 
 class HeadUFile(BinaryLayerFile):
@@ -714,14 +852,15 @@ class HeadUFile(BinaryLayerFile):
     ----------
     filename : str or PathLike
         Path of the head file
-    text : string
-        Name of the text string in the head file. Default is 'headu'.
-    precision : string
-        Precision of the floating point head data in the file. Accepted
-        values are 'auto', 'single' or 'double'. Default is 'auto', which
-        enables precision to be automatically detected.
-    verbose : bool
-        Toggle logging output. Default is False.
+    text : str, default 'headu'
+        Text label identifying the record type to read. Records not matching
+        this label are excluded from the query interface (times, kstpkper,
+        get_data, get_ts). Use BinaryLayerFile with text=None to auto-detect.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point values. Default 'auto' enables automatic
+        detection of precision.
+    verbose : bool, default False
+        Toggle logging output.
 
     Notes
     -----
@@ -752,15 +891,11 @@ class HeadUFile(BinaryLayerFile):
     def __init__(
         self,
         filename: Union[str, PathLike],
-        text="headu",
-        precision="auto",
-        verbose=False,
+        text: str = "headu",
+        precision: str = "auto",
+        verbose: bool = False,
         **kwargs,
     ):
-        """
-        Class constructor
-        """
-        self.text = text.encode()
         if precision == "auto":
             precision = get_headfile_precision(filename)
             if precision == "unknown":
@@ -768,7 +903,9 @@ class HeadUFile(BinaryLayerFile):
                     f"Error. Precision could not be determined for {filename}"
                 )
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
-        super().__init__(filename, precision, verbose, **kwargs)
+        super().__init__(
+            filename, text=text, precision=precision, verbose=verbose, **kwargs
+        )
 
     def _get_data_array(self, totim=0.0):
         """
@@ -923,11 +1060,11 @@ class CellBudgetFile:
     ----------
     filename : str or PathLike
         Path of the cell budget file.
-    precision : string
-        Precision of floating point budget data in the file. Accepted
-        values are 'single' or 'double'. Default is 'single'.
-    verbose : bool
-        Toggle logging output. Default is False.
+    precision : {'auto', 'single', 'double'}
+        Precision of floating point values. Default 'auto' enables automatic
+        detection of precision.
+    verbose : bool, default False
+        Toggle logging output.
 
     Examples
     --------
@@ -2296,6 +2433,8 @@ class CellBudgetFile:
         this method must reverse not only the order but also the sign (direction)
         of the model's intercell flows.
 
+        Parameters
+        ----------
         filename : str or PathLike, optional
             Path of the reversed binary cell budget file.
         """

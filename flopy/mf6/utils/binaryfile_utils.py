@@ -192,7 +192,7 @@ class MFOutputRequester:
 
         elif bintype == "DDN":
             try:
-                return bf.HeadFile(path, text="drawdown", precision="double")
+                return bf.HeadFile(path, precision="double")
             except AssertionError:
                 raise AssertionError(f"{self.dataDict[key]} does not exist")
 
@@ -333,9 +333,7 @@ class MFOutputRequester:
 
             elif key[1] == "DDN":
                 try:
-                    readddn = bf.HeadFile(
-                        path, text="drawdown", precision="double"
-                    )
+                    readddn = bf.HeadFile(path, precision="double")
                     self.dataDict[(key[0], key[1], "DRAWDOWN")] = path
                     readddn.close()
 
