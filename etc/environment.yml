@@ -14,7 +14,7 @@ dependencies:
   # codegen
   - boltons>=1.0
   - Jinja2>=3.0
-  - modflow-devtools>=1.7.0
+  - modflow-devtools>=1.7.0,!=1.9.0,<2
   - tomli
   - tomli-w
 
