@@ -1536,6 +1536,9 @@ class Mf6Splitter:
                         # external array
                         tmp = fnames[lay].split(".")
                         filename = f"{'.'.join(tmp[:-1])}.{mkey :0{self._fdigits}d}.{tmp[-1]}"
+                        folder_path = (self._new_sim.sim_path / filename).parent
+                        if not folder_path.exists():
+                            folder_path.mkdir(parents=True)
 
                         cr = {
                             "filename": filename,
@@ -1621,6 +1624,9 @@ class Mf6Splitter:
                 if how == 3 and new_recarray is not None:
                     tmp = fname.split(".")
                     filename = f"{'.'.join(tmp[:-1])}.{mkey :0{self._fdigits}d}.{tmp[-1]}"
+                    folder_path = (self._new_sim.sim_path / filename).parent
+                    if not folder_path.exists():
+                        folder_path.mkdir(parents=True)
 
                     new_recarray = {
                         "data": new_recarray,
@@ -3842,7 +3848,7 @@ class Mf6Splitter:
             filename=filename,
         )
 
-    def split_model(self, array):
+    def split_model(self, array, sim_ws=None):
         """
         User method to split a model based on an array
 
@@ -3852,6 +3858,10 @@ class Mf6Splitter:
             integer array of new model numbers. Array must either be of
             dimension (NROW, NCOL), (NCPL), or (NNODES for unstructured grid
             models).
+        sim_ws : PathLike or str
+            optional directory path for writing the new simulation to. This parameter
+            is recommended when the model contains external files and the user would
+            like to preserve external linkages while splitting.
 
         Returns
         -------
@@ -3863,6 +3873,11 @@ class Mf6Splitter:
                 "is part of a split simulation"
             )
 
+        set_data_internal = False
+        if sim_ws is None:
+            set_data_internal = True
+            sim_ws = self._sim.sim_path
+
         # set number formatting string for file paths
         array = np.array(array).astype(int)
         s = str(np.max(array))
@@ -3872,7 +3887,7 @@ class Mf6Splitter:
 
         if self._new_sim is None:
             self._new_sim = modflow.MFSimulation(
-                version=self._sim.version, exe_name=self._sim.exe_name, sim_ws=self._sim.sim_path
+                version=self._sim.version, exe_name=self._sim.exe_name, sim_ws=sim_ws
             )
             self._create_sln_tdis()
 
@@ -3898,7 +3913,9 @@ class Mf6Splitter:
                 **nam_options[mkey],
             )
 
-        self._model.set_all_data_internal(check_data=True)
+        if set_data_internal:
+            self._model.set_all_data_internal(check_data=True)
+
         for package in self._model.packagelist:
             paks = self._remap_package(package)
 
