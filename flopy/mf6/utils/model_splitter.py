@@ -3898,6 +3898,7 @@ class Mf6Splitter:
                 **nam_options[mkey],
             )
 
+        self._model.set_all_data_internal(check_data=True)
         for package in self._model.packagelist:
             paks = self._remap_package(package)
 
