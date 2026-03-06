@@ -437,7 +437,7 @@ def test_control_records(function_tmpdir):
     split_ws.mkdir()
     with set_dir(split_ws):
         mfsplit = flopy.mf6.utils.Mf6Splitter(sim)
-        new_sim = mfsplit.split_model(arr)
+        new_sim = mfsplit.split_model(arr, split_ws)
 
     ml1 = new_sim.get_model("model_1")
 
