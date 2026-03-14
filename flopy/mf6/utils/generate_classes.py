@@ -89,7 +89,8 @@ def generate_classes(
         print()
 
         tomlpath = dfnpath / "toml"
-        tomlpath.mkdir(exist_ok=True)
+        shutil.rmtree(tomlpath, ignore_errors=True)
+        tomlpath.mkdir()
         dfn2toml(dfnpath, tomlpath)
 
         shutil.rmtree(_MF6_AUTOGEN_PATH)
