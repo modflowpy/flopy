@@ -669,99 +669,9 @@ class HeadFile(BinaryLayerFile):
         >>> hds.write('output.hds', kstpkper=[(1, 0), (1, 1)])
         """
 
-        def pad_text(text):
-            """Pad text to exactly 16 bytes."""
-            if isinstance(text, str):
-                text = text.encode("ascii")
-            if len(text) > 16:
-                return text[:16]
-            elif len(text) < 16:
-                return text + b" " * (16 - len(text))
-            return text
-
-        def write_records(f, data_dict, text_bytes, realtype, verbose):
-            """Write head records to file."""
-            sorted_keys = sorted(data_dict.keys())
-
-            # Pre-allocate header dtype outside loop (Fix #1)
-            dt = np.dtype(
-                [
-                    ("kstp", np.int32),
-                    ("kper", np.int32),
-                    ("pertim", realtype),
-                    ("totim", realtype),
-                    ("text", "S16"),
-                    ("ncol", np.int32),
-                    ("nrow", np.int32),
-                    ("ilay", np.int32),
-                ]
-            )
-
-            for kstpkper in sorted_keys:
-                kstp, kper = kstpkper
-                entry = data_dict[kstpkper]
-
-                head = np.asarray(entry["head"])
-                pertim = entry["pertim"]
-                totim = entry["totim"]
-
-                # Handle both 3D (nlay, nrow, ncol) and 2D (nrow, ncol) arrays
-                if head.ndim == 2:
-                    head = head.reshape(1, head.shape[0], head.shape[1])
-
-                nlay, nrow, ncol = head.shape
-
-                if verbose:
-                    print(f"  Writing kstp={kstp}, kper={kper}, totim={totim}")
-                    print(f"    Shape: {nlay} layers x {nrow} rows x {ncol} cols")
-
-                # Write one record per layer
-                for ilay in range(nlay):
-                    h = np.array(
-                        (kstp, kper, pertim, totim, text_bytes, ncol, nrow, ilay + 1),
-                        dtype=dt,
-                    )
-                    h.tofile(f)
-                    head[ilay].astype(realtype).tofile(f)
-
         # Determine which time steps to write
         if kstpkper is None:
             kstpkper = self.kstpkper
-
-        # Build data dictionary
-        data_dict = {}
-        for ksp in kstpkper:
-            try:
-                # Convert numpy int32 to Python int if needed
-                kstp = int(ksp[0])
-                kper = int(ksp[1])
-                ksp_tuple = (kstp, kper)
-
-                # Find the totim for this kstpkper
-                mask = (self.recordarray["kstp"] == kstp) & (
-                    self.recordarray["kper"] == kper
-                )
-                matching_records = self.recordarray[mask]
-                if len(matching_records) == 0:
-                    if kwargs.get("verbose", False):
-                        print(f"Warning: No records found for {ksp}")
-                    continue
-
-                record = matching_records[0]
-                totim = float(record["totim"])
-
-                # Get data using totim (works for multi-layer files)
-                head_data = self.get_data(totim=totim)
-
-                data_dict[ksp_tuple] = {
-                    "head": head_data,
-                    "pertim": float(record["pertim"]),
-                    "totim": totim,
-                }
-            except Exception as e:
-                if kwargs.get("verbose", False):
-                    print(f"Warning: Could not read data for {ksp}: {e}")
-                continue
 
         # Set defaults from current file if not provided
         text = kwargs.get("text")
@@ -775,17 +685,98 @@ class HeadFile(BinaryLayerFile):
         realtype = np.float32 if precision == "single" else np.float64
 
         # Pad text to 16 bytes
+        def pad_text(text):
+            """Pad text to exactly 16 bytes."""
+            if isinstance(text, str):
+                text = text.encode("ascii")
+            if len(text) > 16:
+                return text[:16]
+            elif len(text) < 16:
+                return text + b" " * (16 - len(text))
+            return text
+
         text_bytes = pad_text(text)
+
+        # Pre-allocate header dtype outside loop (Fix #1)
+        dt = np.dtype(
+            [
+                ("kstp", np.int32),
+                ("kper", np.int32),
+                ("pertim", realtype),
+                ("totim", realtype),
+                ("text", "S16"),
+                ("ncol", np.int32),
+                ("nrow", np.int32),
+                ("ilay", np.int32),
+            ]
+        )
+
+        # Sort kstpkper upfront for correct output order (Fix #4)
+        sorted_kstpkper = sorted(kstpkper, key=lambda x: (int(x[0]), int(x[1])))
 
         if verbose:
             print(f"Writing binary head file: {filename}")
             print(f"  Text identifier: {text_bytes.decode().strip()}")
             print(f"  Precision: {precision}")
-            print(f"  Number of time steps: {len(data_dict)}")
+            print(f"  Number of time steps: {len(sorted_kstpkper)}")
 
-        # Write the file
+        # Write the file - single loop, no intermediate dict (Fix #4)
         with open(filename, "wb") as f:
-            write_records(f, data_dict, text_bytes, realtype, verbose)
+            for ksp in sorted_kstpkper:
+                try:
+                    # Convert numpy int32 to Python int if needed
+                    kstp = int(ksp[0])
+                    kper = int(ksp[1])
+
+                    # Find the totim for this kstpkper
+                    mask = (self.recordarray["kstp"] == kstp) & (
+                        self.recordarray["kper"] == kper
+                    )
+                    matching_records = self.recordarray[mask]
+                    if len(matching_records) == 0:
+                        if verbose:
+                            print(f"Warning: No records found for {ksp}")
+                        continue
+
+                    record = matching_records[0]
+                    totim = float(record["totim"])
+                    pertim = float(record["pertim"])
+
+                    # Get data using totim (works for multi-layer files)
+                    head = np.asarray(self.get_data(totim=totim))
+
+                    # Handle both 3D (nlay, nrow, ncol) and 2D (nrow, ncol) arrays
+                    if head.ndim == 2:
+                        head = head.reshape(1, head.shape[0], head.shape[1])
+
+                    nlay, nrow, ncol = head.shape
+
+                    if verbose:
+                        print(f"  Writing kstp={kstp}, kper={kper}, totim={totim}")
+                        print(f"    Shape: {nlay} layers x {nrow} rows x {ncol} cols")
+
+                    # Write one record per layer
+                    for ilay in range(nlay):
+                        h = np.array(
+                            (
+                                kstp,
+                                kper,
+                                pertim,
+                                totim,
+                                text_bytes,
+                                ncol,
+                                nrow,
+                                ilay + 1,
+                            ),
+                            dtype=dt,
+                        )
+                        h.tofile(f)
+                        head[ilay].astype(realtype).tofile(f)
+
+                except Exception as e:
+                    if verbose:
+                        print(f"Warning: Could not read data for {ksp}: {e}")
+                    continue
 
         if verbose:
             print(f"Successfully wrote {filename}")
@@ -2476,169 +2467,6 @@ class CellBudgetFile:
                 return text + b" " * (16 - len(text))
             return text
 
-        def write_records(f, budget_dict, nlay, nrow, ncol, realtype, verbose):
-            """Write budget records to file.
-
-            Parameters
-            ----------
-            budget_dict : dict
-                Keys are ((kstp, kper), text, imeth), values are data dicts
-            """
-            # Group records by time step
-            time_steps = {}
-            for key, value in budget_dict.items():
-                ksp_tuple, text, imeth = key
-                if ksp_tuple not in time_steps:
-                    time_steps[ksp_tuple] = []
-                time_steps[ksp_tuple].append((text, imeth, value))
-
-            # Pre-allocate header dtypes outside loops (Fix #1)
-            h1dt = np.dtype(
-                [
-                    ("kstp", np.int32),
-                    ("kper", np.int32),
-                    ("text", "S16"),
-                    ("ncol", np.int32),
-                    ("nrow", np.int32),
-                    ("nlay", np.int32),
-                ]
-            )
-            h2dt = np.dtype(
-                [
-                    ("imeth", np.int32),
-                    ("delt", realtype),
-                    ("pertim", realtype),
-                    ("totim", realtype),
-                ]
-            )
-
-            # Sort by time step for consistent output
-            for kstpkper in sorted(time_steps.keys()):
-                kstp, kper = kstpkper
-
-                if verbose:
-                    print(f"\n  Writing kstp={kstp}, kper={kper}")
-
-                # Write each budget term for this time step
-                for text, imeth, term_data in time_steps[kstpkper]:
-                    data = term_data["data"]
-                    delt = term_data.get("delt", 0.0)
-                    pertim = term_data["pertim"]
-                    totim = term_data["totim"]
-
-                    text_bytes = pad_text(text)
-
-                    if verbose:
-                        print(f"    Writing {text.strip()}: imeth={imeth}")
-
-                    # Check if this is FLOW-JA-FACE (connection-based)
-                    is_flowja = text.strip().upper() in [
-                        "FLOW-JA-FACE",
-                        "FLOW-JA-FACE-X",
-                    ]
-
-                    # Determine dimensions based on data type
-                    if is_flowja and imeth in [0, 1]:
-                        # FLOW-JA-FACE: use NJA (size of connection array)
-                        arr = np.asarray(data)
-                        nja = arr.size
-                        ndim1, ndim2, ndim3 = nja, 1, -1
-                    else:
-                        # Regular budget term: use grid dimensions
-                        if nlay is None or nrow is None or ncol is None:
-                            raise ValueError(
-                                f"Grid dimensions (nlay, nrow, ncol) required for "
-                                f"non-FLOW-JA-FACE budget term '{text.strip()}'. "
-                                f"Provided: nlay={nlay}, nrow={nrow}, ncol={ncol}"
-                            )
-                        # Use negative nlay for compact format
-                        ndim1, ndim2, ndim3 = ncol, nrow, -nlay
-
-                    header1 = np.array(
-                        [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)], dtype=h1dt
-                    )
-                    header1.tofile(f)
-
-                    header2 = np.array([(imeth, delt, pertim, totim)], dtype=h2dt)
-                    header2.tofile(f)
-
-                    # For imeth=6, write model and package names
-                    if imeth == 6:
-                        modelnam = term_data.get("modelnam", "MODEL")
-                        paknam = term_data.get("paknam", "")
-                        modelnam2 = term_data.get("modelnam2", "MODEL")
-                        paknam2 = term_data.get("paknam2", "")
-
-                        # Ensure each is exactly 16 bytes
-                        for name in [modelnam, paknam, modelnam2, paknam2]:
-                            name_bytes = pad_text(name)
-                            f.write(name_bytes)
-
-                    # Write data based on imeth
-                    if imeth == 0 or imeth == 1:
-                        # Array format
-                        arr = np.asarray(data, dtype=realtype)
-
-                        if is_flowja:
-                            # FLOW-JA-FACE: keep as 1D array of size NJA
-                            if arr.ndim != 1:
-                                arr = arr.flatten()
-                        else:
-                            # Regular budget term: reshape to grid if needed
-                            if arr.ndim == 1:
-                                arr = arr.reshape(nlay, nrow, ncol)
-
-                        arr.tofile(f)
-
-                    elif imeth == 6:
-                        # List format - write naux+1
-                        auxtxt = term_data.get("auxtxt", [])
-                        naux = len(auxtxt)
-                        np.array([naux + 1], dtype=np.int32).tofile(f)
-
-                        # Write auxiliary variable names
-                        for auxname in auxtxt:
-                            f.write(pad_text(auxname))
-
-                        # Write nlist
-                        nlist = len(data)
-                        np.array([nlist], dtype=np.int32).tofile(f)
-
-                        # Write list data as structured array
-                        if isinstance(data, np.ndarray) and data.dtype.names:
-                            dt_list = [
-                                ("node", np.int32),
-                                ("node2", np.int32),
-                                ("q", realtype),
-                            ]
-                            for auxname in auxtxt:
-                                dt_list.append((auxname, realtype))
-
-                            output_dt = np.dtype(dt_list)
-                            output_data = np.zeros(nlist, dtype=output_dt)
-
-                            # Copy data with correct types
-                            for field in output_dt.names:
-                                if field in data.dtype.names:
-                                    output_data[field] = data[field].astype(
-                                        output_dt[field]
-                                    )
-
-                            output_data.tofile(f)
-                        else:
-                            raise ValueError(
-                                "For imeth=6, data must be a numpy recarray "
-                                "with fields: node, node2, q, and optional "
-                                "auxiliary fields"
-                            )
-
-                    else:
-                        raise NotImplementedError(
-                            f"imeth={imeth} not yet implemented. "
-                            "Currently only imeth=1 (array) and imeth=6 "
-                            "(list) are supported."
-                        )
-
         # Determine which time steps to write
         if kstpkper is None:
             kstpkper = self.kstpkper
@@ -2650,79 +2478,6 @@ class CellBudgetFile:
             textlist = [text.ljust(16).encode()]
         else:
             textlist = [t.ljust(16).encode() for t in text]
-
-        # Build budget dictionary
-        budget_dict = {}
-        for ksp in kstpkper:
-            # Convert numpy int32 to Python int if needed
-            kstp = int(ksp[0])
-            kper = int(ksp[1])
-            ksp_tuple = (kstp, kper)
-
-            # get_data() expects 0-based indexing, but kstpkper contains 1-based values
-            ksp_0based = (kstp - 1, kper - 1)
-
-            for txt in textlist:
-                # Get matching text from file (case-insensitive, padded)
-                txt_str = (
-                    txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
-                )
-
-                # Find matching records
-                matching_records = [
-                    t
-                    for t in self.textlist
-                    if txt_str.upper() in t.decode().strip().upper()
-                ]
-
-                for file_txt in matching_records:
-                    try:
-                        data = self.get_data(kstpkper=ksp_0based, text=file_txt)[0]
-
-                        # Get metadata from recordarray
-                        mask = (
-                            (self.recordarray["kstp"] == kstp)
-                            & (self.recordarray["kper"] == kper)
-                            & (self.recordarray["text"] == file_txt)
-                        )
-                        records = self.recordarray[mask]
-
-                        if len(records) == 0:
-                            continue
-
-                        record = records[0]
-
-                        # Determine imeth from data structure
-                        if isinstance(data, np.recarray):
-                            imeth = 6  # List format
-                        else:
-                            imeth = 1  # Array format
-
-                        # Create dictionary key
-                        key = (ksp_tuple, file_txt.decode().strip(), imeth)
-
-                        budget_dict[key] = {
-                            "data": data,
-                            "delt": float(record["delt"]),
-                            "pertim": float(record["pertim"]),
-                            "totim": float(record["totim"]),
-                        }
-
-                        # Add model/package names if imeth=6
-                        if imeth == 6:
-                            budget_dict[key].update(
-                                {
-                                    "modelnam": record["modelnam"].decode().strip(),
-                                    "paknam": record["paknam"].decode().strip(),
-                                    "modelnam2": record["modelnam2"].decode().strip(),
-                                    "paknam2": record["paknam2"].decode().strip(),
-                                }
-                            )
-
-                    except Exception as e:
-                        if kwargs.get("verbose", False):
-                            print(f"Warning: Could not read data for {ksp}, {txt}: {e}")
-                        continue
 
         # Set defaults from current file if not provided
         precision = kwargs.get("precision", self.precision)
@@ -2736,6 +2491,29 @@ class CellBudgetFile:
         # Set precision
         realtype = np.float32 if precision == "single" else np.float64
 
+        # Pre-allocate header dtypes outside loops (Fix #1)
+        h1dt = np.dtype(
+            [
+                ("kstp", np.int32),
+                ("kper", np.int32),
+                ("text", "S16"),
+                ("ncol", np.int32),
+                ("nrow", np.int32),
+                ("nlay", np.int32),
+            ]
+        )
+        h2dt = np.dtype(
+            [
+                ("imeth", np.int32),
+                ("delt", realtype),
+                ("pertim", realtype),
+                ("totim", realtype),
+            ]
+        )
+
+        # Sort kstpkper upfront for correct output order (Fix #4)
+        sorted_kstpkper = sorted(kstpkper, key=lambda x: (int(x[0]), int(x[1])))
+
         if verbose:
             print(f"Writing binary budget file: {filename}")
             print(f"  Precision: {precision}")
@@ -2744,9 +2522,190 @@ class CellBudgetFile:
             else:
                 print("  Grid shape: not specified (OK for FLOW-JA-FACE only files)")
 
-        # Write the file
+        # Write the file - single loop, no intermediate dict (Fix #4)
         with open(filename, "wb") as f:
-            write_records(f, budget_dict, nlay, nrow, ncol, realtype, verbose)
+            for ksp in sorted_kstpkper:
+                # Convert numpy int32 to Python int if needed
+                kstp = int(ksp[0])
+                kper = int(ksp[1])
+
+                if verbose:
+                    print(f"\n  Writing kstp={kstp}, kper={kper}")
+
+                # get_data() expects 0-based indexing, but kstpkper
+                # contains 1-based values
+                ksp_0based = (kstp - 1, kper - 1)
+
+                for txt in textlist:
+                    # Get matching text from file (case-insensitive, padded)
+                    txt_str = (
+                        txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
+                    )
+
+                    # Find matching records
+                    matching_records = [
+                        t
+                        for t in self.textlist
+                        if txt_str.upper() in t.decode().strip().upper()
+                    ]
+
+                    for file_txt in matching_records:
+                        try:
+                            data = self.get_data(kstpkper=ksp_0based, text=file_txt)[0]
+
+                            # Get metadata from recordarray
+                            mask = (
+                                (self.recordarray["kstp"] == kstp)
+                                & (self.recordarray["kper"] == kper)
+                                & (self.recordarray["text"] == file_txt)
+                            )
+                            records = self.recordarray[mask]
+
+                            if len(records) == 0:
+                                continue
+
+                            record = records[0]
+
+                            # Determine imeth from data structure
+                            if isinstance(data, np.recarray):
+                                imeth = 6  # List format
+                            else:
+                                imeth = 1  # Array format
+
+                            text_bytes = pad_text(file_txt.decode().strip())
+                            delt = float(record["delt"])
+                            pertim = float(record["pertim"])
+                            totim = float(record["totim"])
+
+                            if verbose:
+                                print(
+                                    f"    Writing {file_txt.decode().strip()}: "
+                                    f"imeth={imeth}"
+                                )
+
+                            # Check if this is FLOW-JA-FACE (connection-based)
+                            is_flowja = file_txt.decode().strip().upper() in [
+                                "FLOW-JA-FACE",
+                                "FLOW-JA-FACE-X",
+                            ]
+
+                            # Determine dimensions based on data type
+                            if is_flowja and imeth in [0, 1]:
+                                # FLOW-JA-FACE: use NJA (size of connection array)
+                                arr = np.asarray(data)
+                                nja = arr.size
+                                ndim1, ndim2, ndim3 = nja, 1, -1
+                            else:
+                                # Regular budget term: use grid dimensions
+                                if nlay is None or nrow is None or ncol is None:
+                                    raise ValueError(
+                                        f"Grid dimensions (nlay, nrow, ncol) "
+                                        f"required for non-FLOW-JA-FACE budget "
+                                        f"term '{file_txt.decode().strip()}'. "
+                                        f"Provided: nlay={nlay}, nrow={nrow}, "
+                                        f"ncol={ncol}"
+                                    )
+                                # Use negative nlay for compact format
+                                ndim1, ndim2, ndim3 = ncol, nrow, -nlay
+
+                            header1 = np.array(
+                                [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)],
+                                dtype=h1dt,
+                            )
+                            header1.tofile(f)
+
+                            header2 = np.array(
+                                [(imeth, delt, pertim, totim)], dtype=h2dt
+                            )
+                            header2.tofile(f)
+
+                            # For imeth=6, write model and package names
+                            if imeth == 6:
+                                modelnam = record["modelnam"].decode().strip()
+                                paknam = record["paknam"].decode().strip()
+                                modelnam2 = record["modelnam2"].decode().strip()
+                                paknam2 = record["paknam2"].decode().strip()
+
+                                # Ensure each is exactly 16 bytes
+                                for name in [modelnam, paknam, modelnam2, paknam2]:
+                                    name_bytes = pad_text(name)
+                                    f.write(name_bytes)
+
+                            # Write data based on imeth
+                            if imeth == 0 or imeth == 1:
+                                # Array format
+                                arr = np.asarray(data, dtype=realtype)
+
+                                if is_flowja:
+                                    # FLOW-JA-FACE: keep as 1D array of size NJA
+                                    if arr.ndim != 1:
+                                        arr = arr.flatten()
+                                else:
+                                    # Regular budget term: reshape to grid if needed
+                                    if arr.ndim == 1:
+                                        arr = arr.reshape(nlay, nrow, ncol)
+
+                                arr.tofile(f)
+
+                            elif imeth == 6:
+                                # List format - write naux+1
+                                auxtxt = []
+                                if "auxtxt" in record.dtype.names:
+                                    # Extract auxiliary text names if available
+                                    pass
+                                naux = len(auxtxt)
+                                np.array([naux + 1], dtype=np.int32).tofile(f)
+
+                                # Write auxiliary variable names
+                                for auxname in auxtxt:
+                                    f.write(pad_text(auxname))
+
+                                # Write nlist
+                                nlist = len(data)
+                                np.array([nlist], dtype=np.int32).tofile(f)
+
+                                # Write list data as structured array
+                                if isinstance(data, np.ndarray) and data.dtype.names:
+                                    dt_list = [
+                                        ("node", np.int32),
+                                        ("node2", np.int32),
+                                        ("q", realtype),
+                                    ]
+                                    for auxname in auxtxt:
+                                        dt_list.append((auxname, realtype))
+
+                                    output_dt = np.dtype(dt_list)
+                                    output_data = np.zeros(nlist, dtype=output_dt)
+
+                                    # Copy data with correct types
+                                    for field in output_dt.names:
+                                        if field in data.dtype.names:
+                                            output_data[field] = data[field].astype(
+                                                output_dt[field]
+                                            )
+
+                                    output_data.tofile(f)
+                                else:
+                                    raise ValueError(
+                                        "For imeth=6, data must be a numpy recarray "
+                                        "with fields: node, node2, q, and optional "
+                                        "auxiliary fields"
+                                    )
+
+                            else:
+                                raise NotImplementedError(
+                                    f"imeth={imeth} not yet implemented. "
+                                    "Currently only imeth=1 (array) and imeth=6 "
+                                    "(list) are supported."
+                                )
+
+                        except Exception as e:
+                            if verbose:
+                                print(
+                                    f"Warning: Could not read data for "
+                                    f"{ksp}, {txt}: {e}"
+                                )
+                            continue
 
         if verbose:
             print(f"\nSuccessfully wrote {filename}")
