@@ -648,15 +648,12 @@ class HeadFile(BinaryLayerFile):
         """
         Write head data to a binary file.
 
-        Convenience instance method that writes all or selected time steps
-        from the current file to a new file using the same format.
-
         Parameters
         ----------
         filename : str or PathLike
             Path to output head file
         kstpkper : list of tuples, optional
-            List of (kstp, kper) tuples to write. If None, writes all time steps.
+            Subset of (kstp, kper) tuples to write. If None, writes all time steps.
         **kwargs
             Additional keyword arguments passed to write_head():
             - text : str, identifier for head data (default uses current file's text)
@@ -686,6 +683,20 @@ class HeadFile(BinaryLayerFile):
             """Write head records to file."""
             sorted_keys = sorted(data_dict.keys())
 
+            # Pre-allocate header dtype outside loop (Fix #1)
+            dt = np.dtype(
+                [
+                    ("kstp", np.int32),
+                    ("kper", np.int32),
+                    ("pertim", realtype),
+                    ("totim", realtype),
+                    ("text", "S16"),
+                    ("ncol", np.int32),
+                    ("nrow", np.int32),
+                    ("ilay", np.int32),
+                ]
+            )
+
             for kstpkper in sorted_keys:
                 kstp, kper = kstpkper
                 entry = data_dict[kstpkper]
@@ -703,20 +714,6 @@ class HeadFile(BinaryLayerFile):
                 if verbose:
                     print(f"  Writing kstp={kstp}, kper={kper}, totim={totim}")
                     print(f"    Shape: {nlay} layers x {nrow} rows x {ncol} cols")
-
-                # Define header dtype
-                dt = np.dtype(
-                    [
-                        ("kstp", np.int32),
-                        ("kper", np.int32),
-                        ("pertim", realtype),
-                        ("totim", realtype),
-                        ("text", "S16"),
-                        ("ncol", np.int32),
-                        ("nrow", np.int32),
-                        ("ilay", np.int32),
-                    ]
-                )
 
                 # Write one record per layer
                 for ilay in range(nlay):
@@ -2442,15 +2439,12 @@ class CellBudgetFile:
         """
         Write budget data to a binary file.
 
-        Convenience instance method that writes all or selected budget records
-        from the current file to a new file using the same format.
-
         Parameters
         ----------
         filename : str or PathLike
             Path to output budget file
         kstpkper : list of tuples, optional
-            List of (kstp, kper) tuples to write. If None, writes all time steps.
+            Subset of (kstp, kper) tuples to write. If None, writes all time steps.
         text : str or list of str, optional
             Budget term(s) to write. If None, writes all terms.
             Examples: 'FLOW-JA-FACE', ['STORAGE', 'CONSTANT HEAD']
@@ -2498,6 +2492,26 @@ class CellBudgetFile:
                     time_steps[ksp_tuple] = []
                 time_steps[ksp_tuple].append((text, imeth, value))
 
+            # Pre-allocate header dtypes outside loops (Fix #1)
+            h1dt = np.dtype(
+                [
+                    ("kstp", np.int32),
+                    ("kper", np.int32),
+                    ("text", "S16"),
+                    ("ncol", np.int32),
+                    ("nrow", np.int32),
+                    ("nlay", np.int32),
+                ]
+            )
+            h2dt = np.dtype(
+                [
+                    ("imeth", np.int32),
+                    ("delt", realtype),
+                    ("pertim", realtype),
+                    ("totim", realtype),
+                ]
+            )
+
             # Sort by time step for consistent output
             for kstpkper in sorted(time_steps.keys()):
                 kstp, kper = kstpkper
@@ -2523,18 +2537,6 @@ class CellBudgetFile:
                         "FLOW-JA-FACE-X",
                     ]
 
-                    # Write header1
-                    h1dt = np.dtype(
-                        [
-                            ("kstp", np.int32),
-                            ("kper", np.int32),
-                            ("text", "S16"),
-                            ("ncol", np.int32),
-                            ("nrow", np.int32),
-                            ("nlay", np.int32),
-                        ]
-                    )
-
                     # Determine dimensions based on data type
                     if is_flowja and imeth in [0, 1]:
                         # FLOW-JA-FACE: use NJA (size of connection array)
@@ -2557,15 +2559,6 @@ class CellBudgetFile:
                     )
                     header1.tofile(f)
 
-                    # Write header2
-                    h2dt = np.dtype(
-                        [
-                            ("imeth", np.int32),
-                            ("delt", realtype),
-                            ("pertim", realtype),
-                            ("totim", realtype),
-                        ]
-                    )
                     header2 = np.array([(imeth, delt, pertim, totim)], dtype=h2dt)
                     header2.tofile(f)
 
