@@ -697,7 +697,7 @@ class HeadFile(BinaryLayerFile):
 
         text_bytes = pad_text(text)
 
-        # Pre-allocate header dtype outside loop (Fix #1)
+        # Pre-allocate header dtype outside loop for better performance
         dt = np.dtype(
             [
                 ("kstp", np.int32),
@@ -711,7 +711,7 @@ class HeadFile(BinaryLayerFile):
             ]
         )
 
-        # Sort kstpkper upfront for correct output order (Fix #4)
+        # Sort kstpkper upfront for correct output order
         sorted_kstpkper = sorted(kstpkper, key=lambda x: (int(x[0]), int(x[1])))
 
         if verbose:
@@ -720,7 +720,7 @@ class HeadFile(BinaryLayerFile):
             print(f"  Precision: {precision}")
             print(f"  Number of time steps: {len(sorted_kstpkper)}")
 
-        # Write the file - single loop, no intermediate dict (Fix #4)
+        # Write the file
         with open(filename, "wb") as f:
             for ksp in sorted_kstpkper:
                 try:
@@ -2491,7 +2491,7 @@ class CellBudgetFile:
         # Set precision
         realtype = np.float32 if precision == "single" else np.float64
 
-        # Pre-allocate header dtypes outside loops (Fix #1)
+        # Pre-allocate header dtypes outside loops for better performance
         h1dt = np.dtype(
             [
                 ("kstp", np.int32),
@@ -2511,8 +2511,20 @@ class CellBudgetFile:
             ]
         )
 
-        # Sort kstpkper upfront for correct output order (Fix #4)
+        # Sort kstpkper upfront for correct output order
         sorted_kstpkper = sorted(kstpkper, key=lambda x: (int(x[0]), int(x[1])))
+
+        # Pre-compute text matching to avoid redundant string operations
+        text_mapping = {}
+        for txt in textlist:
+            txt_str = txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
+            txt_upper = txt_str.upper()
+
+            # Find matching records from file
+            matching_records = [
+                t for t in self.textlist if txt_upper in t.decode().strip().upper()
+            ]
+            text_mapping[txt] = matching_records
 
         if verbose:
             print(f"Writing binary budget file: {filename}")
@@ -2522,7 +2534,7 @@ class CellBudgetFile:
             else:
                 print("  Grid shape: not specified (OK for FLOW-JA-FACE only files)")
 
-        # Write the file - single loop, no intermediate dict (Fix #4)
+        # Write the file
         with open(filename, "wb") as f:
             for ksp in sorted_kstpkper:
                 # Convert numpy int32 to Python int if needed
@@ -2537,19 +2549,8 @@ class CellBudgetFile:
                 ksp_0based = (kstp - 1, kper - 1)
 
                 for txt in textlist:
-                    # Get matching text from file (case-insensitive, padded)
-                    txt_str = (
-                        txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
-                    )
-
-                    # Find matching records
-                    matching_records = [
-                        t
-                        for t in self.textlist
-                        if txt_str.upper() in t.decode().strip().upper()
-                    ]
-
-                    for file_txt in matching_records:
+                    # Use pre-computed text matching
+                    for file_txt in text_mapping[txt]:
                         try:
                             data = self.get_data(kstpkper=ksp_0based, text=file_txt)[0]
 
@@ -2572,19 +2573,18 @@ class CellBudgetFile:
                             else:
                                 imeth = 1  # Array format
 
-                            text_bytes = pad_text(file_txt.decode().strip())
+                            # Decode text once and reuse
+                            text_str = file_txt.decode().strip()
+                            text_bytes = pad_text(text_str)
                             delt = float(record["delt"])
                             pertim = float(record["pertim"])
                             totim = float(record["totim"])
 
                             if verbose:
-                                print(
-                                    f"    Writing {file_txt.decode().strip()}: "
-                                    f"imeth={imeth}"
-                                )
+                                print(f"    Writing {text_str}: imeth={imeth}")
 
                             # Check if this is FLOW-JA-FACE (connection-based)
-                            is_flowja = file_txt.decode().strip().upper() in [
+                            is_flowja = text_str.upper() in [
                                 "FLOW-JA-FACE",
                                 "FLOW-JA-FACE-X",
                             ]
@@ -2600,8 +2600,8 @@ class CellBudgetFile:
                                 if nlay is None or nrow is None or ncol is None:
                                     raise ValueError(
                                         f"Grid dimensions (nlay, nrow, ncol) "
-                                        f"required for non-FLOW-JA-FACE budget "
-                                        f"term '{file_txt.decode().strip()}'. "
+                                        f"required for non-FLOW-JA-FACE "
+                                        f"budget term '{text_str}'. "
                                         f"Provided: nlay={nlay}, nrow={nrow}, "
                                         f"ncol={ncol}"
                                     )
