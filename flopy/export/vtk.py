@@ -1109,17 +1109,17 @@ class Vtk:
                 pids = np.unique(pathlines.particleid)
                 pathlines = [pathlines[pathlines.particleid == pid] for pid in pids]
             elif all(k in pathlines.dtype.names for k in prt_fields):
-                pls = []
-                for imdl in np.unique(pathlines.imdl):
-                    for iprp in np.unique(pathlines.iprp):
-                        for irpt in np.unique(pathlines.irpt):
-                            pl = pathlines[
-                                (pathlines.imdl == imdl)
-                                & (pathlines.iprp == iprp)
-                                & (pathlines.irpt == irpt)
-                            ]
-                            pls.extend([pl[pl.trelease == t] for t in np.unique(pl.t)])
-                pathlines = pls
+                # particle composite key
+                keys = np.column_stack(
+                    [
+                        pathlines["imdl"],
+                        pathlines["iprp"],
+                        pathlines["irpt"],
+                        pathlines["trelease"],
+                    ]
+                )
+                _, inv = np.unique(keys, axis=0, return_inverse=True)
+                pathlines = [pathlines[inv == i] for i in range(inv.max() + 1)]
             else:
                 raise ValueError("Unrecognized pathline dtype")
         else:

@@ -2,6 +2,7 @@ import math
 import os
 import shutil
 from pathlib import Path
+from pprint import pformat
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -38,6 +39,7 @@ from flopy.mf6 import (
 )
 from flopy.modflow import Modflow, ModflowDis
 from flopy.modpath import Modpath6, Modpath6Bas
+from flopy.plot.plotutil import to_prt_pathlines
 from flopy.utils import (
     CellBudgetFile,
     HeadFile,
@@ -1508,8 +1510,6 @@ def test_vtk_unstructured(function_tmpdir, unstructured_grid):
 
 @requires_pkg("vtk", "pyvista")
 def test_vtk_to_pyvista(function_tmpdir):
-    from pprint import pformat
-
     from autotest.test_mp7_cases import Mp7Cases
 
     case_mf6 = Mp7Cases.mp7_mf6(function_tmpdir)
@@ -1529,13 +1529,29 @@ def test_vtk_to_pyvista(function_tmpdir):
     assert grid.n_cells == gwf.modelgrid.nnodes
 
     vtk.add_pathline_points(pls)
-    grid, pathlines = vtk.to_pyvista()
+    grid, mp7_pls = vtk.to_pyvista()
     n_pts = sum(pl.shape[0] for pl in pls)
-    assert pathlines.n_points == n_pts
-    assert pathlines.n_cells == n_pts + len(pls)
-    assert "particleid" in pathlines.point_data
-    assert "time" in pathlines.point_data
-    assert "k" in pathlines.point_data
+    assert mp7_pls.n_points == n_pts
+    assert mp7_pls.n_cells == n_pts + len(pls)
+    assert "particleid" in mp7_pls.point_data
+    assert "time" in mp7_pls.point_data
+    assert "k" in mp7_pls.point_data
+
+    vtk = Vtk(model=gwf, binary=True, smooth=False)
+    assert not any(vtk.to_pyvista())
+
+    prt_pathlines = to_prt_pathlines(np.hstack(pls).view(np.recarray))
+
+    vtk.add_model(gwf)
+    vtk.add_pathline_points(prt_pathlines)
+    grid, prt_pls = vtk.to_pyvista()
+    n_pts = sum(pl.shape[0] for pl in pls)
+    assert prt_pls.n_points == n_pts
+    assert prt_pls.n_cells == n_pts + len(pls)
+    assert "imdl" in prt_pls.point_data
+    assert "iprp" in prt_pls.point_data
+    assert "irpt" in prt_pls.point_data
+    assert "trelease" in prt_pls.point_data
 
     # uncomment to debug
     # grid.plot()
