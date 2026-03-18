@@ -1023,6 +1023,7 @@ class Mf6Splitter:
                 self._offsets[m] = {
                     "xorigin": self._modelgrid.xvertices[rmax + 1, cmin],
                     "yorigin": self._modelgrid.yvertices[rmax + 1, cmin],
+                    "angrot": self._modelgrid.angrot
                 }
                 # get new nrow and ncol information
                 nrow = (rmax - rmin) + 1
@@ -1046,6 +1047,7 @@ class Mf6Splitter:
                 self._offsets[m] = {
                     "xorigin": self._modelgrid.xoffset,
                     "yorigin": self._modelgrid.yoffset,
+                    "angrot": self._modelgrid.angrot
                 }
 
         new_ncpl = {}
