@@ -897,7 +897,7 @@ class Vtk:
             else:
                 raise AssertionError("Size of vector must be 3 * nnodes or 3 * ncpl")
         else:
-            vector = np.reshape(vector, (3, self.nnodes))
+            vector = np.reshape(vector, (3, self.nnodes)).T
 
         if self.point_scalars:
             tmp = []
