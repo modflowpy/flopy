@@ -2457,8 +2457,8 @@ class CellBudgetFile:
         >>> cbc.write('output.cbc', kstpkper=[(1, 0)], text=['STORAGE', 'FLOW-JA-FACE'])
         """
 
-        def pad_text(text):
-            """Pad text to exactly 16 bytes."""
+        def fit_text(text):
+            """Pad or truncate text to 16 bytes."""
             if isinstance(text, str):
                 text = text.encode("ascii")
             if len(text) > 16:
@@ -2467,11 +2467,9 @@ class CellBudgetFile:
                 return text + b" " * (16 - len(text))
             return text
 
-        # Determine which time steps to write
         if kstpkper is None:
             kstpkper = self.kstpkper
 
-        # Determine which text entries to write
         if text is None:
             textlist = self.textlist
         elif isinstance(text, str):
@@ -2479,19 +2477,11 @@ class CellBudgetFile:
         else:
             textlist = [t.ljust(16).encode() for t in text]
 
-        # Set defaults from current file if not provided
-        precision = kwargs.get("precision", self.precision)
         verbose = kwargs.get("verbose", False)
-
-        # Only pass grid dimensions if they're set (non-zero)
-        nlay = self.nlay if self.nlay > 0 else None
-        nrow = self.nrow if self.nrow > 0 else None
-        ncol = self.ncol if self.ncol > 0 else None
-
-        # Set precision
+        precision = kwargs.get("precision", self.precision)
         realtype = np.float32 if precision == "single" else np.float64
 
-        # Pre-allocate header dtypes outside loops for better performance
+        # header dtypes
         h1dt = np.dtype(
             [
                 ("kstp", np.int32),
@@ -2511,20 +2501,20 @@ class CellBudgetFile:
             ]
         )
 
-        # Sort kstpkper upfront for correct output order
         sorted_kstpkper = sorted(kstpkper, key=lambda x: (int(x[0]), int(x[1])))
 
-        # Pre-compute text matching to avoid redundant string operations
         text_mapping = {}
         for txt in textlist:
             txt_str = txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
             txt_upper = txt_str.upper()
-
-            # Find matching records from file
             matching_records = [
                 t for t in self.textlist if txt_upper in t.decode().strip().upper()
             ]
             text_mapping[txt] = matching_records
+
+        nlay = self.nlay if self.nlay > 0 else None
+        nrow = self.nrow if self.nrow > 0 else None
+        ncol = self.ncol if self.ncol > 0 else None
 
         if verbose:
             print(f"Writing binary budget file: {filename}")
@@ -2532,180 +2522,142 @@ class CellBudgetFile:
             if nlay is not None and nrow is not None and ncol is not None:
                 print(f"  Grid shape: {nlay} layers x {nrow} rows x {ncol} cols")
             else:
-                print("  Grid shape: not specified (OK for FLOW-JA-FACE only files)")
+                print("  Grid shape not specified")
 
-        # Write the file
         with open(filename, "wb") as f:
             for ksp in sorted_kstpkper:
-                # Convert numpy int32 to Python int if needed
                 kstp = int(ksp[0])
                 kper = int(ksp[1])
+
+                # get_data() expects 0-based but kstpkper is 1-based
+                ksp_0based = (kstp - 1, kper - 1)
 
                 if verbose:
                     print(f"\n  Writing kstp={kstp}, kper={kper}")
 
-                # get_data() expects 0-based indexing, but kstpkper
-                # contains 1-based values
-                ksp_0based = (kstp - 1, kper - 1)
-
                 for txt in textlist:
-                    # Use pre-computed text matching
                     for file_txt in text_mapping[txt]:
-                        try:
-                            data = self.get_data(kstpkper=ksp_0based, text=file_txt)[0]
-
-                            # Get metadata from recordarray
-                            mask = (
-                                (self.recordarray["kstp"] == kstp)
-                                & (self.recordarray["kper"] == kper)
-                                & (self.recordarray["text"] == file_txt)
-                            )
-                            records = self.recordarray[mask]
-
-                            if len(records) == 0:
-                                continue
-
-                            record = records[0]
-
-                            # Determine imeth from data structure
-                            if isinstance(data, np.recarray):
-                                imeth = 6  # List format
-                            else:
-                                imeth = 1  # Array format
-
-                            # Decode text once and reuse
-                            text_str = file_txt.decode().strip()
-                            text_bytes = pad_text(text_str)
-                            delt = float(record["delt"])
-                            pertim = float(record["pertim"])
-                            totim = float(record["totim"])
-
-                            if verbose:
-                                print(f"    Writing {text_str}: imeth={imeth}")
-
-                            # Check if this is FLOW-JA-FACE (connection-based)
-                            is_flowja = text_str.upper() in [
-                                "FLOW-JA-FACE",
-                                "FLOW-JA-FACE-X",
-                            ]
-
-                            # Determine dimensions based on data type
-                            if is_flowja and imeth in [0, 1]:
-                                # FLOW-JA-FACE: use NJA (size of connection array)
-                                arr = np.asarray(data)
-                                nja = arr.size
-                                ndim1, ndim2, ndim3 = nja, 1, -1
-                            else:
-                                # Regular budget term: use grid dimensions
-                                if nlay is None or nrow is None or ncol is None:
-                                    raise ValueError(
-                                        f"Grid dimensions (nlay, nrow, ncol) "
-                                        f"required for non-FLOW-JA-FACE "
-                                        f"budget term '{text_str}'. "
-                                        f"Provided: nlay={nlay}, nrow={nrow}, "
-                                        f"ncol={ncol}"
-                                    )
-                                # Use negative nlay for compact format
-                                ndim1, ndim2, ndim3 = ncol, nrow, -nlay
-
-                            header1 = np.array(
-                                [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)],
-                                dtype=h1dt,
-                            )
-                            header1.tofile(f)
-
-                            header2 = np.array(
-                                [(imeth, delt, pertim, totim)], dtype=h2dt
-                            )
-                            header2.tofile(f)
-
-                            # For imeth=6, write model and package names
-                            if imeth == 6:
-                                modelnam = record["modelnam"].decode().strip()
-                                paknam = record["paknam"].decode().strip()
-                                modelnam2 = record["modelnam2"].decode().strip()
-                                paknam2 = record["paknam2"].decode().strip()
-
-                                # Ensure each is exactly 16 bytes
-                                for name in [modelnam, paknam, modelnam2, paknam2]:
-                                    name_bytes = pad_text(name)
-                                    f.write(name_bytes)
-
-                            # Write data based on imeth
-                            if imeth == 0 or imeth == 1:
-                                # Array format
-                                arr = np.asarray(data, dtype=realtype)
-
-                                if is_flowja:
-                                    # FLOW-JA-FACE: keep as 1D array of size NJA
-                                    if arr.ndim != 1:
-                                        arr = arr.flatten()
-                                else:
-                                    # Regular budget term: reshape to grid if needed
-                                    if arr.ndim == 1:
-                                        arr = arr.reshape(nlay, nrow, ncol)
-
-                                arr.tofile(f)
-
-                            elif imeth == 6:
-                                # List format - write naux+1
-                                auxtxt = []
-                                if "auxtxt" in record.dtype.names:
-                                    # Extract auxiliary text names if available
-                                    pass
-                                naux = len(auxtxt)
-                                np.array([naux + 1], dtype=np.int32).tofile(f)
-
-                                # Write auxiliary variable names
-                                for auxname in auxtxt:
-                                    f.write(pad_text(auxname))
-
-                                # Write nlist
-                                nlist = len(data)
-                                np.array([nlist], dtype=np.int32).tofile(f)
-
-                                # Write list data as structured array
-                                if isinstance(data, np.ndarray) and data.dtype.names:
-                                    dt_list = [
-                                        ("node", np.int32),
-                                        ("node2", np.int32),
-                                        ("q", realtype),
-                                    ]
-                                    for auxname in auxtxt:
-                                        dt_list.append((auxname, realtype))
-
-                                    output_dt = np.dtype(dt_list)
-                                    output_data = np.zeros(nlist, dtype=output_dt)
-
-                                    # Copy data with correct types
-                                    for field in output_dt.names:
-                                        if field in data.dtype.names:
-                                            output_data[field] = data[field].astype(
-                                                output_dt[field]
-                                            )
-
-                                    output_data.tofile(f)
-                                else:
-                                    raise ValueError(
-                                        "For imeth=6, data must be a numpy recarray "
-                                        "with fields: node, node2, q, and optional "
-                                        "auxiliary fields"
-                                    )
-
-                            else:
-                                raise NotImplementedError(
-                                    f"imeth={imeth} not yet implemented. "
-                                    "Currently only imeth=1 (array) and imeth=6 "
-                                    "(list) are supported."
-                                )
-
-                        except Exception as e:
-                            if verbose:
-                                print(
-                                    f"Warning: Could not read data for "
-                                    f"{ksp}, {txt}: {e}"
-                                )
+                        data = self.get_data(kstpkper=ksp_0based, text=file_txt)[0]
+                        mask = (
+                            (self.recordarray["kstp"] == kstp)
+                            & (self.recordarray["kper"] == kper)
+                            & (self.recordarray["text"] == file_txt)
+                        )
+                        records = self.recordarray[mask]
+                        if len(records) == 0:
                             continue
+
+                        record = records[0]
+
+                        if isinstance(data, np.recarray):
+                            imeth = 6  # list
+                        else:
+                            imeth = 1  # array
+
+                        text_str = file_txt.decode().strip()
+                        text_bytes = fit_text(text_str)
+                        delt = float(record["delt"])
+                        pertim = float(record["pertim"])
+                        totim = float(record["totim"])
+
+                        if verbose:
+                            print(f"    Writing {text_str}: imeth={imeth}")
+
+                        is_flowja = text_str.upper() == "FLOW-JA-FACE"
+
+                        # Determine dimensions based on data type
+                        if is_flowja and imeth in [0, 1]:
+                            # keep FLOW-JA-FACE flat/size NJA
+                            nja = np.asarray(data).size
+                            ndim1, ndim2, ndim3 = nja, 1, -1
+                        else:
+                            # Regular budget term: use grid dimensions
+                            if nlay is None or nrow is None or ncol is None:
+                                raise ValueError(
+                                    f"Grid dimensions (nlay, nrow, ncol) "
+                                    f"required for non-FLOW-JA-FACE "
+                                    f"budget term '{text_str}'. "
+                                    f"Provided: nlay={nlay}, nrow={nrow}, "
+                                    f"ncol={ncol}"
+                                )
+                            # negative nlay -> compact format
+                            ndim1, ndim2, ndim3 = ncol, nrow, -nlay
+
+                        header1 = np.array(
+                            [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)],
+                            dtype=h1dt,
+                        )
+                        header1.tofile(f)
+
+                        header2 = np.array([(imeth, delt, pertim, totim)], dtype=h2dt)
+                        header2.tofile(f)
+
+                        if imeth in [0, 1]:
+                            arr = np.asarray(data, dtype=realtype)
+                            # keep FLOW-JA-FACE flat/size NJA.
+                            # reshape other variables to grid.
+                            if is_flowja and arr.ndim != 1:
+                                arr = arr.flatten()
+                            elif arr.ndim == 1:
+                                arr = arr.reshape(nlay, nrow, ncol)
+
+                            arr.tofile(f)
+
+                        elif imeth == 6:
+                            # write model and package names
+                            modelnam = record["modelnam"].decode().strip()
+                            paknam = record["paknam"].decode().strip()
+                            modelnam2 = record["modelnam2"].decode().strip()
+                            paknam2 = record["paknam2"].decode().strip()
+
+                            for name in [modelnam, paknam, modelnam2, paknam2]:
+                                name_bytes = fit_text(name)
+                                f.write(name_bytes)
+
+                            # write naux and aux var names
+                            standard_fields = {"node", "node2", "q"}
+                            auxtxt = [
+                                name
+                                for name in data.dtype.names
+                                if name not in standard_fields
+                            ]
+                            naux = len(auxtxt)
+                            np.array([naux + 1], dtype=np.int32).tofile(f)
+                            for auxname in auxtxt:
+                                f.write(fit_text(auxname))
+
+                            if not (isinstance(data, np.ndarray) and data.dtype.names):
+                                raise ValueError(
+                                    "For imeth=6, data must be a numpy recarray "
+                                    "with fields: node, node2, q, and optional "
+                                    "auxiliary fields"
+                                )
+
+                            # nrite nlist and list data
+                            nlist = len(data)
+                            np.array([nlist], dtype=np.int32).tofile(f)
+                            dt_list = [
+                                ("node", np.int32),
+                                ("node2", np.int32),
+                                ("q", realtype),
+                            ]
+                            for auxname in auxtxt:
+                                dt_list.append((auxname, realtype))
+
+                            output_dt = np.dtype(dt_list)
+                            output_data = np.zeros(nlist, dtype=output_dt)
+                            for field in output_dt.names:
+                                if field in data.dtype.names:
+                                    output_data[field] = data[field].astype(
+                                        output_dt[field]
+                                    )
+
+                            output_data.tofile(f)
+
+                        else:
+                            raise NotImplementedError(
+                                "Expected imeth=1 (array) or imeth=6 (list)"
+                            )
 
         if verbose:
             print(f"\nSuccessfully wrote {filename}")

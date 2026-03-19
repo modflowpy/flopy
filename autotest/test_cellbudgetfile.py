@@ -1156,3 +1156,53 @@ def test_cellbudgetfile_get_ts_backwards_compatible_idx_format(
         ts_new_list,
         ts_old_list,
     )
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_write_preserves_aux_vars(dis_sim, function_tmpdir):
+    """Test that write() method preserves auxiliary variables in imeth=6 records."""
+    from pathlib import Path
+
+    import numpy as np
+
+    sim = dis_sim
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=True)
+    assert success
+
+    gwf = sim.get_model()
+    cbc_orig = gwf.output.budget()
+
+    # Get DATA-SPDIS which has aux vars (node, q, qx, qy, qz)
+    spdis_orig = cbc_orig.get_data(text="DATA-SPDIS")
+    assert len(spdis_orig) > 0
+
+    # Verify aux fields are present
+    for field in ["node", "q", "qx", "qy", "qz"]:
+        assert field in spdis_orig[0].dtype.names, (
+            f"Field {field} not found in original data"
+        )
+
+    # Write to a new file
+    output_file = Path(function_tmpdir) / "test_aux_rewritten.cbc"
+    cbc_orig.write(output_file, kstpkper=cbc_orig.kstpkper[:2])
+
+    # Read back the written file
+    from flopy.utils import CellBudgetFile
+
+    cbc_rewritten = CellBudgetFile(output_file)
+    spdis_rewritten = cbc_rewritten.get_data(text="DATA-SPDIS")
+
+    # Verify aux vars were preserved
+    for field in ["node", "q", "qx", "qy", "qz"]:
+        assert field in spdis_rewritten[0].dtype.names, (
+            f"Field {field} not found in rewritten data"
+        )
+
+    # Verify data matches
+    assert len(spdis_orig) >= len(spdis_rewritten)
+    for i in range(len(spdis_rewritten)):
+        for field in ["q", "qx", "qy", "qz"]:
+            assert np.allclose(spdis_orig[i][field], spdis_rewritten[i][field]), (
+                f"Field {field} mismatch at timestep {i}"
+            )
