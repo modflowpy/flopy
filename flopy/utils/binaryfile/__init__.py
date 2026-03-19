@@ -2537,7 +2537,10 @@ class CellBudgetFile:
 
                 for txt in textlist:
                     for file_txt in text_mapping[txt]:
-                        data = self.get_data(kstpkper=ksp_0based, text=file_txt)[0]
+                        data_list = self.get_data(kstpkper=ksp_0based, text=file_txt)
+                        if not data_list:
+                            continue
+                        data = data_list[0]
                         mask = (
                             (self.recordarray["kstp"] == kstp)
                             & (self.recordarray["kper"] == kper)
