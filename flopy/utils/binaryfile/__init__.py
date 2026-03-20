@@ -551,8 +551,9 @@ class HeadFile(BinaryLayerFile):
         super().__init__(filename, precision, verbose, **kwargs)
 
     @classmethod
-    def from_data(
+    def write(
         cls,
+        filename,
         data,
         nrow=None,
         ncol=None,
@@ -561,17 +562,18 @@ class HeadFile(BinaryLayerFile):
         precision="double",
         totim=None,
         pertim=None,
-        filename=None,
         verbose=False,
     ):
         """
-        Create a HeadFile from arrays without reading from an existing file.
+        Write head data directly to a binary file.
 
-        This factory method creates a binary head file from provided data arrays,
-        allowing programmatic creation of head files for testing or data generation.
+        This classmethod writes head data arrays to a binary head file without
+        creating a HeadFile instance. Useful for generating head files programmatically.
 
         Parameters
         ----------
+        filename : str or PathLike
+            Path for the output file
         data : dict or list
             Head data in one of two formats:
 
@@ -602,29 +604,25 @@ class HeadFile(BinaryLayerFile):
         pertim : dict or list, optional
             Period time values. If dict, maps (kstp, kper) to pertim.
             If list, should match order of data. If None, defaults to totim.
-        filename : str or PathLike, optional
-            Path for the output file. If None, creates a temporary file.
         verbose : bool, default False
             Print progress messages
-
-        Returns
-        -------
-        HeadFile
-            Instance loaded from the created binary file
 
         Examples
         --------
         >>> import numpy as np
         >>> from flopy.utils import HeadFile
         >>>
-        >>> # Create head data for two time steps
+        >>> # Write head data for two time steps
         >>> head1 = np.random.rand(3, 10, 20)  # 3 layers, 10 rows, 20 cols
         >>> head2 = np.random.rand(3, 10, 20)
         >>> data = {
         ...     (1, 1): head1,
         ...     (1, 2): head2,
         ... }
-        >>> hds = HeadFile.from_data(data)
+        >>> HeadFile.write('output.hds', data)
+        >>>
+        >>> # Then read it
+        >>> hds = HeadFile('output.hds')
         >>> hds.get_times()
         [1.0, 2.0]
         >>>
@@ -633,7 +631,7 @@ class HeadFile(BinaryLayerFile):
         ...     {'data': head1, 'kstp': 1, 'kper': 1, 'totim': 10.0, 'pertim': 10.0},
         ...     {'data': head2, 'kstp': 1, 'kper': 2, 'totim': 20.0, 'pertim': 10.0},
         ... ]
-        >>> hds = HeadFile.from_data(data_with_times)
+        >>> HeadFile.write('output.hds', data_with_times)
         """
         # Normalize data to list of record dicts
         if isinstance(data, dict):
@@ -795,11 +793,6 @@ class HeadFile(BinaryLayerFile):
 
             os.fsync(f.fileno())
 
-        # Load and return HeadFile instance
-        return cls(
-            filename, text=text.decode().strip(), precision=precision, verbose=verbose
-        )
-
     def reverse(self, filename: Optional[PathLike] = None):
         """
         Reverse the time order of the currently loaded binary head file. If a head
@@ -889,23 +882,23 @@ class HeadFile(BinaryLayerFile):
             move(target, filename)
             super().__init__(filename, self.precision, self.verbose)
 
-    def write(
+    def export(
         self,
         filename: Union[str, PathLike],
         kstpkper: Optional[list] = None,
         **kwargs,
     ):
         """
-        Write head data to a binary file.
+        Export head data to a binary file.
 
         Parameters
         ----------
         filename : str or PathLike
             Path to output head file
         kstpkper : list of tuples, optional
-            Subset of (kstp, kper) tuples to write. If None, writes all time steps.
+            Subset of (kstp, kper) tuples to export. If None, exports all time steps.
         **kwargs
-            Additional keyword arguments passed to write_head():
+            Additional keyword arguments:
             - text : str, identifier for head data (default uses current file's text)
             - precision : str, 'single' or 'double' (default is the file's precision)
             - verbose : bool, print progress messages
@@ -913,10 +906,10 @@ class HeadFile(BinaryLayerFile):
         Examples
         --------
         >>> hds = HeadFile('input.hds')
-        >>> # Write all time steps
-        >>> hds.write('output.hds')
-        >>> # Write specific time steps
-        >>> hds.write('output.hds', kstpkper=[(1, 0), (1, 1)])
+        >>> # Export all time steps
+        >>> hds.export('output.hds')
+        >>> # Export specific time steps
+        >>> hds.export('output.hds', kstpkper=[(1, 0), (1, 1)])
         """
 
         # Determine which time steps to write
@@ -1414,8 +1407,9 @@ class CellBudgetFile:
         self.close()
 
     @classmethod
-    def from_data(
+    def write(
         cls,
+        filename,
         data,
         text="FLOW-JA-FACE",
         imeth=1,
@@ -1426,17 +1420,19 @@ class CellBudgetFile:
         nlay=None,
         nrow=None,
         ncol=None,
-        filename=None,
         verbose=False,
     ):
         """
-        Create a CellBudgetFile from arrays without reading from an existing file.
+        Write budget data directly to a binary file.
 
-        This factory method creates a binary cell budget file from provided data arrays,
-        allowing programmatic creation of budget files for testing or data generation.
+        This classmethod writes budget data arrays to a binary cell budget file without
+        creating a CellBudgetFile instance. Useful for generating budget files
+        programmatically.
 
         Parameters
         ----------
+        filename : str or PathLike
+            Path for the output file
         data : dict or list
             Budget data in one of two formats:
 
@@ -1474,39 +1470,35 @@ class CellBudgetFile:
             Number of rows. Required for imeth=1 if nlay and ncol not provided.
         ncol : int, optional
             Number of columns. Required for imeth=1 if nlay and nrow not provided.
-        filename : str or PathLike, optional
-            Path for output file. If None, creates a temporary file.
         verbose : bool, default False
             Print progress messages
-
-        Returns
-        -------
-        CellBudgetFile
-            Instance loaded from the created binary file
 
         Examples
         --------
         >>> import numpy as np
         >>> from flopy.utils import CellBudgetFile
         >>>
-        >>> # Create flow-ja-face data for two time steps
-        >>> # For a 3x10x20 grid, nja might be ~6000 connections
+        >>> # Write budget data for two time steps
         >>> flow1 = np.random.rand(6000)
         >>> flow2 = np.random.rand(6000)
         >>> data = {
         ...     (1, 1): flow1,
         ...     (1, 2): flow2,
         ... }
-        >>> cbb = CellBudgetFile.from_data(data, text='FLOW-JA-FACE')
+        >>> CellBudgetFile.write(
+        ...     'output.cbc', data, text='FLOW-JA-FACE', nlay=3, nrow=10, ncol=20
+        ... )
         >>>
-        >>> # Or with explicit metadata
-        >>> data_with_meta = [
+        >>> # Then read it
+        >>> cbb = CellBudgetFile('output.cbc')
+        >>>
+        >>> # Or with list of records (dicts)
+        >>> CellBudgetFile.write('output.cbc', [
         ...     {'data': flow1, 'kstp': 1, 'kper': 1, 'totim': 10.0,
         ...      'text': 'FLOW-JA-FACE'},
         ...     {'data': flow2, 'kstp': 1, 'kper': 2, 'totim': 20.0,
         ...      'text': 'FLOW-JA-FACE'},
-        ... ]
-        >>> cbb = CellBudgetFile.from_data(data_with_meta)
+        ... ], nlay=3, nrow=10, ncol=20)
         """
         # Normalize data to list of record dicts
         if isinstance(data, dict):
@@ -1561,7 +1553,12 @@ class CellBudgetFile:
         elif isinstance(data, list):
             records = []
             for rec in data:
-                arr = np.asarray(rec["data"]).flatten()
+                rec_imeth = rec.get("imeth", imeth)
+                arr = np.asarray(rec["data"])
+                # Only flatten for imeth=1 (full 3D arrays)
+                # For imeth=6 (list-based), keep as structured array
+                if rec_imeth == 1:
+                    arr = arr.flatten()
                 records.append(
                     {
                         "data": arr,
@@ -1573,7 +1570,11 @@ class CellBudgetFile:
                         ),
                         "delt": rec.get("delt", 1.0),
                         "text": rec.get("text", text),
-                        "imeth": rec.get("imeth", imeth),
+                        "imeth": rec_imeth,
+                        "modelnam": rec.get("modelnam", ""),
+                        "paknam": rec.get("paknam", ""),
+                        "modelnam2": rec.get("modelnam2", ""),
+                        "paknam2": rec.get("paknam2", ""),
                     }
                 )
         else:
@@ -1582,33 +1583,49 @@ class CellBudgetFile:
         if len(records) == 0:
             raise ValueError("No data records provided")
 
-        # Only imeth=1 is supported for now
+        # Check supported imeth values
         for rec in records:
-            if rec["imeth"] != 1:
+            if rec["imeth"] not in (1, 6):
                 raise NotImplementedError(
-                    f"Only imeth=1 is currently supported, got imeth={rec['imeth']}"
+                    f"Only imeth=1 and imeth=6 are currently supported, "
+                    f"got imeth={rec['imeth']}"
                 )
 
         # Infer dimensions from first record
-        first_data = records[0]["data"]
-        nnodes = len(first_data)
+        # For imeth=1, nnodes = nlay * nrow * ncol
+        # For imeth=6, we still need dimensions but data is list-based
+        first_imeth = records[0]["imeth"]
 
-        # For imeth=1, we need nlay, nrow, ncol
-        # If all three provided, use them; otherwise try to infer
-        if nlay is not None and nrow is not None and ncol is not None:
-            if nlay * nrow * ncol != nnodes:
-                raise ValueError(
-                    f"Dimensions don't match: nlay={nlay}, nrow={nrow}, ncol={ncol} "
-                    f"gives {nlay * nrow * ncol} nodes but data has {nnodes}"
-                )
+        if first_imeth == 1:
+            first_data = records[0]["data"]
+            nnodes = len(first_data)
+
+            # If all three provided, use them; otherwise try to infer
+            if nlay is not None and nrow is not None and ncol is not None:
+                if nlay * nrow * ncol != nnodes:
+                    raise ValueError(
+                        f"Dimensions don't match: nlay={nlay}, nrow={nrow}, "
+                        f"ncol={ncol} gives {nlay * nrow * ncol} nodes but "
+                        f"data has {nnodes}"
+                    )
+            else:
+                # Set defaults to make it work for common cases
+                if nlay is None:
+                    nlay = 1
+                if nrow is None:
+                    nrow = 1
+                if ncol is None:
+                    ncol = nnodes
         else:
-            # Set defaults to make it work for common cases
+            # For imeth=6, dimensions must be provided or we use defaults
             if nlay is None:
                 nlay = 1
             if nrow is None:
                 nrow = 1
             if ncol is None:
-                ncol = nnodes
+                ncol = 1
+
+        nnodes = nlay * nrow * ncol
 
         # Set precision dtype
         realtype = np.float32 if precision == "single" else np.float64
@@ -1661,54 +1678,113 @@ class CellBudgetFile:
             for rec in records:
                 # Pad text
                 text_bytes = pad_text(rec["text"])
+                rec_imeth = rec["imeth"]
 
-                # Write header 1
-                # Note: nlay must be negative to indicate a compact budget file
-                h1 = np.array(
-                    (rec["kstp"], rec["kper"], text_bytes, ncol, nrow, -nlay),
-                    dtype=h1dt,
-                )
-                h1.tofile(f)
-
-                # Write header 2
-                h2 = np.array(
-                    (
-                        rec["imeth"],
-                        realtype(rec["delt"]),
-                        realtype(rec["pertim"]),
-                        realtype(rec["totim"]),
-                    ),
-                    dtype=h2dt,
-                )
-                h2.tofile(f)
-
-                # Write data
-                arr = rec["data"].astype(realtype)
-                if len(arr) != nnodes:
-                    raise ValueError(
-                        f"Inconsistent data sizes: expected {nnodes}, got {len(arr)}"
+                if rec_imeth == 1:
+                    # Write header 1 for full 3D array
+                    # Note: nlay must be negative to indicate a compact budget file
+                    h1 = np.array(
+                        (rec["kstp"], rec["kper"], text_bytes, ncol, nrow, -nlay),
+                        dtype=h1dt,
                     )
-                arr.tofile(f)
+                    h1.tofile(f)
+
+                    # Write header 2
+                    h2 = np.array(
+                        (
+                            rec_imeth,
+                            realtype(rec["delt"]),
+                            realtype(rec["pertim"]),
+                            realtype(rec["totim"]),
+                        ),
+                        dtype=h2dt,
+                    )
+                    h2.tofile(f)
+
+                    # Write data
+                    arr = rec["data"].astype(realtype)
+                    if len(arr) != nnodes:
+                        raise ValueError(
+                            f"Inconsistent data sizes: expected {nnodes}, "
+                            f"got {len(arr)}"
+                        )
+                    arr.tofile(f)
+
+                elif rec_imeth == 6:
+                    # Write header 1 for list-based data
+                    # For imeth=6, use ncol=1, nrow=1, nlay=-1
+                    h1 = np.array(
+                        (rec["kstp"], rec["kper"], text_bytes, 1, 1, -1),
+                        dtype=h1dt,
+                    )
+                    h1.tofile(f)
+
+                    # Write header 2
+                    h2 = np.array(
+                        (
+                            rec_imeth,
+                            realtype(rec["delt"]),
+                            realtype(rec["pertim"]),
+                            realtype(rec["totim"]),
+                        ),
+                        dtype=h2dt,
+                    )
+                    h2.tofile(f)
+
+                    # Write modelnam, paknam, modelnam2, paknam2
+                    for name in ["modelnam", "paknam", "modelnam2", "paknam2"]:
+                        name_bytes = pad_text(rec.get(name, ""))
+                        f.write(name_bytes)
+
+                    # Get data and determine columns
+                    arr = rec["data"]
+                    if not isinstance(arr, np.ndarray) or arr.dtype.names is None:
+                        raise ValueError(
+                            "For imeth=6, data must be a structured numpy array "
+                            "with named fields"
+                        )
+
+                    # Calculate ndat (number of floating point columns)
+                    # Expecting fields like: ID1, ID2, FLOW, [aux1, aux2, ...]
+                    colnames = arr.dtype.names
+                    ndat = len(colnames) - 2  # Exclude ID1, ID2
+
+                    # Write ndat
+                    np.array([ndat], dtype=np.int32).tofile(f)
+
+                    # Write auxiliary column names (if any)
+                    naux = ndat - 1  # Exclude FLOW
+                    if naux > 0:
+                        aux_names = colnames[3:]  # Skip ID1, ID2, FLOW
+                        for aux_name in aux_names:
+                            aux_bytes = pad_text(aux_name)
+                            f.write(aux_bytes)
+
+                    # Write nlist
+                    nlist = arr.shape[0]
+                    np.array([nlist], dtype=np.int32).tofile(f)
+
+                    # Write data - need to ensure correct dtypes
+                    # Convert to proper precision for floating point fields
+                    dt_list = []
+                    for i, name in enumerate(colnames):
+                        if i < 2:  # ID1, ID2
+                            dt_list.append((name, np.int32))
+                        else:  # FLOW and auxiliary variables
+                            dt_list.append((name, realtype))
+
+                    # Convert data to correct dtype
+                    arr_typed = np.empty(nlist, dtype=np.dtype(dt_list))
+                    for name in colnames:
+                        arr_typed[name] = arr[name]
+
+                    arr_typed.tofile(f)
 
             # Explicitly flush to ensure data is written
             f.flush()
             import os
 
             os.fsync(f.fileno())
-
-        # Load and return CellBudgetFile instance
-        obj = cls(filename, precision=precision, verbose=verbose)
-
-        # If dimensions weren't set during _build_index() (e.g., all records were
-        # FLOW-JA-FACE which are skipped), set them explicitly from the provided values
-        if obj.nrow == 0:
-            obj.nrow = nrow
-            obj.ncol = ncol
-            obj.nlay = nlay
-            obj.shape = (nlay, nrow, ncol)
-            obj.nnodes = nlay * nrow * ncol
-
-        return obj
 
     def __len__(self):
         """
@@ -2967,7 +3043,7 @@ class CellBudgetFile:
 
         return residual
 
-    def write(
+    def export(
         self,
         filename: Union[str, PathLike],
         kstpkper: Optional[list] = None,
@@ -2975,33 +3051,35 @@ class CellBudgetFile:
         **kwargs,
     ):
         """
-        Write budget data to a binary file.
+        Export budget data to a binary file.
 
         Parameters
         ----------
         filename : str or PathLike
             Path to output budget file
         kstpkper : list of tuples, optional
-            Subset of (kstp, kper) tuples to write. If None, writes all time steps.
+            Subset of (kstp, kper) tuples to export. If None, exports all time steps.
         text : str or list of str, optional
-            Budget term(s) to write. If None, writes all terms.
+            Budget term(s) to export. If None, exports all terms.
             Examples: 'FLOW-JA-FACE', ['STORAGE', 'CONSTANT HEAD']
         **kwargs
-            Additional keyword arguments passed to write_budget():
+            Additional keyword arguments:
             - precision : str, 'single' or 'double' (default is the file's precision)
             - verbose : bool, print progress messages
 
         Examples
         --------
         >>> cbc = CellBudgetFile('input.cbc')
-        >>> # Write all data
-        >>> cbc.write('output.cbc')
-        >>> # Write specific time steps
-        >>> cbc.write('output.cbc', kstpkper=[(1, 0), (1, 1)])
-        >>> # Write specific budget terms
-        >>> cbc.write('output.cbc', text='FLOW-JA-FACE')
-        >>> # Write specific terms and time steps
-        >>> cbc.write('output.cbc', kstpkper=[(1, 0)], text=['STORAGE', 'FLOW-JA-FACE'])
+        >>> # Export all data
+        >>> cbc.export('output.cbc')
+        >>> # Export specific time steps
+        >>> cbc.export('output.cbc', kstpkper=[(1, 0), (1, 1)])
+        >>> # Export specific budget terms
+        >>> cbc.export('output.cbc', text='FLOW-JA-FACE')
+        >>> # Export specific terms and time steps
+        >>> cbc.export(
+        ...     'output.cbc', kstpkper=[(1, 0)], text=['STORAGE', 'FLOW-JA-FACE']
+        ... )
         """
 
         def fit_text(text):

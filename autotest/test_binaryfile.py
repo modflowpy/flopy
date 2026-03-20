@@ -777,8 +777,8 @@ def test_headfile_get_ts_disu_grid(dis_sim, function_tmpdir):
     )
 
 
-def test_headfile_from_data_dict(function_tmpdir):
-    """Test HeadFile.from_data() with dict input format."""
+def test_headfile_write_dict(function_tmpdir):
+    """Test HeadFile.write() with dict input format."""
     # Create test data for a 3-layer, 10-row, 20-col grid
     nlay, nrow, ncol = 3, 10, 20
     head1 = np.random.rand(nlay, nrow, ncol).astype(np.float64)
@@ -790,8 +790,13 @@ def test_headfile_from_data_dict(function_tmpdir):
         (1, 2): head2,
     }
 
-    # Test with auto-generated filename
-    hds = HeadFile.from_data(data, precision="double")
+    # Write to file
+    outfile = function_tmpdir / "test.hds"
+    HeadFile.write(outfile, data, precision="double")
+    assert outfile.exists()
+
+    # Read back and verify
+    hds = HeadFile(outfile)
     assert hds.nlay == nlay
     assert hds.nrow == nrow
     assert hds.ncol == ncol
@@ -805,15 +810,9 @@ def test_headfile_from_data_dict(function_tmpdir):
     np.testing.assert_allclose(data_read1, head1, rtol=1e-10)
     np.testing.assert_allclose(data_read2, head2, rtol=1e-10)
 
-    # Test with explicit filename
-    outfile = function_tmpdir / "test.hds"
-    hds2 = HeadFile.from_data(data, filename=outfile, precision="double")
-    assert outfile.exists()
-    assert hds2.filename == outfile
 
-
-def test_headfile_from_data_list(function_tmpdir):
-    """Test HeadFile.from_data() with list input format."""
+def test_headfile_write_list(function_tmpdir):
+    """Test HeadFile.write() with list input format."""
     nlay, nrow, ncol = 2, 5, 10
     head1 = np.random.rand(nlay, nrow, ncol).astype(np.float32)
     head2 = np.random.rand(nlay, nrow, ncol).astype(np.float32)
@@ -824,7 +823,9 @@ def test_headfile_from_data_list(function_tmpdir):
         {"data": head2, "kstp": 1, "kper": 2, "totim": 20.0, "pertim": 10.0},
     ]
 
-    hds = HeadFile.from_data(data, precision="single")
+    outfile = function_tmpdir / "test.hds"
+    HeadFile.write(outfile, data, precision="single")
+    hds = HeadFile(outfile)
     assert hds.nlay == nlay
     assert hds.nrow == nrow
     assert hds.ncol == ncol
@@ -837,8 +838,8 @@ def test_headfile_from_data_list(function_tmpdir):
     np.testing.assert_allclose(data_read2, head2, rtol=1e-6)
 
 
-def test_headfile_from_data_2d(function_tmpdir):
-    """Test HeadFile.from_data() with 2D arrays (single layer)."""
+def test_headfile_write_2d(function_tmpdir):
+    """Test HeadFile.write() with 2D arrays (single layer)."""
     nrow, ncol = 10, 20
     head1 = np.random.rand(nrow, ncol)
     head2 = np.random.rand(nrow, ncol)
@@ -848,7 +849,9 @@ def test_headfile_from_data_2d(function_tmpdir):
         (1, 2): head2,
     }
 
-    hds = HeadFile.from_data(data)
+    outfile = function_tmpdir / "test.hds"
+    HeadFile.write(outfile, data)
+    hds = HeadFile(outfile)
     assert hds.nlay == 1
     assert hds.nrow == nrow
     assert hds.ncol == ncol
@@ -859,8 +862,8 @@ def test_headfile_from_data_2d(function_tmpdir):
     np.testing.assert_allclose(data_read[0], head1, rtol=1e-10)
 
 
-def test_headfile_from_data_custom_times(function_tmpdir):
-    """Test HeadFile.from_data() with custom time values."""
+def test_headfile_write_custom_times(function_tmpdir):
+    """Test HeadFile.write() with custom time values."""
     nlay, nrow, ncol = 1, 5, 5
     head1 = np.ones((nlay, nrow, ncol))
     head2 = np.ones((nlay, nrow, ncol)) * 2
@@ -874,7 +877,9 @@ def test_headfile_from_data_custom_times(function_tmpdir):
     totim = {(1, 1): 5.5, (2, 1): 10.5}
     pertim = {(1, 1): 5.5, (2, 1): 5.0}
 
-    hds = HeadFile.from_data(data, totim=totim, pertim=pertim)
+    outfile = function_tmpdir / "test.hds"
+    HeadFile.write(outfile, data, totim=totim, pertim=pertim)
+    hds = HeadFile(outfile)
     assert hds.get_times() == [5.5, 10.5]
 
     # Verify we can retrieve by totim
@@ -882,37 +887,47 @@ def test_headfile_from_data_custom_times(function_tmpdir):
     np.testing.assert_allclose(data_read, head1)
 
 
-def test_cellbudgetfile_from_data_dict(function_tmpdir):
-    """Test CellBudgetFile.from_data() with dict input format."""
-    # Create test data for flow-ja-face (1D arrays)
+def test_cellbudgetfile_write_dict(function_tmpdir):
+    """Test CellBudgetFile.write() with dict input format."""
+    # Create test data for multiple budget terms
     nnodes = 600  # 3 * 10 * 20
     flow1 = np.random.rand(nnodes).astype(np.float64)
     flow2 = np.random.rand(nnodes).astype(np.float64)
+    storage1 = np.random.rand(nnodes).astype(np.float64)
+    storage2 = np.random.rand(nnodes).astype(np.float64)
 
-    data = {
-        (1, 1): flow1,
-        (1, 2): flow2,
-    }
+    # Write multiple budget terms so dimensions get set properly
+    # (FLOW-JA-FACE alone won't set dimensions)
+    data = [
+        {"data": flow1, "kstp": 1, "kper": 1, "text": "FLOW-JA-FACE", "totim": 1.0},
+        {"data": storage1, "kstp": 1, "kper": 1, "text": "STORAGE", "totim": 1.0},
+        {"data": flow2, "kstp": 1, "kper": 2, "text": "FLOW-JA-FACE", "totim": 2.0},
+        {"data": storage2, "kstp": 1, "kper": 2, "text": "STORAGE", "totim": 2.0},
+    ]
 
     # Create with explicit dimensions
-    cbb = CellBudgetFile.from_data(
-        data, text="FLOW-JA-FACE", nlay=3, nrow=10, ncol=20, precision="double"
-    )
+    outfile = function_tmpdir / "test.cbc"
+    CellBudgetFile.write(outfile, data, nlay=3, nrow=10, ncol=20, precision="double")
+    cbb = CellBudgetFile(outfile)
     assert cbb.nlay == 3
     assert cbb.nrow == 10
     assert cbb.ncol == 20
     assert len(cbb.get_times()) == 2
     assert cbb.get_times() == [1.0, 2.0]
 
-    # Verify data round-trips
-    data_read1 = cbb.get_data(kstpkper=(0, 0), text="FLOW-JA-FACE")[0]
-    data_read2 = cbb.get_data(kstpkper=(0, 1), text="FLOW-JA-FACE")[0]
-    np.testing.assert_allclose(data_read1.flatten(), flow1, rtol=1e-10)
-    np.testing.assert_allclose(data_read2.flatten(), flow2, rtol=1e-10)
+    # Verify data round-trips for both budget terms
+    flow_read1 = cbb.get_data(kstpkper=(0, 0), text="FLOW-JA-FACE")[0]
+    flow_read2 = cbb.get_data(kstpkper=(0, 1), text="FLOW-JA-FACE")[0]
+    storage_read1 = cbb.get_data(kstpkper=(0, 0), text="STORAGE")[0]
+    storage_read2 = cbb.get_data(kstpkper=(0, 1), text="STORAGE")[0]
+    np.testing.assert_allclose(flow_read1.flatten(), flow1, rtol=1e-10)
+    np.testing.assert_allclose(flow_read2.flatten(), flow2, rtol=1e-10)
+    np.testing.assert_allclose(storage_read1.flatten(), storage1, rtol=1e-10)
+    np.testing.assert_allclose(storage_read2.flatten(), storage2, rtol=1e-10)
 
 
-def test_cellbudgetfile_from_data_list(function_tmpdir):
-    """Test CellBudgetFile.from_data() with list input format."""
+def test_cellbudgetfile_write_list(function_tmpdir):
+    """Test CellBudgetFile.write() with list input format."""
     nnodes = 100
     flow1 = np.random.rand(nnodes).astype(np.float32)
     flow2 = np.random.rand(nnodes).astype(np.float32)
@@ -936,7 +951,9 @@ def test_cellbudgetfile_from_data_list(function_tmpdir):
         },
     ]
 
-    cbb = CellBudgetFile.from_data(data, nlay=1, nrow=1, ncol=100, precision="single")
+    outfile = function_tmpdir / "test.cbc"
+    CellBudgetFile.write(outfile, data, nlay=1, nrow=1, ncol=100, precision="single")
+    cbb = CellBudgetFile(outfile)
     assert cbb.get_times() == [10.0, 20.0]
 
     # Verify data
@@ -946,15 +963,15 @@ def test_cellbudgetfile_from_data_list(function_tmpdir):
     np.testing.assert_allclose(data_read2.flatten(), flow2, rtol=1e-6)
 
 
-def test_headfile_from_data_errors(function_tmpdir):
-    """Test that HeadFile.from_data() raises appropriate errors."""
+def test_headfile_write_errors(function_tmpdir):
+    """Test that HeadFile.write() raises appropriate errors."""
     # Empty data
     with pytest.raises(ValueError, match="No data records"):
-        HeadFile.from_data({})
+        HeadFile.write(function_tmpdir / "test.hds", {})
 
     # 1D array (not allowed)
     with pytest.raises(ValueError, match="at least 2D"):
-        HeadFile.from_data({(1, 1): np.array([1, 2, 3])})
+        HeadFile.write(function_tmpdir / "test.hds", {(1, 1): np.array([1, 2, 3])})
 
     # Inconsistent shapes
     data = {
@@ -962,23 +979,19 @@ def test_headfile_from_data_errors(function_tmpdir):
         (1, 2): np.ones((10, 15)),  # Different ncol
     }
     with pytest.raises(ValueError, match="Inconsistent array shapes"):
-        HeadFile.from_data(data)
+        HeadFile.write(function_tmpdir / "test.hds", data)
 
 
-def test_cellbudgetfile_from_data_errors(function_tmpdir):
-    """Test that CellBudgetFile.from_data() raises appropriate errors."""
+def test_cellbudgetfile_write_errors(function_tmpdir):
+    """Test that CellBudgetFile.write() raises appropriate errors."""
     # Empty data
     with pytest.raises(ValueError, match="No data records"):
-        CellBudgetFile.from_data({})
-
-    # imeth != 1 not supported yet
-    data = [{"data": np.ones(100), "kstp": 1, "kper": 1, "imeth": 6}]
-    with pytest.raises(NotImplementedError, match="Only imeth=1"):
-        CellBudgetFile.from_data(data)
+        CellBudgetFile.write(function_tmpdir / "test.cbc", {})
 
     # Dimension mismatch
     with pytest.raises(ValueError, match="Dimensions don't match"):
-        CellBudgetFile.from_data(
+        CellBudgetFile.write(
+            function_tmpdir / "test.cbc",
             {(1, 1): np.ones(100)},
             nlay=2,
             nrow=10,
