@@ -775,3 +775,212 @@ def test_headfile_get_ts_disu_grid(dis_sim, function_tmpdir):
         ts_old_list,
         err_msg="DISU HeadFile: old list format should match new list format",
     )
+
+
+def test_headfile_from_data_dict(function_tmpdir):
+    """Test HeadFile.from_data() with dict input format."""
+    # Create test data for a 3-layer, 10-row, 20-col grid
+    nlay, nrow, ncol = 3, 10, 20
+    head1 = np.random.rand(nlay, nrow, ncol).astype(np.float64)
+    head2 = np.random.rand(nlay, nrow, ncol).astype(np.float64)
+
+    # Create using dict format
+    data = {
+        (1, 1): head1,
+        (1, 2): head2,
+    }
+
+    # Test with auto-generated filename
+    hds = HeadFile.from_data(data, precision="double")
+    assert hds.nlay == nlay
+    assert hds.nrow == nrow
+    assert hds.ncol == ncol
+    assert len(hds.get_times()) == 2
+    assert hds.get_times() == [1.0, 2.0]
+    assert hds.get_kstpkper() == [(0, 0), (0, 1)]
+
+    # Verify data round-trips correctly
+    data_read1 = hds.get_data(kstpkper=(0, 0))
+    data_read2 = hds.get_data(kstpkper=(0, 1))
+    np.testing.assert_allclose(data_read1, head1, rtol=1e-10)
+    np.testing.assert_allclose(data_read2, head2, rtol=1e-10)
+
+    # Test with explicit filename
+    outfile = function_tmpdir / "test.hds"
+    hds2 = HeadFile.from_data(data, filename=outfile, precision="double")
+    assert outfile.exists()
+    assert hds2.filename == outfile
+
+
+def test_headfile_from_data_list(function_tmpdir):
+    """Test HeadFile.from_data() with list input format."""
+    nlay, nrow, ncol = 2, 5, 10
+    head1 = np.random.rand(nlay, nrow, ncol).astype(np.float32)
+    head2 = np.random.rand(nlay, nrow, ncol).astype(np.float32)
+
+    # Create using list format with explicit metadata
+    data = [
+        {"data": head1, "kstp": 1, "kper": 1, "totim": 10.0, "pertim": 10.0},
+        {"data": head2, "kstp": 1, "kper": 2, "totim": 20.0, "pertim": 10.0},
+    ]
+
+    hds = HeadFile.from_data(data, precision="single")
+    assert hds.nlay == nlay
+    assert hds.nrow == nrow
+    assert hds.ncol == ncol
+    assert hds.get_times() == [10.0, 20.0]
+
+    # Verify data
+    data_read1 = hds.get_data(totim=10.0)
+    data_read2 = hds.get_data(totim=20.0)
+    np.testing.assert_allclose(data_read1, head1, rtol=1e-6)
+    np.testing.assert_allclose(data_read2, head2, rtol=1e-6)
+
+
+def test_headfile_from_data_2d(function_tmpdir):
+    """Test HeadFile.from_data() with 2D arrays (single layer)."""
+    nrow, ncol = 10, 20
+    head1 = np.random.rand(nrow, ncol)
+    head2 = np.random.rand(nrow, ncol)
+
+    data = {
+        (1, 1): head1,
+        (1, 2): head2,
+    }
+
+    hds = HeadFile.from_data(data)
+    assert hds.nlay == 1
+    assert hds.nrow == nrow
+    assert hds.ncol == ncol
+
+    # Get data and check - should get 3D array back
+    data_read = hds.get_data(kstpkper=(0, 0))
+    assert data_read.shape == (1, nrow, ncol)
+    np.testing.assert_allclose(data_read[0], head1, rtol=1e-10)
+
+
+def test_headfile_from_data_custom_times(function_tmpdir):
+    """Test HeadFile.from_data() with custom time values."""
+    nlay, nrow, ncol = 1, 5, 5
+    head1 = np.ones((nlay, nrow, ncol))
+    head2 = np.ones((nlay, nrow, ncol)) * 2
+
+    data = {
+        (1, 1): head1,
+        (2, 1): head2,
+    }
+
+    # Custom totim and pertim
+    totim = {(1, 1): 5.5, (2, 1): 10.5}
+    pertim = {(1, 1): 5.5, (2, 1): 5.0}
+
+    hds = HeadFile.from_data(data, totim=totim, pertim=pertim)
+    assert hds.get_times() == [5.5, 10.5]
+
+    # Verify we can retrieve by totim
+    data_read = hds.get_data(totim=5.5)
+    np.testing.assert_allclose(data_read, head1)
+
+
+def test_cellbudgetfile_from_data_dict(function_tmpdir):
+    """Test CellBudgetFile.from_data() with dict input format."""
+    # Create test data for flow-ja-face (1D arrays)
+    nnodes = 600  # 3 * 10 * 20
+    flow1 = np.random.rand(nnodes).astype(np.float64)
+    flow2 = np.random.rand(nnodes).astype(np.float64)
+
+    data = {
+        (1, 1): flow1,
+        (1, 2): flow2,
+    }
+
+    # Create with explicit dimensions
+    cbb = CellBudgetFile.from_data(
+        data, text="FLOW-JA-FACE", nlay=3, nrow=10, ncol=20, precision="double"
+    )
+    assert cbb.nlay == 3
+    assert cbb.nrow == 10
+    assert cbb.ncol == 20
+    assert len(cbb.get_times()) == 2
+    assert cbb.get_times() == [1.0, 2.0]
+
+    # Verify data round-trips
+    data_read1 = cbb.get_data(kstpkper=(0, 0), text="FLOW-JA-FACE")[0]
+    data_read2 = cbb.get_data(kstpkper=(0, 1), text="FLOW-JA-FACE")[0]
+    np.testing.assert_allclose(data_read1.flatten(), flow1, rtol=1e-10)
+    np.testing.assert_allclose(data_read2.flatten(), flow2, rtol=1e-10)
+
+
+def test_cellbudgetfile_from_data_list(function_tmpdir):
+    """Test CellBudgetFile.from_data() with list input format."""
+    nnodes = 100
+    flow1 = np.random.rand(nnodes).astype(np.float32)
+    flow2 = np.random.rand(nnodes).astype(np.float32)
+
+    data = [
+        {
+            "data": flow1,
+            "kstp": 1,
+            "kper": 1,
+            "totim": 10.0,
+            "pertim": 10.0,
+            "text": "STORAGE",
+        },
+        {
+            "data": flow2,
+            "kstp": 1,
+            "kper": 2,
+            "totim": 20.0,
+            "pertim": 10.0,
+            "text": "STORAGE",
+        },
+    ]
+
+    cbb = CellBudgetFile.from_data(data, nlay=1, nrow=1, ncol=100, precision="single")
+    assert cbb.get_times() == [10.0, 20.0]
+
+    # Verify data
+    data_read1 = cbb.get_data(totim=10.0, text="STORAGE")[0]
+    data_read2 = cbb.get_data(totim=20.0, text="STORAGE")[0]
+    np.testing.assert_allclose(data_read1.flatten(), flow1, rtol=1e-6)
+    np.testing.assert_allclose(data_read2.flatten(), flow2, rtol=1e-6)
+
+
+def test_headfile_from_data_errors(function_tmpdir):
+    """Test that HeadFile.from_data() raises appropriate errors."""
+    # Empty data
+    with pytest.raises(ValueError, match="No data records"):
+        HeadFile.from_data({})
+
+    # 1D array (not allowed)
+    with pytest.raises(ValueError, match="at least 2D"):
+        HeadFile.from_data({(1, 1): np.array([1, 2, 3])})
+
+    # Inconsistent shapes
+    data = {
+        (1, 1): np.ones((10, 20)),
+        (1, 2): np.ones((10, 15)),  # Different ncol
+    }
+    with pytest.raises(ValueError, match="Inconsistent array shapes"):
+        HeadFile.from_data(data)
+
+
+def test_cellbudgetfile_from_data_errors(function_tmpdir):
+    """Test that CellBudgetFile.from_data() raises appropriate errors."""
+    # Empty data
+    with pytest.raises(ValueError, match="No data records"):
+        CellBudgetFile.from_data({})
+
+    # imeth != 1 not supported yet
+    data = [{"data": np.ones(100), "kstp": 1, "kper": 1, "imeth": 6}]
+    with pytest.raises(NotImplementedError, match="Only imeth=1"):
+        CellBudgetFile.from_data(data)
+
+    # Dimension mismatch
+    with pytest.raises(ValueError, match="Dimensions don't match"):
+        CellBudgetFile.from_data(
+            {(1, 1): np.ones(100)},
+            nlay=2,
+            nrow=10,
+            ncol=10,  # Should be 200 nodes
+        )

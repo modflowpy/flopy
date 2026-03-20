@@ -550,6 +550,256 @@ class HeadFile(BinaryLayerFile):
         self.header_dtype = BinaryHeader.set_dtype(bintype="Head", precision=precision)
         super().__init__(filename, precision, verbose, **kwargs)
 
+    @classmethod
+    def from_data(
+        cls,
+        data,
+        nrow=None,
+        ncol=None,
+        nlay=None,
+        text="head",
+        precision="double",
+        totim=None,
+        pertim=None,
+        filename=None,
+        verbose=False,
+    ):
+        """
+        Create a HeadFile from arrays without reading from an existing file.
+
+        This factory method creates a binary head file from provided data arrays,
+        allowing programmatic creation of head files for testing or data generation.
+
+        Parameters
+        ----------
+        data : dict or list
+            Head data in one of two formats:
+
+            1. Dict mapping (kstp, kper) tuples to arrays:
+               {(kstp, kper): array, ...}
+               - Arrays should be 2D (nrow, ncol) or 3D (nlay, nrow, ncol)
+               - If totim/pertim not provided, totim defaults to kper, pertim to totim
+
+            2. List of dicts with full metadata:
+               [{'data': array, 'kstp': int, 'kper': int,
+                 'totim': float, 'pertim': float, 'ilay': int (optional)}, ...]
+               - Each dict represents one layer at one timestep
+               - ilay defaults to 1 if not provided
+
+        nrow : int, optional
+            Number of rows. If None, inferred from data arrays.
+        ncol : int, optional
+            Number of columns. If None, inferred from data arrays.
+        nlay : int, optional
+            Number of layers. If None, inferred from data arrays.
+        text : str, default "head"
+            Text identifier for the head data (will be padded to 16 characters)
+        precision : str, default "double"
+            Precision of floating point data: 'single' or 'double'
+        totim : dict or list, optional
+            Total time values. If dict, maps (kstp, kper) to totim.
+            If list, should match order of data. If None, defaults to kper.
+        pertim : dict or list, optional
+            Period time values. If dict, maps (kstp, kper) to pertim.
+            If list, should match order of data. If None, defaults to totim.
+        filename : str or PathLike, optional
+            Path for the output file. If None, creates a temporary file.
+        verbose : bool, default False
+            Print progress messages
+
+        Returns
+        -------
+        HeadFile
+            Instance loaded from the created binary file
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from flopy.utils import HeadFile
+        >>>
+        >>> # Create head data for two time steps
+        >>> head1 = np.random.rand(3, 10, 20)  # 3 layers, 10 rows, 20 cols
+        >>> head2 = np.random.rand(3, 10, 20)
+        >>> data = {
+        ...     (1, 1): head1,
+        ...     (1, 2): head2,
+        ... }
+        >>> hds = HeadFile.from_data(data)
+        >>> hds.get_times()
+        [1.0, 2.0]
+        >>>
+        >>> # Or with explicit time values
+        >>> data_with_times = [
+        ...     {'data': head1, 'kstp': 1, 'kper': 1, 'totim': 10.0, 'pertim': 10.0},
+        ...     {'data': head2, 'kstp': 1, 'kper': 2, 'totim': 20.0, 'pertim': 10.0},
+        ... ]
+        >>> hds = HeadFile.from_data(data_with_times)
+        """
+        # Normalize data to list of record dicts
+        if isinstance(data, dict):
+            records = []
+            for (kstp, kper), arr in sorted(data.items()):
+                # Ensure array is at least 2D
+                arr = np.asarray(arr)
+                if arr.ndim == 1:
+                    raise ValueError(
+                        "Data arrays must be at least 2D (nrow, ncol), got 1D array"
+                    )
+
+                # Handle 2D vs 3D arrays
+                if arr.ndim == 2:
+                    # Single layer
+                    arr = arr.reshape(1, arr.shape[0], arr.shape[1])
+
+                nlayers, nrows, ncols = arr.shape
+
+                # Get time values
+                if totim is None:
+                    tot = float(kper)
+                elif isinstance(totim, dict):
+                    tot = totim.get((kstp, kper), float(kper))
+                else:
+                    raise ValueError("totim must be None or dict when data is dict")
+
+                if pertim is None:
+                    per = tot
+                elif isinstance(pertim, dict):
+                    per = pertim.get((kstp, kper), tot)
+                else:
+                    raise ValueError("pertim must be None or dict when data is dict")
+
+                # Create one record per layer
+                for ilay in range(nlayers):
+                    records.append(
+                        {
+                            "data": arr[ilay],
+                            "kstp": kstp,
+                            "kper": kper,
+                            "totim": tot,
+                            "pertim": per,
+                            "ilay": ilay + 1,
+                        }
+                    )
+        elif isinstance(data, list):
+            records = []
+            for rec in data:
+                arr = np.asarray(rec["data"])
+                if arr.ndim == 1:
+                    raise ValueError("Data arrays must be at least 2D")
+
+                # Handle 2D vs 3D
+                if arr.ndim == 2:
+                    # Single layer record
+                    records.append(
+                        {
+                            "data": arr,
+                            "kstp": rec["kstp"],
+                            "kper": rec["kper"],
+                            "totim": rec.get("totim", float(rec["kper"])),
+                            "pertim": rec.get(
+                                "pertim", rec.get("totim", float(rec["kper"]))
+                            ),
+                            "ilay": rec.get("ilay", 1),
+                        }
+                    )
+                else:
+                    # 3D array - create one record per layer
+                    nlayers = arr.shape[0]
+                    for ilay in range(nlayers):
+                        records.append(
+                            {
+                                "data": arr[ilay],
+                                "kstp": rec["kstp"],
+                                "kper": rec["kper"],
+                                "totim": rec.get("totim", float(rec["kper"])),
+                                "pertim": rec.get(
+                                    "pertim", rec.get("totim", float(rec["kper"]))
+                                ),
+                                "ilay": ilay + 1,
+                            }
+                        )
+        else:
+            raise ValueError("data must be dict or list")
+
+        if len(records) == 0:
+            raise ValueError("No data records provided")
+
+        # Infer dimensions from data if not provided
+        first_data = records[0]["data"]
+        if nrow is None:
+            nrow = first_data.shape[0]
+        if ncol is None:
+            ncol = first_data.shape[1]
+        if nlay is None:
+            nlay = max(rec["ilay"] for rec in records)
+
+        # Validate dimensions
+        for rec in records:
+            if rec["data"].shape != (nrow, ncol):
+                raise ValueError(
+                    f"Inconsistent array shapes: expected ({nrow}, {ncol}), "
+                    f"got {rec['data'].shape}"
+                )
+
+        # Set precision dtype
+        realtype = np.float32 if precision == "single" else np.float64
+
+        # Pad text to 16 bytes
+        if isinstance(text, str):
+            text = text.encode("ascii")
+        if len(text) > 16:
+            text = text[:16]
+        elif len(text) < 16:
+            text = text + b" " * (16 - len(text))
+
+        # Create temporary file if no filename provided
+        if filename is None:
+            # Create a temp file that won't be auto-deleted
+            fd, filename = tempfile.mkstemp(suffix=".hds")
+            import os
+
+            os.close(fd)  # Close the file descriptor, we'll open it for writing
+
+        # Write binary file
+        if verbose:
+            print(f"Writing binary head file: {filename}")
+            print(f"  Text identifier: {text.decode().strip()}")
+            print(f"  Precision: {precision}")
+            print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            print(f"  Number of records: {len(records)}")
+
+        # Use BinaryHeader.create() and write like Util2d.write_bin() does
+        with open(filename, "wb") as f:
+            for rec in records:
+                # Create header using BinaryHeader.create()
+                header = BinaryHeader.create(
+                    bintype="Head",
+                    precision=precision,
+                    text=text.decode().strip(),
+                    nrow=nrow,
+                    ncol=ncol,
+                    ilay=rec["ilay"],
+                    pertim=rec["pertim"],
+                    totim=rec["totim"],
+                    kstp=rec["kstp"],
+                    kper=rec["kper"],
+                )
+
+                # Write header and data
+                header.tofile(f)
+                rec["data"].astype(realtype).tofile(f)
+
+            # Explicitly flush and sync to ensure data is written
+            f.flush()
+            import os
+
+            os.fsync(f.fileno())
+
+        # Load and return HeadFile instance
+        return cls(
+            filename, text=text.decode().strip(), precision=precision, verbose=verbose
+        )
+
     def reverse(self, filename: Optional[PathLike] = None):
         """
         Reverse the time order of the currently loaded binary head file. If a head
@@ -1162,6 +1412,303 @@ class CellBudgetFile:
 
     def __exit__(self, *exc):
         self.close()
+
+    @classmethod
+    def from_data(
+        cls,
+        data,
+        text="FLOW-JA-FACE",
+        imeth=1,
+        precision="double",
+        delt=1.0,
+        pertim=None,
+        totim=None,
+        nlay=None,
+        nrow=None,
+        ncol=None,
+        filename=None,
+        verbose=False,
+    ):
+        """
+        Create a CellBudgetFile from arrays without reading from an existing file.
+
+        This factory method creates a binary cell budget file from provided data arrays,
+        allowing programmatic creation of budget files for testing or data generation.
+
+        Parameters
+        ----------
+        data : dict or list
+            Budget data in one of two formats:
+
+            1. Dict mapping (kstp, kper) tuples to arrays:
+               {(kstp, kper): array, ...}
+               - For imeth=1: arrays should be 1D (flattened cell-by-cell data)
+               - If totim/pertim not provided, totim defaults to kper, pertim to totim
+
+            2. List of dicts with full metadata:
+               [{'data': array, 'kstp': int, 'kper': int, 'text': str (optional),
+                 'totim': float (optional), 'pertim': float (optional),
+                 'delt': float (optional), 'imeth': int (optional)}, ...]
+               - Allows per-record customization of all parameters
+
+        text : str or list, default "FLOW-JA-FACE"
+            Budget text identifier (will be padded to 16 characters).
+            If list, must match length of data records.
+        imeth : int, default 1
+            Method code:
+            - 1: Full 3D array (most common)
+            - 6: List-based budget (for MF6 advanced packages)
+        precision : str, default "double"
+            Precision of floating point data: 'single' or 'double'
+        delt : float or dict, default 1.0
+            Time step length. If dict, maps (kstp, kper) to delt values.
+        pertim : float or dict, optional
+            Period time. If dict, maps (kstp, kper) to pertim.
+            If None, defaults to totim.
+        totim : float or dict, optional
+            Total simulation time. If dict, maps (kstp, kper) to totim.
+            If None, defaults to kper.
+        nlay : int, optional
+            Number of layers. Inferred if None (assumes nodes = nlay*nrow*ncol).
+        nrow : int, optional
+            Number of rows. Required for imeth=1 if nlay and ncol not provided.
+        ncol : int, optional
+            Number of columns. Required for imeth=1 if nlay and nrow not provided.
+        filename : str or PathLike, optional
+            Path for output file. If None, creates a temporary file.
+        verbose : bool, default False
+            Print progress messages
+
+        Returns
+        -------
+        CellBudgetFile
+            Instance loaded from the created binary file
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from flopy.utils import CellBudgetFile
+        >>>
+        >>> # Create flow-ja-face data for two time steps
+        >>> # For a 3x10x20 grid, nja might be ~6000 connections
+        >>> flow1 = np.random.rand(6000)
+        >>> flow2 = np.random.rand(6000)
+        >>> data = {
+        ...     (1, 1): flow1,
+        ...     (1, 2): flow2,
+        ... }
+        >>> cbb = CellBudgetFile.from_data(data, text='FLOW-JA-FACE')
+        >>>
+        >>> # Or with explicit metadata
+        >>> data_with_meta = [
+        ...     {'data': flow1, 'kstp': 1, 'kper': 1, 'totim': 10.0,
+        ...      'text': 'FLOW-JA-FACE'},
+        ...     {'data': flow2, 'kstp': 1, 'kper': 2, 'totim': 20.0,
+        ...      'text': 'FLOW-JA-FACE'},
+        ... ]
+        >>> cbb = CellBudgetFile.from_data(data_with_meta)
+        """
+        # Normalize data to list of record dicts
+        if isinstance(data, dict):
+            records = []
+            for (kstp, kper), arr in sorted(data.items()):
+                arr = np.asarray(arr).flatten()
+
+                # Get time values
+                if totim is None:
+                    tot = float(kper)
+                elif isinstance(totim, dict):
+                    tot = totim.get((kstp, kper), float(kper))
+                elif isinstance(totim, (int, float)):
+                    tot = float(totim)
+                else:
+                    raise ValueError("totim must be None, number, or dict")
+
+                if pertim is None:
+                    per = tot
+                elif isinstance(pertim, dict):
+                    per = pertim.get((kstp, kper), tot)
+                elif isinstance(pertim, (int, float)):
+                    per = float(pertim)
+                else:
+                    raise ValueError("pertim must be None, number, or dict")
+
+                if isinstance(delt, dict):
+                    dt = delt.get((kstp, kper), 1.0)
+                elif isinstance(delt, (int, float)):
+                    dt = float(delt)
+                else:
+                    raise ValueError("delt must be number or dict")
+
+                # Get text for this record
+                if isinstance(text, list):
+                    rec_text = text[len(records)]
+                else:
+                    rec_text = text
+
+                records.append(
+                    {
+                        "data": arr,
+                        "kstp": kstp,
+                        "kper": kper,
+                        "totim": tot,
+                        "pertim": per,
+                        "delt": dt,
+                        "text": rec_text,
+                        "imeth": imeth,
+                    }
+                )
+        elif isinstance(data, list):
+            records = []
+            for rec in data:
+                arr = np.asarray(rec["data"]).flatten()
+                records.append(
+                    {
+                        "data": arr,
+                        "kstp": rec["kstp"],
+                        "kper": rec["kper"],
+                        "totim": rec.get("totim", float(rec["kper"])),
+                        "pertim": rec.get(
+                            "pertim", rec.get("totim", float(rec["kper"]))
+                        ),
+                        "delt": rec.get("delt", 1.0),
+                        "text": rec.get("text", text),
+                        "imeth": rec.get("imeth", imeth),
+                    }
+                )
+        else:
+            raise ValueError("data must be dict or list")
+
+        if len(records) == 0:
+            raise ValueError("No data records provided")
+
+        # Only imeth=1 is supported for now
+        for rec in records:
+            if rec["imeth"] != 1:
+                raise NotImplementedError(
+                    f"Only imeth=1 is currently supported, got imeth={rec['imeth']}"
+                )
+
+        # Infer dimensions from first record
+        first_data = records[0]["data"]
+        nnodes = len(first_data)
+
+        # For imeth=1, we need nlay, nrow, ncol
+        # If all three provided, use them; otherwise try to infer
+        if nlay is not None and nrow is not None and ncol is not None:
+            if nlay * nrow * ncol != nnodes:
+                raise ValueError(
+                    f"Dimensions don't match: nlay={nlay}, nrow={nrow}, ncol={ncol} "
+                    f"gives {nlay * nrow * ncol} nodes but data has {nnodes}"
+                )
+        else:
+            # Set defaults to make it work for common cases
+            if nlay is None:
+                nlay = 1
+            if nrow is None:
+                nrow = 1
+            if ncol is None:
+                ncol = nnodes
+
+        # Set precision dtype
+        realtype = np.float32 if precision == "single" else np.float64
+
+        # Prepare dtypes for headers
+        h1dt = np.dtype(
+            [
+                ("kstp", np.int32),
+                ("kper", np.int32),
+                ("text", "S16"),
+                ("ncol", np.int32),
+                ("nrow", np.int32),
+                ("nlay", np.int32),
+            ]
+        )
+        h2dt = np.dtype(
+            [
+                ("imeth", np.int32),
+                ("delt", realtype),
+                ("pertim", realtype),
+                ("totim", realtype),
+            ]
+        )
+
+        # Helper function to pad text
+        def pad_text(txt):
+            if isinstance(txt, str):
+                txt = txt.encode("ascii")
+            if len(txt) > 16:
+                return txt[:16]
+            elif len(txt) < 16:
+                return txt + b" " * (16 - len(txt))
+            return txt
+
+        # Create temporary file if no filename provided
+        if filename is None:
+            fd, filename = tempfile.mkstemp(suffix=".cbc")
+            import os
+
+            os.close(fd)
+
+        # Write binary file
+        if verbose:
+            print(f"Writing binary budget file: {filename}")
+            print(f"  Precision: {precision}")
+            print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            print(f"  Number of records: {len(records)}")
+
+        with open(filename, "wb") as f:
+            for rec in records:
+                # Pad text
+                text_bytes = pad_text(rec["text"])
+
+                # Write header 1
+                # Note: nlay must be negative to indicate a compact budget file
+                h1 = np.array(
+                    (rec["kstp"], rec["kper"], text_bytes, ncol, nrow, -nlay),
+                    dtype=h1dt,
+                )
+                h1.tofile(f)
+
+                # Write header 2
+                h2 = np.array(
+                    (
+                        rec["imeth"],
+                        realtype(rec["delt"]),
+                        realtype(rec["pertim"]),
+                        realtype(rec["totim"]),
+                    ),
+                    dtype=h2dt,
+                )
+                h2.tofile(f)
+
+                # Write data
+                arr = rec["data"].astype(realtype)
+                if len(arr) != nnodes:
+                    raise ValueError(
+                        f"Inconsistent data sizes: expected {nnodes}, got {len(arr)}"
+                    )
+                arr.tofile(f)
+
+            # Explicitly flush to ensure data is written
+            f.flush()
+            import os
+
+            os.fsync(f.fileno())
+
+        # Load and return CellBudgetFile instance
+        obj = cls(filename, precision=precision, verbose=verbose)
+
+        # If dimensions weren't set during _build_index() (e.g., all records were
+        # FLOW-JA-FACE which are skipped), set them explicitly from the provided values
+        if obj.nrow == 0:
+            obj.nrow = nrow
+            obj.ncol = ncol
+            obj.nlay = nlay
+            obj.shape = (nlay, nrow, ncol)
+            obj.nnodes = nlay * nrow * ncol
+
+        return obj
 
     def __len__(self):
         """
