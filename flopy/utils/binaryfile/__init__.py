@@ -558,54 +558,88 @@ class HeadFile(BinaryLayerFile):
         nrow=None,
         ncol=None,
         nlay=None,
+        ncpl=None,
+        nnodes=None,
         text="head",
         precision="double",
         totim=None,
         pertim=None,
+        kstpkper=None,
         verbose=False,
     ):
         """
         Write head data directly to a binary file.
 
-        This classmethod writes head data arrays to a binary head file without
-        creating a HeadFile instance. Useful for generating head files programmatically.
+        This classmethod writes head data arrays to a binary head file and returns
+        a HeadFile instance with the file open.
 
         Parameters
         ----------
         filename : str or PathLike
             Path for the output file
-        data : dict or list
-            Head data in one of two formats:
+        data : ndarray, dict, or list
+            Head data in one of three formats:
 
-            1. Dict mapping (kstp, kper) tuples to arrays:
+            1. Array with time dimension:
+               - Shape (ntimes, nlay, nrow, ncol) or (ntimes, nrow, ncol)
+               - First dimension is time, creates one record per time step
+               - Requires kstpkper parameter or uses sequential (1,1), (2,1), ...
+
+            2. Dict mapping (kstp, kper) tuples to arrays:
                {(kstp, kper): array, ...}
                - Arrays should be 2D (nrow, ncol) or 3D (nlay, nrow, ncol)
-               - If totim/pertim not provided, totim defaults to kper, pertim to totim
 
-            2. List of dicts with full metadata:
+            3. List of dicts with full metadata:
                [{'data': array, 'kstp': int, 'kper': int,
                  'totim': float, 'pertim': float, 'ilay': int (optional)}, ...]
                - Each dict represents one layer at one timestep
                - ilay defaults to 1 if not provided
 
         nrow : int, optional
-            Number of rows. If None, inferred from data arrays.
+            Number of rows (DIS only). Inferred if None.
         ncol : int, optional
-            Number of columns. If None, inferred from data arrays.
+            Number of columns (DIS only). Inferred if None.
         nlay : int, optional
-            Number of layers. If None, inferred from data arrays.
+            Number of layers (DIS, DISV). Inferred if None.
+        ncpl : int, optional
+            Number of cells per layer (DISV only). Inferred if None.
+        nnodes : int, optional
+            Total number of nodes (DISU only). Inferred if None.
         text : str, default "head"
             Text identifier for the head data (will be padded to 16 characters)
         precision : str, default "double"
             Precision of floating point data: 'single' or 'double'
-        totim : dict or list, optional
-            Total time values. If dict, maps (kstp, kper) to totim.
-            If list, should match order of data. If None, defaults to kper.
-        pertim : dict or list, optional
-            Period time values. If dict, maps (kstp, kper) to pertim.
-            If list, should match order of data. If None, defaults to totim.
+        totim : float, dict, or list, optional
+            Total time values. Can be:
+            - float/int: Use same value for all records (only valid with single timestep)
+            - dict: Maps (kstp, kper) to totim values
+            - list: Should match order of data
+            - None: Defaults to sequential counter (1.0, 2.0, 3.0, ...)
+        pertim : float, dict, or list, optional
+            Period time values. Can be:
+            - float/int: Use same value for all records (only valid with single timestep)
+            - dict: Maps (kstp, kper) to pertim values
+            - list: Should match order of data
+            - None: Defaults to totim
+        kstpkper : list of tuples, optional
+            Time step/period mapping for array data with time dimension.
+            List of (kstp, kper) tuples, one per time step.
+            If None, uses sequential numbering: (1,1), (2,1), (3,1), ...
+            Ignored if data is dict or list format.
         verbose : bool, default False
             Print progress messages
+
+        Returns
+        -------
+        HeadFile
+            Instance with the written file open
+
+        Notes
+        -----
+        Discretization types are determined by which parameters are provided:
+        - DIS (structured): nlay, nrow, ncol
+        - DISV (vertically staggered): nlay, ncpl
+        - DISU (unstructured): nnodes
 
         Examples
         --------
@@ -619,10 +653,7 @@ class HeadFile(BinaryLayerFile):
         ...     (1, 1): head1,
         ...     (1, 2): head2,
         ... }
-        >>> HeadFile.write('output.hds', data)
-        >>>
-        >>> # Then read it
-        >>> hds = HeadFile('output.hds')
+        >>> hds = HeadFile.write('output.hds', data)
         >>> hds.get_times()
         [1.0, 2.0]
         >>>
@@ -633,38 +664,157 @@ class HeadFile(BinaryLayerFile):
         ... ]
         >>> HeadFile.write('output.hds', data_with_times)
         """
+        # xarray duck typing - extract underlying numpy array
+        if hasattr(data, "values") and hasattr(data, "dims"):
+            data = data.values
+
+        # Scalar handling - broadcast to shape
+        if isinstance(data, (int, float, np.number)):
+            # Determine shape from grid parameters
+            if nnodes is not None:
+                shape = (nnodes,)
+            elif ncpl is not None and nlay is not None:
+                shape = (nlay, ncpl)
+            elif nrow is not None and ncol is not None:
+                if nlay is not None:
+                    shape = (nlay, nrow, ncol)
+                else:
+                    shape = (nrow, ncol)
+            else:
+                raise ValueError(
+                    "Must provide grid dimensions (nlay/nrow/ncol, ncpl, or nnodes) "
+                    "when using scalar data"
+                )
+
+            # Default to single timestep if kstpkper not provided
+            if kstpkper is None:
+                kstpkper = [(1, 1)]
+
+            # Create array with time dimension
+            realtype = np.float32 if precision == "single" else np.float64
+            arr = np.full((len(kstpkper),) + shape, data, dtype=realtype)
+            data = arr
+
+        # List handling - convert list of arrays to array with time dimension
+        if isinstance(data, list):
+            if not data:
+                raise ValueError("Empty data list")
+
+            # Check if it's list of dicts (already supported) or list of arrays
+            if isinstance(data[0], dict):
+                # List of dicts - let existing code handle it
+                pass
+            else:
+                # List of arrays - convert to numpy array with time dimension
+                # First extract .values from any xarray elements
+                arrays = []
+                for elem in data:
+                    if hasattr(elem, "values") and hasattr(elem, "dims"):
+                        arrays.append(elem.values)
+                    else:
+                        arrays.append(elem)
+
+                try:
+                    data = np.array(arrays)
+                except Exception as e:
+                    raise ValueError(f"Could not convert list to array: {e}")
+
+        # Handle array with time dimension - convert to dict format
+        if isinstance(data, np.ndarray):
+            arr = data
+            ntimes = arr.shape[0]
+
+            # Generate or validate kstpkper
+            if kstpkper is None:
+                # Sequential: (1,1), (2,1), (3,1), ...
+                kstpkper = [(i, 1) for i in range(1, ntimes + 1)]
+            elif len(kstpkper) != ntimes:
+                raise ValueError(
+                    f"kstpkper must have {ntimes} entries to match "
+                    f"time dimension, got {len(kstpkper)}"
+                )
+
+            # Convert to dict format
+            data = {}
+            for i, (kstp, kper) in enumerate(kstpkper):
+                data[(kstp, kper)] = arr[i]
+
         # Normalize data to list of record dicts
         if isinstance(data, dict):
-            records = []
-            for (kstp, kper), arr in sorted(data.items()):
-                # Ensure array is at least 2D
-                arr = np.asarray(arr)
-                if arr.ndim == 1:
+            # Validate that single-value times are only used with single timestep
+            if len(data) > 1:
+                if isinstance(totim, (int, float)):
                     raise ValueError(
-                        "Data arrays must be at least 2D (nrow, ncol), got 1D array"
+                        "totim cannot be a single value when data has multiple time steps. "
+                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                    )
+                if isinstance(pertim, (int, float)):
+                    raise ValueError(
+                        "pertim cannot be a single value when data has multiple time steps. "
+                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
                     )
 
-                # Handle 2D vs 3D arrays
-                if arr.ndim == 2:
-                    # Single layer
-                    arr = arr.reshape(1, arr.shape[0], arr.shape[1])
+            records = []
+            for i, ((kstp, kper), arr) in enumerate(sorted(data.items()), start=1):
+                # Handle xarray in dict values
+                if hasattr(arr, "values") and hasattr(arr, "dims"):
+                    arr = arr.values
+                arr = np.asarray(arr)
 
-                nlayers, nrows, ncols = arr.shape
+                # Allow 1D arrays for DISV/DISU, require 2D+ for DIS
+                if arr.ndim == 1:
+                    # 1D array - valid for DISV (ncpl) or DISU (nnodes)
+                    if ncpl is not None or nnodes is not None:
+                        # Single layer for DISV/DISU - reshape to (1, ncells)
+                        nlayers = 1
+                        ncells = arr.shape[0]
+                        arr = arr.reshape(1, ncells)
+                    else:
+                        raise ValueError(
+                            "1D arrays require ncpl or nnodes parameter. "
+                            "For DIS grids, use 2D (nrow, ncol) or 3D (nlay, nrow, ncol) arrays."
+                        )
+                elif arr.ndim == 2:
+                    # 2D array
+                    if ncpl is not None:
+                        # DISV: (nlay, ncpl) - already in right shape
+                        nlayers = arr.shape[0]
+                        ncells = arr.shape[1]
+                    elif nnodes is not None:
+                        # DISU: shouldn't have 2D, but treat as single layer
+                        nlayers = 1
+                        ncells = arr.size
+                        arr = arr.reshape(1, ncells)
+                    else:
+                        # DIS: single layer (nrow, ncol) - reshape to (1, nrow, ncol)
+                        nlayers = 1
+                        nrows = arr.shape[0]
+                        ncols = arr.shape[1]
+                        arr = arr.reshape(1, arr.shape[0], arr.shape[1])
+                else:
+                    # 3D array (nlay, nrow, ncol) for DIS
+                    nlayers = arr.shape[0]
+                    nrows = arr.shape[1]
+                    ncols = arr.shape[2]
 
                 # Get time values
                 if totim is None:
-                    tot = float(kper)
+                    tot = float(i)
                 elif isinstance(totim, dict):
-                    tot = totim.get((kstp, kper), float(kper))
+                    tot = totim.get((kstp, kper), float(i))
+                elif isinstance(totim, (int, float)):
+                    tot = float(totim)
                 else:
-                    raise ValueError("totim must be None or dict when data is dict")
+                    raise ValueError("totim must be None, number, or dict")
 
                 if pertim is None:
                     per = tot
                 elif isinstance(pertim, dict):
                     per = pertim.get((kstp, kper), tot)
+                elif isinstance(pertim, (int, float)):
+                    per = float(pertim)
                 else:
-                    raise ValueError("pertim must be None or dict when data is dict")
+                    raise ValueError("pertim must be None, number, or dict")
 
                 # Create one record per layer
                 for ilay in range(nlayers):
@@ -681,7 +831,11 @@ class HeadFile(BinaryLayerFile):
         elif isinstance(data, list):
             records = []
             for rec in data:
-                arr = np.asarray(rec["data"])
+                arr = rec["data"]
+                # Handle xarray in list elements
+                if hasattr(arr, "values") and hasattr(arr, "dims"):
+                    arr = arr.values
+                arr = np.asarray(arr)
                 if arr.ndim == 1:
                     raise ValueError("Data arrays must be at least 2D")
 
@@ -722,20 +876,39 @@ class HeadFile(BinaryLayerFile):
         if len(records) == 0:
             raise ValueError("No data records provided")
 
-        # Infer dimensions from data if not provided
-        first_data = records[0]["data"]
-        if nrow is None:
-            nrow = first_data.shape[0]
-        if ncol is None:
-            ncol = first_data.shape[1]
-        if nlay is None:
-            nlay = max(rec["ilay"] for rec in records)
+        # Determine discretization type and infer dimensions
+        if nnodes is not None:
+            # DISU (unstructured)
+            dis_type = "DISU"
+            nlay = 1
+            nrow = 1
+            ncol = nnodes
+            expected_shape = (nnodes,)
+        elif ncpl is not None:
+            # DISV (vertically staggered)
+            dis_type = "DISV"
+            if nlay is None:
+                nlay = max(rec["ilay"] for rec in records)
+            nrow = 1
+            ncol = ncpl
+            expected_shape = (ncpl,)
+        else:
+            # DIS (structured) - default
+            dis_type = "DIS"
+            first_data = records[0]["data"]
+            if nrow is None:
+                nrow = first_data.shape[0]
+            if ncol is None:
+                ncol = first_data.shape[1]
+            if nlay is None:
+                nlay = max(rec["ilay"] for rec in records)
+            expected_shape = (nrow, ncol)
 
         # Validate dimensions
         for rec in records:
-            if rec["data"].shape != (nrow, ncol):
+            if rec["data"].shape != expected_shape:
                 raise ValueError(
-                    f"Inconsistent array shapes: expected ({nrow}, {ncol}), "
+                    f"Inconsistent array shapes: expected {expected_shape}, "
                     f"got {rec['data'].shape}"
                 )
 
@@ -763,7 +936,13 @@ class HeadFile(BinaryLayerFile):
             print(f"Writing binary head file: {filename}")
             print(f"  Text identifier: {text.decode().strip()}")
             print(f"  Precision: {precision}")
-            print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            print(f"  Discretization: {dis_type}")
+            if dis_type == "DIS":
+                print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            elif dis_type == "DISV":
+                print(f"  Dimensions: {nlay} layers, {ncpl} cells per layer")
+            elif dis_type == "DISU":
+                print(f"  Dimensions: {nnodes} nodes (unstructured)")
             print(f"  Number of records: {len(records)}")
 
         # Use BinaryHeader.create() and write like Util2d.write_bin() does
@@ -792,6 +971,9 @@ class HeadFile(BinaryLayerFile):
             import os
 
             os.fsync(f.fileno())
+
+        # Return an instance with the file open
+        return cls(filename, precision=precision, verbose=verbose)
 
     def reverse(self, filename: Optional[PathLike] = None):
         """
@@ -929,13 +1111,20 @@ class HeadFile(BinaryLayerFile):
 
         # Pad text to 16 bytes
         def pad_text(text):
-            """Pad text to exactly 16 bytes."""
+            """Pad text to exactly 16 bytes, right-aligned with leading spaces."""
             if isinstance(text, str):
+                # Right-align with spaces, then encode
+                text = f"{text:>16}"
                 text = text.encode("ascii")
+            else:
+                # Already bytes - check if it needs padding
+                if len(text) < 16:
+                    # Decode, right-align with spaces, re-encode
+                    text = text.decode("ascii")
+                    text = f"{text:>16}".encode("ascii")
+
             if len(text) > 16:
                 return text[:16]
-            elif len(text) < 16:
-                return text + b" " * (16 - len(text))
             return text
 
         text_bytes = pad_text(text)
@@ -1420,28 +1609,34 @@ class CellBudgetFile:
         nlay=None,
         nrow=None,
         ncol=None,
+        ncpl=None,
+        nnodes=None,
+        kstpkper=None,
         verbose=False,
     ):
         """
         Write budget data directly to a binary file.
 
-        This classmethod writes budget data arrays to a binary cell budget file without
-        creating a CellBudgetFile instance. Useful for generating budget files
-        programmatically.
+        This classmethod writes budget data arrays to a binary cell budget file and returns
+        a CellBudgetFile instance with the file open.
 
         Parameters
         ----------
         filename : str or PathLike
             Path for the output file
-        data : dict or list
-            Budget data in one of two formats:
+        data : ndarray, dict, or list
+            Budget data in one of three formats:
 
-            1. Dict mapping (kstp, kper) tuples to arrays:
+            1. Array with time dimension:
+               - Shape (ntimes, nlay, nrow, ncol) or (ntimes, ...) for grid data
+               - First dimension is time, creates one record per time step
+               - Requires kstpkper parameter or uses sequential (1,1), (2,1), ...
+
+            2. Dict mapping (kstp, kper) tuples to arrays:
                {(kstp, kper): array, ...}
                - For imeth=1: arrays should be 1D (flattened cell-by-cell data)
-               - If totim/pertim not provided, totim defaults to kper, pertim to totim
 
-            2. List of dicts with full metadata:
+            3. List of dicts with full metadata:
                [{'data': array, 'kstp': int, 'kper': int, 'text': str (optional),
                  'totim': float (optional), 'pertim': float (optional),
                  'delt': float (optional), 'imeth': int (optional)}, ...]
@@ -1457,21 +1652,50 @@ class CellBudgetFile:
         precision : str, default "double"
             Precision of floating point data: 'single' or 'double'
         delt : float or dict, default 1.0
-            Time step length. If dict, maps (kstp, kper) to delt values.
+            Time step length. Can be:
+            - float/int: Use same value for all records
+            - dict: Maps (kstp, kper) to delt values
         pertim : float or dict, optional
-            Period time. If dict, maps (kstp, kper) to pertim.
-            If None, defaults to totim.
+            Period time. Can be:
+            - float/int: Use same value for all records (only valid with single timestep)
+            - dict: Maps (kstp, kper) to pertim values
+            - None: Defaults to totim
         totim : float or dict, optional
-            Total simulation time. If dict, maps (kstp, kper) to totim.
-            If None, defaults to kper.
+            Total simulation time. Can be:
+            - float/int: Use same value for all records (only valid with single timestep)
+            - dict: Maps (kstp, kper) to totim values
+            - None: Defaults to sequential counter (1.0, 2.0, 3.0, ...)
         nlay : int, optional
-            Number of layers. Inferred if None (assumes nodes = nlay*nrow*ncol).
+            Number of layers (DIS, DISV). Inferred if None.
         nrow : int, optional
-            Number of rows. Required for imeth=1 if nlay and ncol not provided.
+            Number of rows (DIS only). Inferred if None.
         ncol : int, optional
-            Number of columns. Required for imeth=1 if nlay and nrow not provided.
+            Number of columns (DIS only). Inferred if None.
+        ncpl : int, optional
+            Number of cells per layer (DISV only). Inferred if None.
+        nnodes : int, optional
+            Total number of nodes (DISU only). Inferred if None.
+        kstpkper : list of tuples, optional
+            Time step/period mapping for array data with time dimension.
+            List of (kstp, kper) tuples, one per time step.
+            If None, uses sequential numbering: (1,1), (2,1), (3,1), ...
+            Ignored if data is dict or list format.
         verbose : bool, default False
             Print progress messages
+
+        Returns
+        -------
+        CellBudgetFile
+            Instance with the written file open
+
+        Notes
+        -----
+        Discretization types are determined by which parameters are provided:
+        - DIS (structured): nlay, nrow, ncol
+        - DISV (vertically staggered): nlay, ncpl
+        - DISU (unstructured): nnodes
+
+        If no dimensions are provided, they will be inferred from array shapes.
 
         Examples
         --------
@@ -1485,12 +1709,9 @@ class CellBudgetFile:
         ...     (1, 1): flow1,
         ...     (1, 2): flow2,
         ... }
-        >>> CellBudgetFile.write(
+        >>> cbb = CellBudgetFile.write(
         ...     'output.cbc', data, text='FLOW-JA-FACE', nlay=3, nrow=10, ncol=20
         ... )
-        >>>
-        >>> # Then read it
-        >>> cbb = CellBudgetFile('output.cbc')
         >>>
         >>> # Or with list of records (dicts)
         >>> CellBudgetFile.write('output.cbc', [
@@ -1500,17 +1721,119 @@ class CellBudgetFile:
         ...      'text': 'FLOW-JA-FACE'},
         ... ], nlay=3, nrow=10, ncol=20)
         """
+        # xarray duck typing - extract underlying numpy array
+        if hasattr(data, "values") and hasattr(data, "dims"):
+            data = data.values
+
+        # Scalar handling - broadcast to shape
+        if isinstance(data, (int, float, np.number)):
+            # Determine shape from grid parameters
+            if nnodes is not None:
+                shape = (nnodes,)
+            elif ncpl is not None and nlay is not None:
+                shape = (nlay, ncpl)
+            elif nrow is not None and ncol is not None:
+                if nlay is not None:
+                    shape = (nlay, nrow, ncol)
+                else:
+                    shape = (nrow, ncol)
+            else:
+                raise ValueError(
+                    "Must provide grid dimensions (nlay/nrow/ncol, ncpl, or nnodes) "
+                    "when using scalar data"
+                )
+
+            # Default to single timestep if kstpkper not provided
+            if kstpkper is None:
+                kstpkper = [(1, 1)]
+
+            # Create array with time dimension
+            realtype = np.float32 if precision == "single" else np.float64
+            arr = np.full((len(kstpkper),) + shape, data, dtype=realtype)
+            data = arr
+
+        # List handling - convert list of arrays to array with time dimension
+        if isinstance(data, list):
+            if not data:
+                raise ValueError("Empty data list")
+
+            # Check if it's list of dicts (already supported) or list of arrays
+            if isinstance(data[0], dict):
+                # List of dicts - let existing code handle it
+                pass
+            else:
+                # List of arrays - convert to numpy array with time dimension
+                # First extract .values from any xarray elements
+                arrays = []
+                for elem in data:
+                    if hasattr(elem, "values") and hasattr(elem, "dims"):
+                        arrays.append(elem.values)
+                    else:
+                        arrays.append(elem)
+
+                try:
+                    data = np.array(arrays)
+                except Exception as e:
+                    raise ValueError(f"Could not convert list to array: {e}")
+
+        # Handle array with time dimension - convert to dict format
+        if isinstance(data, np.ndarray):
+            arr = data
+            ntimes = arr.shape[0]
+
+            # Generate or validate kstpkper
+            if kstpkper is None:
+                # Sequential: (1,1), (2,1), (3,1), ...
+                kstpkper = [(i, 1) for i in range(1, ntimes + 1)]
+            elif len(kstpkper) != ntimes:
+                raise ValueError(
+                    f"kstpkper must have {ntimes} entries to match "
+                    f"time dimension, got {len(kstpkper)}"
+                )
+
+            # Convert to dict format
+            data = {}
+            for i, (kstp, kper) in enumerate(kstpkper):
+                data[(kstp, kper)] = arr[i]
+
         # Normalize data to list of record dicts
         if isinstance(data, dict):
+            # Validate that single-value times are only used with single timestep
+            if len(data) > 1:
+                if isinstance(totim, (int, float)):
+                    raise ValueError(
+                        "totim cannot be a single value when data has multiple time steps. "
+                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                    )
+                if isinstance(pertim, (int, float)):
+                    raise ValueError(
+                        "pertim cannot be a single value when data has multiple time steps. "
+                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                    )
+                if isinstance(delt, (int, float)) and delt != 1.0:
+                    raise ValueError(
+                        "delt cannot be a single non-default value when data has multiple time steps. "
+                        "Use a dict mapping (kstp, kper) to delt values, or pass data with a single time step."
+                    )
+
             records = []
-            for (kstp, kper), arr in sorted(data.items()):
-                arr = np.asarray(arr).flatten()
+            inferred_shape = None  # Track shape from first shaped array
+
+            for i, ((kstp, kper), arr) in enumerate(sorted(data.items()), start=1):
+                # Handle xarray in dict values
+                if hasattr(arr, "values") and hasattr(arr, "dims"):
+                    arr = arr.values
+                arr = np.asarray(arr)
+                # Capture shape before flattening for dimension inference
+                if arr.ndim in (2, 3) and inferred_shape is None:
+                    inferred_shape = arr.shape
+                arr = arr.flatten()
 
                 # Get time values
                 if totim is None:
-                    tot = float(kper)
+                    tot = float(i)
                 elif isinstance(totim, dict):
-                    tot = totim.get((kstp, kper), float(kper))
+                    tot = totim.get((kstp, kper), float(i))
                 elif isinstance(totim, (int, float)):
                     tot = float(totim)
                 else:
@@ -1550,15 +1873,55 @@ class CellBudgetFile:
                         "imeth": imeth,
                     }
                 )
+
+            # Use inferred shape if dimensions not provided
+            if inferred_shape is not None:
+                # Determine if user is trying to use DISV (nlay + ncpl)
+                if ncpl is not None or (nlay is not None and nrow is None and ncol is None):
+                    # DISV mode
+                    if len(inferred_shape) == 2:
+                        # 2D array: (nlay, ncpl)
+                        nlay = nlay or inferred_shape[0]
+                        ncpl = ncpl or inferred_shape[1]
+                    elif len(inferred_shape) == 1:
+                        # 1D array: assume nlay=1, infer ncpl
+                        nlay = nlay or 1
+                        ncpl = ncpl or inferred_shape[0]
+                elif nnodes is None:
+                    # DIS mode (default)
+                    if nlay is None or nrow is None or ncol is None:
+                        if len(inferred_shape) == 3:
+                            # 3D array: (nlay, nrow, ncol)
+                            nlay = nlay or inferred_shape[0]
+                            nrow = nrow or inferred_shape[1]
+                            ncol = ncol or inferred_shape[2]
+                        elif len(inferred_shape) == 2:
+                            # 2D array: (nrow, ncol), assume nlay=1
+                            nlay = nlay or 1
+                            nrow = nrow or inferred_shape[0]
+                            ncol = ncol or inferred_shape[1]
+
         elif isinstance(data, list):
             records = []
+            inferred_shape = None  # Track shape from first shaped array
+
             for rec in data:
                 rec_imeth = rec.get("imeth", imeth)
-                arr = np.asarray(rec["data"])
-                # Only flatten for imeth=1 (full 3D arrays)
-                # For imeth=6 (list-based), keep as structured array
+                arr = rec["data"]
+                # Handle xarray in list elements
+                if hasattr(arr, "values") and hasattr(arr, "dims"):
+                    arr = arr.values
+                arr = np.asarray(arr)
+
+                # For imeth=1, capture shape before flattening for dimension inference
                 if rec_imeth == 1:
+                    rec_text = rec.get("text", text).strip()
+                    # Only infer from non-FLOW-JA-FACE data (connection-based)
+                    if rec_text != "FLOW-JA-FACE" and arr.ndim in (2, 3):
+                        if inferred_shape is None:
+                            inferred_shape = arr.shape
                     arr = arr.flatten()
+
                 records.append(
                     {
                         "data": arr,
@@ -1577,6 +1940,33 @@ class CellBudgetFile:
                         "paknam2": rec.get("paknam2", ""),
                     }
                 )
+
+            # Use inferred shape if dimensions not provided
+            if inferred_shape is not None:
+                # Determine if user is trying to use DISV (nlay + ncpl)
+                if ncpl is not None or (nlay is not None and nrow is None and ncol is None):
+                    # DISV mode
+                    if len(inferred_shape) == 2:
+                        # 2D array: (nlay, ncpl)
+                        nlay = nlay or inferred_shape[0]
+                        ncpl = ncpl or inferred_shape[1]
+                    elif len(inferred_shape) == 1:
+                        # 1D array: assume nlay=1, infer ncpl
+                        nlay = nlay or 1
+                        ncpl = ncpl or inferred_shape[0]
+                elif nnodes is None:
+                    # DIS mode (default)
+                    if nlay is None or nrow is None or ncol is None:
+                        if len(inferred_shape) == 3:
+                            # 3D array: (nlay, nrow, ncol)
+                            nlay = nlay or inferred_shape[0]
+                            nrow = nrow or inferred_shape[1]
+                            ncol = ncol or inferred_shape[2]
+                        elif len(inferred_shape) == 2:
+                            # 2D array: (nrow, ncol), assume nlay=1
+                            nlay = nlay or 1
+                            nrow = nrow or inferred_shape[0]
+                            ncol = ncol or inferred_shape[1]
         else:
             raise ValueError("data must be dict or list")
 
@@ -1591,41 +1981,79 @@ class CellBudgetFile:
                     f"got imeth={rec['imeth']}"
                 )
 
-        # Infer dimensions from first record
-        # For imeth=1, nnodes = nlay * nrow * ncol
-        # For imeth=6, we still need dimensions but data is list-based
+        # Determine discretization type and calculate nnodes
+        # DIS: nlay, nrow, ncol
+        # DISV: nlay, ncpl
+        # DISU: nnodes
         first_imeth = records[0]["imeth"]
 
-        if first_imeth == 1:
-            first_data = records[0]["data"]
-            nnodes = len(first_data)
+        # Determine discretization type
+        if nnodes is not None:
+            # DISU (unstructured)
+            dis_type = "DISU"
+            # For DISU header: (nnodes, 1, -1)
+            nlay = 1  # -nlay = -1 in header
+            nrow = 1
+            ncol = nnodes
+        elif ncpl is not None:
+            # DISV (vertically staggered)
+            dis_type = "DISV"
+            if nlay is None:
+                nlay = 1
+            # Calculate nnodes from nlay * ncpl
+            nnodes = nlay * ncpl
+            # For DISV, nrow is always 1 in the header
+            nrow = 1
+            # ncol is set to ncpl for header writing
+            ncol = ncpl
+        else:
+            # DIS (structured) - default
+            dis_type = "DIS"
 
-            # If all three provided, use them; otherwise try to infer
-            if nlay is not None and nrow is not None and ncol is not None:
-                if nlay * nrow * ncol != nnodes:
-                    raise ValueError(
-                        f"Dimensions don't match: nlay={nlay}, nrow={nrow}, "
-                        f"ncol={ncol} gives {nlay * nrow * ncol} nodes but "
-                        f"data has {nnodes}"
-                    )
+            if first_imeth == 1:
+                first_data = records[0]["data"]
+                first_text = records[0].get("text", text).strip()
+
+                # FLOW-JA-FACE is connection-based, not node-based
+                if first_text == "FLOW-JA-FACE":
+                    # For FLOW-JA-FACE, dimensions must be provided
+                    if nlay is None or nrow is None or ncol is None:
+                        raise ValueError(
+                            "For FLOW-JA-FACE data, dimensions must be provided"
+                        )
+                    nnodes = nlay * nrow * ncol
+                else:
+                    # For regular node-based data, infer from data size
+                    data_size = len(first_data)
+
+                    # If all dimensions provided, validate them
+                    if nlay is not None and nrow is not None and ncol is not None:
+                        expected = nlay * nrow * ncol
+                        if expected != data_size:
+                            raise ValueError(
+                                f"Dimensions don't match: nlay={nlay}, nrow={nrow}, "
+                                f"ncol={ncol} gives {expected} nodes but "
+                                f"data has {data_size}"
+                            )
+                        nnodes = data_size
+                    else:
+                        # Set defaults to make it work for common cases
+                        nnodes = data_size
+                        if nlay is None:
+                            nlay = 1
+                        if nrow is None:
+                            nrow = 1
+                        if ncol is None:
+                            ncol = nnodes
             else:
-                # Set defaults to make it work for common cases
+                # For imeth=6, use defaults if not provided
                 if nlay is None:
                     nlay = 1
                 if nrow is None:
                     nrow = 1
                 if ncol is None:
-                    ncol = nnodes
-        else:
-            # For imeth=6, dimensions must be provided or we use defaults
-            if nlay is None:
-                nlay = 1
-            if nrow is None:
-                nrow = 1
-            if ncol is None:
-                ncol = 1
-
-        nnodes = nlay * nrow * ncol
+                    ncol = 1
+                nnodes = nlay * nrow * ncol
 
         # Set precision dtype
         realtype = np.float32 if precision == "single" else np.float64
@@ -1652,12 +2080,20 @@ class CellBudgetFile:
 
         # Helper function to pad text
         def pad_text(txt):
+            """Pad text to exactly 16 bytes, right-aligned with leading spaces."""
             if isinstance(txt, str):
+                # Right-align with spaces, then encode
+                txt = f"{txt:>16}"
                 txt = txt.encode("ascii")
+            else:
+                # Already bytes - check if it needs padding
+                if len(txt) < 16:
+                    # Decode, right-align with spaces, re-encode
+                    txt = txt.decode("ascii")
+                    txt = f"{txt:>16}".encode("ascii")
+
             if len(txt) > 16:
                 return txt[:16]
-            elif len(txt) < 16:
-                return txt + b" " * (16 - len(txt))
             return txt
 
         # Create temporary file if no filename provided
@@ -1671,7 +2107,13 @@ class CellBudgetFile:
         if verbose:
             print(f"Writing binary budget file: {filename}")
             print(f"  Precision: {precision}")
-            print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            print(f"  Discretization: {dis_type}")
+            if dis_type == "DIS":
+                print(f"  Dimensions: {nlay} layers, {nrow} rows, {ncol} columns")
+            elif dis_type == "DISV":
+                print(f"  Dimensions: {nlay} layers, {ncpl} cells per layer")
+            elif dis_type == "DISU":
+                print(f"  Dimensions: {nnodes} nodes (unstructured)")
             print(f"  Number of records: {len(records)}")
 
         with open(filename, "wb") as f:
@@ -1682,11 +2124,21 @@ class CellBudgetFile:
 
                 if rec_imeth == 1:
                     # Write header 1 for full 3D array
-                    # Note: nlay must be negative to indicate a compact budget file
-                    h1 = np.array(
-                        (rec["kstp"], rec["kper"], text_bytes, ncol, nrow, -nlay),
-                        dtype=h1dt,
-                    )
+                    # For FLOW-JA-FACE (connection-based): use (data_size, 1, -1)
+                    # For other records (node-based): use (ncol, nrow, -nlay)
+                    rec_text = rec["text"].strip()
+                    if rec_text == "FLOW-JA-FACE":
+                        # Connection-based data - use actual data size
+                        h1 = np.array(
+                            (rec["kstp"], rec["kper"], text_bytes, len(rec["data"]), 1, -1),
+                            dtype=h1dt,
+                        )
+                    else:
+                        # Node-based data - use grid dimensions
+                        h1 = np.array(
+                            (rec["kstp"], rec["kper"], text_bytes, ncol, nrow, -nlay),
+                            dtype=h1dt,
+                        )
                     h1.tofile(f)
 
                     # Write header 2
@@ -1703,7 +2155,9 @@ class CellBudgetFile:
 
                     # Write data
                     arr = rec["data"].astype(realtype)
-                    if len(arr) != nnodes:
+                    # Skip size validation for FLOW-JA-FACE (connection-based)
+                    rec_text = rec["text"].strip()
+                    if rec_text != "FLOW-JA-FACE" and len(arr) != nnodes:
                         raise ValueError(
                             f"Inconsistent data sizes: expected {nnodes}, "
                             f"got {len(arr)}"
@@ -1732,8 +2186,10 @@ class CellBudgetFile:
                     h2.tofile(f)
 
                     # Write modelnam, paknam, modelnam2, paknam2
+                    # Use same defaults as binary_util.py write_budget function
+                    defaults = {"modelnam": "", "paknam": "", "modelnam2": "", "paknam2": ""}
                     for name in ["modelnam", "paknam", "modelnam2", "paknam2"]:
-                        name_bytes = pad_text(rec.get(name, ""))
+                        name_bytes = pad_text(rec.get(name, defaults[name]))
                         f.write(name_bytes)
 
                     # Get data and determine columns
@@ -1757,7 +2213,10 @@ class CellBudgetFile:
                     if naux > 0:
                         aux_names = colnames[3:]  # Skip ID1, ID2, FLOW
                         for aux_name in aux_names:
-                            aux_bytes = pad_text(aux_name)
+                            # Auxiliary names must be space-padded (not null-padded)
+                            # to match MODFLOW 6 expectations
+                            aux_str = aux_name if isinstance(aux_name, str) else aux_name.decode('ascii')
+                            aux_bytes = f"{aux_str:16}".encode('ascii')
                             f.write(aux_bytes)
 
                     # Write nlist
@@ -1785,6 +2244,9 @@ class CellBudgetFile:
             import os
 
             os.fsync(f.fileno())
+
+        # Return an instance with the file open
+        return cls(filename, precision=precision, verbose=verbose)
 
     def __len__(self):
         """

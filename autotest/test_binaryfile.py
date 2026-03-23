@@ -969,8 +969,8 @@ def test_headfile_write_errors(function_tmpdir):
     with pytest.raises(ValueError, match="No data records"):
         HeadFile.write(function_tmpdir / "test.hds", {})
 
-    # 1D array (not allowed)
-    with pytest.raises(ValueError, match="at least 2D"):
+    # 1D array (not allowed for DIS)
+    with pytest.raises(ValueError, match="1D arrays require ncpl or nnodes"):
         HeadFile.write(function_tmpdir / "test.hds", {(1, 1): np.array([1, 2, 3])})
 
     # Inconsistent shapes
@@ -988,12 +988,310 @@ def test_cellbudgetfile_write_errors(function_tmpdir):
     with pytest.raises(ValueError, match="No data records"):
         CellBudgetFile.write(function_tmpdir / "test.cbc", {})
 
-    # Dimension mismatch
+    # Dimension mismatch (use non-FLOW-JA-FACE text for validation)
     with pytest.raises(ValueError, match="Dimensions don't match"):
         CellBudgetFile.write(
             function_tmpdir / "test.cbc",
             {(1, 1): np.ones(100)},
+            text="STORAGE",
             nlay=2,
             nrow=10,
             ncol=10,  # Should be 200 nodes
         )
+
+
+def test_headfile_write_scalar(function_tmpdir):
+    """Test HeadFile.write() with scalar data."""
+    # Single timestep
+    outfile = function_tmpdir / "test_scalar.hds"
+    hds = HeadFile.write(outfile, 100.0, nlay=3, nrow=10, ncol=20)
+    assert hds.get_times() == [1.0]
+
+    data_read = hds.get_data(totim=1.0)
+    assert data_read.shape == (3, 10, 20)
+    np.testing.assert_allclose(data_read, 100.0)
+    hds.close()
+
+    # Multiple timesteps with kstpkper
+    outfile = function_tmpdir / "test_scalar_multi.hds"
+    hds = HeadFile.write(
+        outfile,
+        50.0,
+        nlay=2,
+        nrow=5,
+        ncol=10,
+        kstpkper=[(1, 1), (1, 2), (1, 3)]
+    )
+    assert hds.get_times() == [1.0, 2.0, 3.0]
+
+    for totim in [1.0, 2.0, 3.0]:
+        data_read = hds.get_data(totim=totim)
+        assert data_read.shape == (2, 5, 10)
+        np.testing.assert_allclose(data_read, 50.0)
+    hds.close()
+
+    # Error if dimensions not provided
+    with pytest.raises(ValueError, match="Must provide grid dimensions"):
+        HeadFile.write(function_tmpdir / "test.hds", 100.0)
+
+
+def test_cellbudgetfile_write_scalar(function_tmpdir):
+    """Test CellBudgetFile.write() with scalar data."""
+    # Single timestep
+    outfile = function_tmpdir / "test_scalar.cbc"
+    cbb = CellBudgetFile.write(
+        outfile,
+        25.0,
+        text="CONSTANT HEAD",
+        nlay=3,
+        nrow=10,
+        ncol=20
+    )
+    assert cbb.get_times() == [1.0]
+
+    data_read = cbb.get_data(totim=1.0, text="CONSTANT HEAD")[0]
+    assert data_read.shape == (3, 10, 20)
+    np.testing.assert_allclose(data_read, 25.0)
+    cbb.close()
+
+    # Multiple timesteps with kstpkper
+    outfile = function_tmpdir / "test_scalar_multi.cbc"
+    cbb = CellBudgetFile.write(
+        outfile,
+        -10.0,
+        text="STORAGE",
+        nlay=2,
+        nrow=5,
+        ncol=10,
+        kstpkper=[(1, 1), (2, 1), (1, 2)]
+    )
+    assert cbb.get_times() == [1.0, 2.0, 3.0]
+
+    for totim in [1.0, 2.0, 3.0]:
+        data_read = cbb.get_data(totim=totim, text="STORAGE")[0]
+        assert data_read.shape == (2, 5, 10)
+        np.testing.assert_allclose(data_read, -10.0)
+    cbb.close()
+
+
+def test_headfile_write_list_of_arrays(function_tmpdir):
+    """Test HeadFile.write() with list of arrays."""
+    nlay, nrow, ncol = 3, 10, 20
+
+    # Create list of arrays
+    heads = [
+        np.full((nlay, nrow, ncol), 100.0),
+        np.full((nlay, nrow, ncol), 95.0),
+        np.full((nlay, nrow, ncol), 90.0),
+    ]
+
+    outfile = function_tmpdir / "test_list.hds"
+    hds = HeadFile.write(outfile, heads)
+
+    # Should create 3 timesteps with sequential (kstp, kper)
+    assert hds.get_times() == [1.0, 2.0, 3.0]
+
+    # Verify data
+    data1 = hds.get_data(totim=1.0)
+    data2 = hds.get_data(totim=2.0)
+    data3 = hds.get_data(totim=3.0)
+
+    np.testing.assert_allclose(data1, 100.0)
+    np.testing.assert_allclose(data2, 95.0)
+    np.testing.assert_allclose(data3, 90.0)
+    hds.close()
+
+    # Test with custom kstpkper
+    outfile = function_tmpdir / "test_list_kstpkper.hds"
+    hds = HeadFile.write(
+        outfile,
+        heads,
+        kstpkper=[(1, 1), (1, 2), (1, 3)]
+    )
+    assert hds.get_times() == [1.0, 2.0, 3.0]
+    hds.close()
+
+
+def test_cellbudgetfile_write_list_of_arrays(function_tmpdir):
+    """Test CellBudgetFile.write() with list of arrays."""
+    nlay, nrow, ncol = 2, 5, 10
+
+    # Create list of arrays
+    storage = [
+        np.random.rand(nlay, nrow, ncol).astype(np.float32),
+        np.random.rand(nlay, nrow, ncol).astype(np.float32),
+    ]
+
+    outfile = function_tmpdir / "test_list.cbc"
+    cbb = CellBudgetFile.write(
+        outfile,
+        storage,
+        text="STORAGE",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        precision="single"
+    )
+
+    # Should create 2 timesteps
+    assert cbb.get_times() == [1.0, 2.0]
+
+    # Verify data
+    data1 = cbb.get_data(totim=1.0, text="STORAGE")[0]
+    data2 = cbb.get_data(totim=2.0, text="STORAGE")[0]
+
+    np.testing.assert_allclose(data1, storage[0], rtol=1e-6)
+    np.testing.assert_allclose(data2, storage[1], rtol=1e-6)
+    cbb.close()
+
+
+def test_headfile_write_xarray_duck(function_tmpdir):
+    """Test HeadFile.write() with xarray-like duck arrays."""
+    nlay, nrow, ncol = 3, 10, 20
+
+    # Create a mock xarray-like object (duck typing)
+    class MockXArray:
+        def __init__(self, data):
+            self.values = data
+            self.dims = ['z', 'y', 'x']
+            self.shape = data.shape
+
+    # Test with single xarray-like array
+    data = np.full((nlay, nrow, ncol), 100.0)
+    xarr = MockXArray(data)
+
+    outfile = function_tmpdir / "test_xarray.hds"
+    hds = HeadFile.write(outfile, {(1, 1): xarr})
+
+    data_read = hds.get_data(totim=1.0)
+    np.testing.assert_allclose(data_read, 100.0)
+    hds.close()
+
+    # Test with list of xarray-like arrays
+    xarrs = [
+        MockXArray(np.full((nlay, nrow, ncol), 100.0)),
+        MockXArray(np.full((nlay, nrow, ncol), 95.0)),
+    ]
+
+    outfile = function_tmpdir / "test_xarray_list.hds"
+    hds = HeadFile.write(outfile, xarrs)
+
+    assert hds.get_times() == [1.0, 2.0]
+    np.testing.assert_allclose(hds.get_data(totim=1.0), 100.0)
+    np.testing.assert_allclose(hds.get_data(totim=2.0), 95.0)
+    hds.close()
+
+    # Test with list-of-dicts containing xarray-like
+    data_list = [
+        {'data': MockXArray(np.full((nlay, nrow, ncol), 50.0)), 'kstp': 1, 'kper': 1},
+        {'data': MockXArray(np.full((nlay, nrow, ncol), 45.0)), 'kstp': 1, 'kper': 2},
+    ]
+
+    outfile = function_tmpdir / "test_xarray_dictlist.hds"
+    hds = HeadFile.write(outfile, data_list)
+
+    assert hds.get_times() == [1.0, 2.0]
+    np.testing.assert_allclose(hds.get_data(totim=1.0), 50.0)
+    np.testing.assert_allclose(hds.get_data(totim=2.0), 45.0)
+    hds.close()
+
+
+def test_cellbudgetfile_write_xarray_duck(function_tmpdir):
+    """Test CellBudgetFile.write() with xarray-like duck arrays."""
+    nlay, nrow, ncol = 2, 5, 10
+
+    # Create a mock xarray-like object
+    class MockXArray:
+        def __init__(self, data):
+            self.values = data
+            self.dims = ['z', 'y', 'x']
+            self.shape = data.shape
+
+    # Test with dict of xarray-like arrays
+    data = {
+        (1, 1): MockXArray(np.random.rand(nlay, nrow, ncol).astype(np.float32)),
+        (1, 2): MockXArray(np.random.rand(nlay, nrow, ncol).astype(np.float32)),
+    }
+
+    outfile = function_tmpdir / "test_xarray.cbc"
+    cbb = CellBudgetFile.write(
+        outfile,
+        data,
+        text="STORAGE",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        precision="single"
+    )
+
+    assert cbb.get_times() == [1.0, 2.0]
+
+    # Verify data matches original
+    data1 = cbb.get_data(totim=1.0, text="STORAGE")[0]
+    data2 = cbb.get_data(totim=2.0, text="STORAGE")[0]
+
+    np.testing.assert_allclose(data1, data[(1, 1)].values, rtol=1e-6)
+    np.testing.assert_allclose(data2, data[(1, 2)].values, rtol=1e-6)
+    cbb.close()
+
+    # Test with list of xarray-like arrays
+    storage_list = [
+        MockXArray(np.random.rand(nlay, nrow, ncol).astype(np.float32)),
+        MockXArray(np.random.rand(nlay, nrow, ncol).astype(np.float32)),
+    ]
+
+    outfile = function_tmpdir / "test_xarray_list.cbc"
+    cbb = CellBudgetFile.write(
+        outfile,
+        storage_list,
+        text="STORAGE",
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        precision="single"
+    )
+
+    assert cbb.get_times() == [1.0, 2.0]
+    np.testing.assert_allclose(
+        cbb.get_data(totim=1.0, text="STORAGE")[0],
+        storage_list[0].values,
+        rtol=1e-6
+    )
+    np.testing.assert_allclose(
+        cbb.get_data(totim=2.0, text="STORAGE")[0],
+        storage_list[1].values,
+        rtol=1e-6
+    )
+    cbb.close()
+
+
+def test_headfile_write_scalar_disv_disu(function_tmpdir):
+    """Test HeadFile.write() with scalars for DISV and DISU grids."""
+    # DISV grid (stored as nlay, nrow=1, ncol=ncpl)
+    outfile = function_tmpdir / "test_scalar_disv.hds"
+    hds = HeadFile.write(outfile, 75.0, nlay=3, ncpl=100)
+
+    assert hds.get_times() == [1.0]
+    data_read = hds.get_data(totim=1.0)
+    assert data_read.shape == (3, 1, 100)
+    np.testing.assert_allclose(data_read, 75.0)
+    hds.close()
+
+    # DISU grid (stored as nlay=1, nrow=1, ncol=nnodes)
+    outfile = function_tmpdir / "test_scalar_disu.hds"
+    hds = HeadFile.write(outfile, 50.0, nnodes=500)
+
+    assert hds.get_times() == [1.0]
+    data_read = hds.get_data(totim=1.0)
+    assert data_read.shape == (1, 1, 500)
+    np.testing.assert_allclose(data_read, 50.0)
+    hds.close()
+
+
+def test_empty_list_error(function_tmpdir):
+    """Test that empty lists raise appropriate errors."""
+    with pytest.raises(ValueError, match="Empty data list"):
+        HeadFile.write(function_tmpdir / "test.hds", [])
+
+    with pytest.raises(ValueError, match="Empty data list"):
+        CellBudgetFile.write(function_tmpdir / "test.cbc", [], text="STORAGE")

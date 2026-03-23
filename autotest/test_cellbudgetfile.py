@@ -1185,7 +1185,7 @@ def test_cellbudgetfile_write_preserves_aux_vars(dis_sim, function_tmpdir):
 
     # Write to a new file
     output_file = Path(function_tmpdir) / "test_aux_rewritten.cbc"
-    cbc_orig.write(output_file, kstpkper=cbc_orig.kstpkper[:2])
+    cbc_orig.export(output_file, kstpkper=cbc_orig.kstpkper[:2])
 
     # Read back the written file
     from flopy.utils import CellBudgetFile
