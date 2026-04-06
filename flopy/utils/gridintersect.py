@@ -378,8 +378,7 @@ class GridIntersect:
             array of cellids
         """
         warnings.warn(
-            "UnstructuredGrid intersection is experimental",
-            category=UserWarning
+            "UnstructuredGrid intersection is experimental", category=UserWarning
         )
         shapely = import_optional_dependency("shapely")
         if self.local:

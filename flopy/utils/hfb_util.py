@@ -111,7 +111,11 @@ def _edge_neighbors(modelgrid):
     edge_nodes = {}
     for i, item in enumerate(geoms):
         if item not in edge_nodes:
-            edge_nodes[item] = set([node_nums[i],])
+            edge_nodes[item] = set(
+                [
+                    node_nums[i],
+                ]
+            )
         else:
             edge_nodes[item].add(node_nums[i])
 
@@ -165,7 +169,6 @@ def make_hfb_array(modelgrid, geom):
                 vrts.append(vrts[0])
         verts.append(np.array(vrts))
 
-
     ixs = GridIntersect(modelgrid)
     result = ixs.intersect(geom, shapetype="LineString")
     result_adj = []
@@ -195,8 +198,12 @@ def make_hfb_array(modelgrid, geom):
             o1 = list(range(tmp[0], tmp[1] + 1))
             o2 = list(range(tmp[1], nvert)) + list(range(0, tmp[0] + 1))
             # calculate routing distance
-            d1 = np.sum([elens[tuple(sorted([o1[ix - 1], o1[ix]]))] for ix in range(1, len(o1))])
-            d2 = np.sum([elens[tuple(sorted([o2[ix - 1], o2[ix]]))] for ix in range(1, len(o2))])
+            d1 = np.sum(
+                [elens[tuple(sorted([o1[ix - 1], o1[ix]]))] for ix in range(1, len(o1))]
+            )
+            d2 = np.sum(
+                [elens[tuple(sorted([o2[ix - 1], o2[ix]]))] for ix in range(1, len(o2))]
+            )
 
             # evaluate distance and break ties if necessary
             if d1 < d2:

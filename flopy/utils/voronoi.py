@@ -318,14 +318,12 @@ class VoronoiGrid:
         disu_gridprops : dict
             Dictionary of arguments that can be unpacked into the
             flopy.mf6.ModflowGwfdisu constructor
-            
+
         """
         from ..discretization import UnstructuredGrid
 
         gridprops = self.get_gridprops_unstructuredgrid()
-        ugrid = UnstructuredGrid(
-            **gridprops
-        )
+        ugrid = UnstructuredGrid(**gridprops)
 
         xcenters = ugrid.xcellcenters
         ycenters = ugrid.ycellcenters
@@ -342,7 +340,12 @@ class VoronoiGrid:
         for node, nnodes in neighbors.items():
             iac.append(len(nnodes) + 1)
             ja.extend([node] + nnodes)
-            ihc.extend([1, ] * iac[-1])
+            ihc.extend(
+                [
+                    1,
+                ]
+                * iac[-1]
+            )
             # cell center to cell center distance...
             cl12.append(0)
             hwva.append(0)
@@ -355,7 +358,7 @@ class VoronoiGrid:
             dists = distance(nxc, nyc, xc, yc)
             cl12.extend(dists)
 
-            angles = np.arctan2(nxc - xc, nyc - yc) * 180. / np.pi
+            angles = np.arctan2(nxc - xc, nyc - yc) * 180.0 / np.pi
             angles = np.where(angles < 0, angles + 360, angles)
             angldegx.extend(angles)
 
@@ -367,10 +370,7 @@ class VoronoiGrid:
                 common = set(ivrts) & set(nivrts)
                 idxs = [ivrts.index(i) for i in common]
                 hwv = distance(
-                    xverts[idxs[0]],
-                    yverts[idxs[0]],
-                    xverts[idxs[1]],
-                    yverts[idxs[1]]
+                    xverts[idxs[0]], yverts[idxs[0]], xverts[idxs[1]], yverts[idxs[1]]
                 )
                 hwva.append(hwv)
 
