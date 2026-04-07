@@ -246,7 +246,7 @@ def make_hfb_array(modelgrid, geom):
 
         vidx1 = _min_distance_index(xcell, x1, ycell, y1)
         if len(vidx1) > 1:
-            # pertub line by small epsilon
+            # perturb line by small epsilon
             coords[-1] = perturb_intersection_coords(vidx1, xycell, coords[-1])
             x1, y1 = coords[-1, 0], coords[-1, 1]
             vidx1 = _min_distance_index(xcell, x1, ycell, y1)
