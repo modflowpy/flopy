@@ -1,8 +1,9 @@
 import numpy as np
 import pandas as pd
+
 from .geometry import distance
-from .gridintersect import GridIntersect
 from .geospatial_utils import GeoSpatialUtil
+from .gridintersect import GridIntersect
 
 
 def _min_distance_index(x0, x1, y0, y1):
@@ -26,7 +27,7 @@ def _min_distance_index(x0, x1, y0, y1):
     """
     dist = distance(x0, y0, x1, y1)
     idx = np.where(dist == np.min(dist))[0]
-    return idx[0]
+    return idx
 
 
 def _edge_length_lut(xyverts):
@@ -64,9 +65,12 @@ def _minimize_hfb_deviance(idxs, xyverts, pts):
 
     Parameters
     ----------
-    idxs :
-    xyverts :
-    pts :
+    idxs : iterable
+        list, tuple, or numpy array of polygon vertex indices for test hfb path
+    xyverts : np.array
+        numpy array of (x,y) polygon vertices
+    pts : np.array
+        numpy array of (x,y) points of intersection between line and polygon
 
     Returns
     -------
@@ -86,15 +90,64 @@ def _minimize_hfb_deviance(idxs, xyverts, pts):
     mins = []
     for xc, yc in lcs:
         dists = distance(pts[0], pts[1], xc, yc)
-        # asq = (pts[0] - xc) ** 2
-        # bsq = (pts[1] - yc) ** 2
-        # dists = np.sqrt(asq + bsq)
         mins.append(np.min(dists))
 
     return np.sum(mins)
 
 
+def perturb_intersection_coords(idxs, xyverts, ipt, epsilon=1e-06):
+    """
+
+    Parameters
+    ----------
+    idxs :
+    xyverts :
+    coords :
+    cidx :
+
+    Returns
+    -------
+
+    """
+    xyverts = xyverts.T
+    xverts = xyverts[0][idxs]
+    yverts = xyverts[1][idxs]
+
+    if (xverts[0] - xverts[1]) == 0:
+        # vertical line
+        new_vrt = [xverts[0], np.mean(yverts) - epsilon]
+    elif (yverts[0] - yverts[1]) == 0:
+        # horizontal line
+        new_vrt = [np.mean(xverts) - epsilon, yverts[0]]
+    else:
+        # need to adjust across the line
+        m = (yverts[1] - yverts[0]) / [xverts[1] - xverts[0]]
+        if xverts[0] != 0:
+            vidx = 0
+        else:
+            vidx = 1
+        b = yverts[vidx] / (m * xverts[vidx])
+        cx = ipt[0] - epsilon
+        cy = m * cx + b
+        new_vrt = [cx, cy]
+
+    ipt = new_vrt
+    return ipt
+
+
 def _edge_neighbors(modelgrid):
+    """
+    Method to get a dictionary of unique node edges (by ivert) and the nodes the
+    edge is shared between
+
+    Parameters
+    ----------
+    modelgrid : flopy.discretization.Grid object
+
+    Returns
+    -------
+        dict : dictionary of {edge iverts : [nodes]}
+    """
     node_num = 0
     geoms = []
     node_nums = []
@@ -111,11 +164,9 @@ def _edge_neighbors(modelgrid):
     edge_nodes = {}
     for i, item in enumerate(geoms):
         if item not in edge_nodes:
-            edge_nodes[item] = set(
-                [
-                    node_nums[i],
-                ]
-            )
+            edge_nodes[item] = {
+                node_nums[i],
+            }
         else:
             edge_nodes[item].add(node_nums[i])
 
@@ -175,16 +226,32 @@ def make_hfb_array(modelgrid, geom):
     for record in result:
         node = record.cellid
         ixshp = record.ixshapes
-        coords = ixshp.coords.xy
-        x0, x1 = coords[0][0], coords[0][-1]
-        y0, y1 = coords[1][0], coords[1][-1]
+        # todo: numpy array this and Transpose
+        coords = np.array(ixshp.coords.xy).T
+        x0, y0 = coords[0, 0], coords[0, 1]
+        x1, y1 = coords[-1, 0], coords[-1, 1]
 
         xycell = verts[node]
         xcell = xycell.T[0][:-1]
         ycell = xycell.T[1][:-1]
 
         vidx0 = _min_distance_index(xcell, x0, ycell, y0)
+        if len(vidx0) > 1:
+            # perturb line by small epsilon
+            coords[0] = perturb_intersection_coords(vidx0, xycell, coords[0])
+            x0, y0 = coords[0, 0], coords[0, 1]
+            vidx0 = _min_distance_index(xcell, x0, ycell, y0)
+
+        vidx0 = vidx0[0]
+
         vidx1 = _min_distance_index(xcell, x1, ycell, y1)
+        if len(vidx1) > 1:
+            # pertub line by small epsilon
+            coords[-1] = perturb_intersection_coords(vidx1, xycell, coords[-1])
+            x1, y1 = coords[-1, 0], coords[-1, 1]
+            vidx1 = _min_distance_index(xcell, x1, ycell, y1)
+
+        vidx1 = vidx1[0]
 
         if vidx0 == vidx1:
             continue
@@ -211,8 +278,8 @@ def make_hfb_array(modelgrid, geom):
             elif d2 < d1:
                 tmp = o2
             else:
-                om1 = _minimize_hfb_deviance(o1, xycell, np.array(coords))
-                om2 = _minimize_hfb_deviance(o2, xycell, np.array(coords))
+                om1 = _minimize_hfb_deviance(o1, xycell, coords)
+                om2 = _minimize_hfb_deviance(o2, xycell, coords)
                 if om1 <= om2:
                     tmp = o1
                 else:

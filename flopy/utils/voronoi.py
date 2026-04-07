@@ -4,7 +4,7 @@ from math import sqrt
 import numpy as np
 
 from .cvfdutil import get_disv_gridprops
-from .geometry import point_in_polygon, distance
+from .geometry import distance, point_in_polygon
 from .utl_import import import_optional_dependency
 
 
