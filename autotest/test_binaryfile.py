@@ -1015,12 +1015,7 @@ def test_headfile_write_scalar(function_tmpdir):
     # Multiple timesteps with kstpkper
     outfile = function_tmpdir / "test_scalar_multi.hds"
     hds = HeadFile.write(
-        outfile,
-        50.0,
-        nlay=2,
-        nrow=5,
-        ncol=10,
-        kstpkper=[(1, 1), (1, 2), (1, 3)]
+        outfile, 50.0, nlay=2, nrow=5, ncol=10, kstpkper=[(1, 1), (1, 2), (1, 3)]
     )
     assert hds.get_times() == [1.0, 2.0, 3.0]
 
@@ -1040,12 +1035,7 @@ def test_cellbudgetfile_write_scalar(function_tmpdir):
     # Single timestep
     outfile = function_tmpdir / "test_scalar.cbc"
     cbb = CellBudgetFile.write(
-        outfile,
-        25.0,
-        text="CONSTANT HEAD",
-        nlay=3,
-        nrow=10,
-        ncol=20
+        outfile, 25.0, text="CONSTANT HEAD", nlay=3, nrow=10, ncol=20
     )
     assert cbb.get_times() == [1.0]
 
@@ -1063,7 +1053,7 @@ def test_cellbudgetfile_write_scalar(function_tmpdir):
         nlay=2,
         nrow=5,
         ncol=10,
-        kstpkper=[(1, 1), (2, 1), (1, 2)]
+        kstpkper=[(1, 1), (2, 1), (1, 2)],
     )
     assert cbb.get_times() == [1.0, 2.0, 3.0]
 
@@ -1103,11 +1093,7 @@ def test_headfile_write_list_of_arrays(function_tmpdir):
 
     # Test with custom kstpkper
     outfile = function_tmpdir / "test_list_kstpkper.hds"
-    hds = HeadFile.write(
-        outfile,
-        heads,
-        kstpkper=[(1, 1), (1, 2), (1, 3)]
-    )
+    hds = HeadFile.write(outfile, heads, kstpkper=[(1, 1), (1, 2), (1, 3)])
     assert hds.get_times() == [1.0, 2.0, 3.0]
     hds.close()
 
@@ -1130,7 +1116,7 @@ def test_cellbudgetfile_write_list_of_arrays(function_tmpdir):
         nlay=nlay,
         nrow=nrow,
         ncol=ncol,
-        precision="single"
+        precision="single",
     )
 
     # Should create 2 timesteps
@@ -1153,7 +1139,7 @@ def test_headfile_write_xarray_duck(function_tmpdir):
     class MockXArray:
         def __init__(self, data):
             self.values = data
-            self.dims = ['z', 'y', 'x']
+            self.dims = ["z", "y", "x"]
             self.shape = data.shape
 
     # Test with single xarray-like array
@@ -1183,8 +1169,8 @@ def test_headfile_write_xarray_duck(function_tmpdir):
 
     # Test with list-of-dicts containing xarray-like
     data_list = [
-        {'data': MockXArray(np.full((nlay, nrow, ncol), 50.0)), 'kstp': 1, 'kper': 1},
-        {'data': MockXArray(np.full((nlay, nrow, ncol), 45.0)), 'kstp': 1, 'kper': 2},
+        {"data": MockXArray(np.full((nlay, nrow, ncol), 50.0)), "kstp": 1, "kper": 1},
+        {"data": MockXArray(np.full((nlay, nrow, ncol), 45.0)), "kstp": 1, "kper": 2},
     ]
 
     outfile = function_tmpdir / "test_xarray_dictlist.hds"
@@ -1204,7 +1190,7 @@ def test_cellbudgetfile_write_xarray_duck(function_tmpdir):
     class MockXArray:
         def __init__(self, data):
             self.values = data
-            self.dims = ['z', 'y', 'x']
+            self.dims = ["z", "y", "x"]
             self.shape = data.shape
 
     # Test with dict of xarray-like arrays
@@ -1221,7 +1207,7 @@ def test_cellbudgetfile_write_xarray_duck(function_tmpdir):
         nlay=nlay,
         nrow=nrow,
         ncol=ncol,
-        precision="single"
+        precision="single",
     )
 
     assert cbb.get_times() == [1.0, 2.0]
@@ -1248,19 +1234,15 @@ def test_cellbudgetfile_write_xarray_duck(function_tmpdir):
         nlay=nlay,
         nrow=nrow,
         ncol=ncol,
-        precision="single"
+        precision="single",
     )
 
     assert cbb.get_times() == [1.0, 2.0]
     np.testing.assert_allclose(
-        cbb.get_data(totim=1.0, text="STORAGE")[0],
-        storage_list[0].values,
-        rtol=1e-6
+        cbb.get_data(totim=1.0, text="STORAGE")[0], storage_list[0].values, rtol=1e-6
     )
     np.testing.assert_allclose(
-        cbb.get_data(totim=2.0, text="STORAGE")[0],
-        storage_list[1].values,
-        rtol=1e-6
+        cbb.get_data(totim=2.0, text="STORAGE")[0], storage_list[1].values, rtol=1e-6
     )
     cbb.close()
 

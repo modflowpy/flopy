@@ -611,13 +611,15 @@ class HeadFile(BinaryLayerFile):
             Precision of floating point data: 'single' or 'double'
         totim : float, dict, or list, optional
             Total time values. Can be:
-            - float/int: Use same value for all records (only valid with single timestep)
+            - float/int: Use same value for all records (only valid with
+              single timestep)
             - dict: Maps (kstp, kper) to totim values
             - list: Should match order of data
             - None: Defaults to sequential counter (1.0, 2.0, 3.0, ...)
         pertim : float, dict, or list, optional
             Period time values. Can be:
-            - float/int: Use same value for all records (only valid with single timestep)
+            - float/int: Use same value for all records (only valid with
+              single timestep)
             - dict: Maps (kstp, kper) to pertim values
             - list: Should match order of data
             - None: Defaults to totim
@@ -745,13 +747,17 @@ class HeadFile(BinaryLayerFile):
             if len(data) > 1:
                 if isinstance(totim, (int, float)):
                     raise ValueError(
-                        "totim cannot be a single value when data has multiple time steps. "
-                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                        "totim cannot be a single value when data has "
+                        "multiple time steps. Use a dict mapping (kstp, "
+                        "kper) to time values, or pass data with a single "
+                        "time step."
                     )
                 if isinstance(pertim, (int, float)):
                     raise ValueError(
-                        "pertim cannot be a single value when data has multiple time steps. "
-                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                        "pertim cannot be a single value when data has "
+                        "multiple time steps. Use a dict mapping (kstp, "
+                        "kper) to time values, or pass data with a single "
+                        "time step."
                     )
 
             records = []
@@ -772,7 +778,8 @@ class HeadFile(BinaryLayerFile):
                     else:
                         raise ValueError(
                             "1D arrays require ncpl or nnodes parameter. "
-                            "For DIS grids, use 2D (nrow, ncol) or 3D (nlay, nrow, ncol) arrays."
+                            "For DIS grids, use 2D (nrow, ncol) or 3D "
+                            "(nlay, nrow, ncol) arrays."
                         )
                 elif arr.ndim == 2:
                     # 2D array
@@ -1617,8 +1624,8 @@ class CellBudgetFile:
         """
         Write budget data directly to a binary file.
 
-        This classmethod writes budget data arrays to a binary cell budget file and returns
-        a CellBudgetFile instance with the file open.
+        This classmethod writes budget data arrays to a binary cell budget
+        file and returns a CellBudgetFile instance with the file open.
 
         Parameters
         ----------
@@ -1657,12 +1664,14 @@ class CellBudgetFile:
             - dict: Maps (kstp, kper) to delt values
         pertim : float or dict, optional
             Period time. Can be:
-            - float/int: Use same value for all records (only valid with single timestep)
+            - float/int: Use same value for all records (only valid with
+              single timestep)
             - dict: Maps (kstp, kper) to pertim values
             - None: Defaults to totim
         totim : float or dict, optional
             Total simulation time. Can be:
-            - float/int: Use same value for all records (only valid with single timestep)
+            - float/int: Use same value for all records (only valid with
+              single timestep)
             - dict: Maps (kstp, kper) to totim values
             - None: Defaults to sequential counter (1.0, 2.0, 3.0, ...)
         nlay : int, optional
@@ -1802,18 +1811,24 @@ class CellBudgetFile:
             if len(data) > 1:
                 if isinstance(totim, (int, float)):
                     raise ValueError(
-                        "totim cannot be a single value when data has multiple time steps. "
-                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                        "totim cannot be a single value when data has "
+                        "multiple time steps. Use a dict mapping (kstp, "
+                        "kper) to time values, or pass data with a single "
+                        "time step."
                     )
                 if isinstance(pertim, (int, float)):
                     raise ValueError(
-                        "pertim cannot be a single value when data has multiple time steps. "
-                        "Use a dict mapping (kstp, kper) to time values, or pass data with a single time step."
+                        "pertim cannot be a single value when data has "
+                        "multiple time steps. Use a dict mapping (kstp, "
+                        "kper) to time values, or pass data with a single "
+                        "time step."
                     )
                 if isinstance(delt, (int, float)) and delt != 1.0:
                     raise ValueError(
-                        "delt cannot be a single non-default value when data has multiple time steps. "
-                        "Use a dict mapping (kstp, kper) to delt values, or pass data with a single time step."
+                        "delt cannot be a single non-default value when "
+                        "data has multiple time steps. Use a dict mapping "
+                        "(kstp, kper) to delt values, or pass data with a "
+                        "single time step."
                     )
 
             records = []
@@ -1877,7 +1892,9 @@ class CellBudgetFile:
             # Use inferred shape if dimensions not provided
             if inferred_shape is not None:
                 # Determine if user is trying to use DISV (nlay + ncpl)
-                if ncpl is not None or (nlay is not None and nrow is None and ncol is None):
+                if ncpl is not None or (
+                    nlay is not None and nrow is None and ncol is None
+                ):
                     # DISV mode
                     if len(inferred_shape) == 2:
                         # 2D array: (nlay, ncpl)
@@ -1944,7 +1961,9 @@ class CellBudgetFile:
             # Use inferred shape if dimensions not provided
             if inferred_shape is not None:
                 # Determine if user is trying to use DISV (nlay + ncpl)
-                if ncpl is not None or (nlay is not None and nrow is None and ncol is None):
+                if ncpl is not None or (
+                    nlay is not None and nrow is None and ncol is None
+                ):
                     # DISV mode
                     if len(inferred_shape) == 2:
                         # 2D array: (nlay, ncpl)
@@ -2130,7 +2149,14 @@ class CellBudgetFile:
                     if rec_text == "FLOW-JA-FACE":
                         # Connection-based data - use actual data size
                         h1 = np.array(
-                            (rec["kstp"], rec["kper"], text_bytes, len(rec["data"]), 1, -1),
+                            (
+                                rec["kstp"],
+                                rec["kper"],
+                                text_bytes,
+                                len(rec["data"]),
+                                1,
+                                -1,
+                            ),
                             dtype=h1dt,
                         )
                     else:
@@ -2187,7 +2213,12 @@ class CellBudgetFile:
 
                     # Write modelnam, paknam, modelnam2, paknam2
                     # Use same defaults as binary_util.py write_budget function
-                    defaults = {"modelnam": "", "paknam": "", "modelnam2": "", "paknam2": ""}
+                    defaults = {
+                        "modelnam": "",
+                        "paknam": "",
+                        "modelnam2": "",
+                        "paknam2": "",
+                    }
                     for name in ["modelnam", "paknam", "modelnam2", "paknam2"]:
                         name_bytes = pad_text(rec.get(name, defaults[name]))
                         f.write(name_bytes)
@@ -2215,8 +2246,12 @@ class CellBudgetFile:
                         for aux_name in aux_names:
                             # Auxiliary names must be space-padded (not null-padded)
                             # to match MODFLOW 6 expectations
-                            aux_str = aux_name if isinstance(aux_name, str) else aux_name.decode('ascii')
-                            aux_bytes = f"{aux_str:16}".encode('ascii')
+                            aux_str = (
+                                aux_name
+                                if isinstance(aux_name, str)
+                                else aux_name.decode("ascii")
+                            )
+                            aux_bytes = f"{aux_str:16}".encode("ascii")
                             f.write(aux_bytes)
 
                     # Write nlist
