@@ -25,6 +25,29 @@ from ..datafile import Header, LayerFile
 from ..gridutil import get_lni
 
 
+def _pad_text_to_16(text):
+    """
+    Pad text to exactly 16 bytes, left-justified (MODFLOW standard).
+
+    Parameters
+    ----------
+    text : str or bytes
+        Text to pad
+
+    Returns
+    -------
+    bytes
+        16-byte text field with spaces on the right
+    """
+    if isinstance(text, str):
+        text = text.encode("ascii")
+    if len(text) > 16:
+        return text[:16]
+    elif len(text) < 16:
+        return text + b" " * (16 - len(text))
+    return text
+
+
 class BinaryHeader(Header):
     """
     Represents data headers for binary output files.
@@ -583,7 +606,7 @@ class HeadFile(BinaryLayerFile):
             1. Array with time dimension:
                - Shape (ntimes, nlay, nrow, ncol) or (ntimes, nrow, ncol)
                - First dimension is time, creates one record per time step
-               - Requires kstpkper parameter or uses sequential (1,1), (2,1), ...
+               - Requires kstpkper parameter or uses sequential (1,1), (1,2), (1,3), ...
 
             2. Dict mapping (kstp, kper) tuples to arrays:
                {(kstp, kper): array, ...}
@@ -626,7 +649,7 @@ class HeadFile(BinaryLayerFile):
         kstpkper : list of tuples, optional
             Time step/period mapping for array data with time dimension.
             List of (kstp, kper) tuples, one per time step.
-            If None, uses sequential numbering: (1,1), (2,1), (3,1), ...
+            If None, uses sequential numbering: (1,1), (1,2), (1,3), ...
             Ignored if data is dict or list format.
         verbose : bool, default False
             Print progress messages
@@ -728,8 +751,8 @@ class HeadFile(BinaryLayerFile):
 
             # Generate or validate kstpkper
             if kstpkper is None:
-                # Sequential: (1,1), (2,1), (3,1), ...
-                kstpkper = [(i, 1) for i in range(1, ntimes + 1)]
+                # Sequential stress periods: (1,1), (1,2), (1,3), ...
+                kstpkper = [(1, i) for i in range(1, ntimes + 1)]
             elif len(kstpkper) != ntimes:
                 raise ValueError(
                     f"kstpkper must have {ntimes} entries to match "
@@ -923,12 +946,7 @@ class HeadFile(BinaryLayerFile):
         realtype = np.float32 if precision == "single" else np.float64
 
         # Pad text to 16 bytes
-        if isinstance(text, str):
-            text = text.encode("ascii")
-        if len(text) > 16:
-            text = text[:16]
-        elif len(text) < 16:
-            text = text + b" " * (16 - len(text))
+        text = _pad_text_to_16(text)
 
         # Create temporary file if no filename provided
         if filename is None:
@@ -1117,24 +1135,7 @@ class HeadFile(BinaryLayerFile):
         realtype = np.float32 if precision == "single" else np.float64
 
         # Pad text to 16 bytes
-        def pad_text(text):
-            """Pad text to exactly 16 bytes, right-aligned with leading spaces."""
-            if isinstance(text, str):
-                # Right-align with spaces, then encode
-                text = f"{text:>16}"
-                text = text.encode("ascii")
-            else:
-                # Already bytes - check if it needs padding
-                if len(text) < 16:
-                    # Decode, right-align with spaces, re-encode
-                    text = text.decode("ascii")
-                    text = f"{text:>16}".encode("ascii")
-
-            if len(text) > 16:
-                return text[:16]
-            return text
-
-        text_bytes = pad_text(text)
+        text_bytes = _pad_text_to_16(text)
 
         # Pre-allocate header dtype outside loop for better performance
         dt = np.dtype(
@@ -1637,7 +1638,7 @@ class CellBudgetFile:
             1. Array with time dimension:
                - Shape (ntimes, nlay, nrow, ncol) or (ntimes, ...) for grid data
                - First dimension is time, creates one record per time step
-               - Requires kstpkper parameter or uses sequential (1,1), (2,1), ...
+               - Requires kstpkper parameter or uses sequential (1,1), (1,2), (1,3), ...
 
             2. Dict mapping (kstp, kper) tuples to arrays:
                {(kstp, kper): array, ...}
@@ -1687,7 +1688,7 @@ class CellBudgetFile:
         kstpkper : list of tuples, optional
             Time step/period mapping for array data with time dimension.
             List of (kstp, kper) tuples, one per time step.
-            If None, uses sequential numbering: (1,1), (2,1), (3,1), ...
+            If None, uses sequential numbering: (1,1), (1,2), (1,3), ...
             Ignored if data is dict or list format.
         verbose : bool, default False
             Print progress messages
@@ -1792,8 +1793,8 @@ class CellBudgetFile:
 
             # Generate or validate kstpkper
             if kstpkper is None:
-                # Sequential: (1,1), (2,1), (3,1), ...
-                kstpkper = [(i, 1) for i in range(1, ntimes + 1)]
+                # Sequential stress periods: (1,1), (1,2), (1,3), ...
+                kstpkper = [(1, i) for i in range(1, ntimes + 1)]
             elif len(kstpkper) != ntimes:
                 raise ValueError(
                     f"kstpkper must have {ntimes} entries to match "
@@ -2097,23 +2098,8 @@ class CellBudgetFile:
             ]
         )
 
-        # Helper function to pad text
-        def pad_text(txt):
-            """Pad text to exactly 16 bytes, right-aligned with leading spaces."""
-            if isinstance(txt, str):
-                # Right-align with spaces, then encode
-                txt = f"{txt:>16}"
-                txt = txt.encode("ascii")
-            else:
-                # Already bytes - check if it needs padding
-                if len(txt) < 16:
-                    # Decode, right-align with spaces, re-encode
-                    txt = txt.decode("ascii")
-                    txt = f"{txt:>16}".encode("ascii")
-
-            if len(txt) > 16:
-                return txt[:16]
-            return txt
+        # Helper function to pad text (using module-level helper)
+        pad_text = _pad_text_to_16
 
         # Create temporary file if no filename provided
         if filename is None:
@@ -3579,25 +3565,15 @@ class CellBudgetFile:
         ... )
         """
 
-        def fit_text(text):
-            """Pad or truncate text to 16 bytes."""
-            if isinstance(text, str):
-                text = text.encode("ascii")
-            if len(text) > 16:
-                return text[:16]
-            elif len(text) < 16:
-                return text + b" " * (16 - len(text))
-            return text
-
         if kstpkper is None:
             kstpkper = self.kstpkper
 
         if text is None:
             textlist = self.textlist
         elif isinstance(text, str):
-            textlist = [text.ljust(16).encode()]
+            textlist = [_pad_text_to_16(text)]
         else:
-            textlist = [t.ljust(16).encode() for t in text]
+            textlist = [_pad_text_to_16(t) for t in text]
 
         verbose = kwargs.get("verbose", False)
         precision = kwargs.get("precision", self.precision)
@@ -3680,7 +3656,7 @@ class CellBudgetFile:
                             imeth = 1  # array
 
                         text_str = file_txt.decode().strip()
-                        text_bytes = fit_text(text_str)
+                        text_bytes = _pad_text_to_16(text_str)
                         delt = float(record["delt"])
                         pertim = float(record["pertim"])
                         totim = float(record["totim"])
@@ -3736,7 +3712,7 @@ class CellBudgetFile:
                             paknam2 = record["paknam2"].decode().strip()
 
                             for name in [modelnam, paknam, modelnam2, paknam2]:
-                                name_bytes = fit_text(name)
+                                name_bytes = _pad_text_to_16(name)
                                 f.write(name_bytes)
 
                             # write naux and aux var names
@@ -3749,7 +3725,7 @@ class CellBudgetFile:
                             naux = len(auxtxt)
                             np.array([naux + 1], dtype=np.int32).tofile(f)
                             for auxname in auxtxt:
-                                f.write(fit_text(auxname))
+                                f.write(_pad_text_to_16(auxname))
 
                             if not (isinstance(data, np.ndarray) and data.dtype.names):
                                 raise ValueError(
