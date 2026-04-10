@@ -43,7 +43,7 @@ def test_headfile_write_benchmark(benchmark, freyberg_hds_path, tmp_path):
     output_file = tmp_path / "benchmark_output.hds"
 
     def write_head():
-        hds.write(output_file, kstpkper=kstpkper)
+        hds.export(output_file, kstpkper=kstpkper)
 
     benchmark(write_head)
     assert output_file.exists()
@@ -57,7 +57,7 @@ def test_cellbudgetfile_write_benchmark(benchmark, freyberg_cbc_path, tmp_path):
     output_file = tmp_path / "benchmark_output.cbc"
 
     def write_budget():
-        cbc.write(output_file, kstpkper=kstpkper)
+        cbc.export(output_file, kstpkper=kstpkper)
 
     benchmark(write_budget)
     assert output_file.exists()
