@@ -145,7 +145,7 @@ def test_mfgrdfile_write_benchmark_dis(benchmark, tmp_path):
     output_file = tmp_path / "benchmark_output.grb"
 
     def write_grb():
-        grb.write(output_file, verbose=False)
+        grb.export(output_file, verbose=False)
 
     benchmark(write_grb)
     assert output_file.exists()

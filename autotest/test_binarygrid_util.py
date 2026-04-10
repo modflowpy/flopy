@@ -166,7 +166,7 @@ def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
     grb_orig = MfGrdFile(original_file, verbose=False)
 
     output_file = tmp_path / "test_instance.dis.grb"
-    grb_orig.write(output_file, verbose=False)
+    grb_orig.export(output_file, verbose=False)
 
     grb_new = MfGrdFile(output_file, verbose=False)
 
@@ -196,10 +196,10 @@ def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_pat
     grb = MfGrdFile(original_file, verbose=False)
 
     single_file = tmp_path / "test_single.grb"
-    grb.write(single_file, precision="single", verbose=False)
+    grb.export(single_file, precision="single", verbose=False)
 
     double_file = tmp_path / "test_double.grb"
-    grb.write(double_file, precision="double", verbose=False)
+    grb.export(double_file, precision="double", verbose=False)
 
     grb_single = MfGrdFile(single_file, verbose=False)
     grb_double = MfGrdFile(double_file, verbose=False)
@@ -210,7 +210,7 @@ def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_pat
 
 
 def test_write_grb_disv_roundtrip(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.write() for DISV grid with roundtrip validation."""
+    """Test MfGrdFile.export() for DISV grid with roundtrip validation."""
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISV grb file
@@ -219,7 +219,7 @@ def test_write_grb_disv_roundtrip(tmp_path, mfgrd_test_path):
 
     # Write using instance method
     output_file = tmp_path / "test_disv.grb"
-    grb_orig.write(output_file, verbose=False)
+    grb_orig.export(output_file, verbose=False)
 
     # Read it back
     grb_new = MfGrdFile(output_file, verbose=False)
@@ -266,7 +266,7 @@ def test_write_grb_disv_roundtrip(tmp_path, mfgrd_test_path):
 
 
 def test_write_grb_disv_precision_conversion(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.write() for DISV grid with precision conversion."""
+    """Test MfGrdFile.export() for DISV grid with precision conversion."""
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISV grb file
@@ -275,10 +275,10 @@ def test_write_grb_disv_precision_conversion(tmp_path, mfgrd_test_path):
 
     # Write in single and double precision
     single_file = tmp_path / "test_disv_single.grb"
-    grb.write(single_file, precision="single", verbose=False)
+    grb.export(single_file, precision="single", verbose=False)
 
     double_file = tmp_path / "test_disv_double.grb"
-    grb.write(double_file, precision="double", verbose=False)
+    grb.export(double_file, precision="double", verbose=False)
 
     # Read them back
     grb_single = MfGrdFile(single_file, verbose=False)
@@ -316,7 +316,7 @@ def test_write_grb_disv_precision_conversion(tmp_path, mfgrd_test_path):
 
 
 def test_write_grb_disu_roundtrip(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.write() for DISU grid with roundtrip validation."""
+    """Test MfGrdFile.export() for DISU grid with roundtrip validation."""
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISU grb file
@@ -325,7 +325,7 @@ def test_write_grb_disu_roundtrip(tmp_path, mfgrd_test_path):
 
     # Write using instance method
     output_file = tmp_path / "test_disu.grb"
-    grb_orig.write(output_file, verbose=False)
+    grb_orig.export(output_file, verbose=False)
 
     # Read it back
     grb_new = MfGrdFile(output_file, verbose=False)
@@ -361,7 +361,7 @@ def test_write_grb_disu_roundtrip(tmp_path, mfgrd_test_path):
 
 
 def test_write_grb_disu_precision_conversion(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.write() for DISU grid with precision conversion."""
+    """Test MfGrdFile.export() for DISU grid with precision conversion."""
     from flopy.mf6.utils.binarygrid_util import MfGrdFile
 
     # Read original DISU grb file
@@ -370,10 +370,10 @@ def test_write_grb_disu_precision_conversion(tmp_path, mfgrd_test_path):
 
     # Write in single and double precision
     single_file = tmp_path / "test_disu_single.grb"
-    grb.write(single_file, precision="single", verbose=False)
+    grb.export(single_file, precision="single", verbose=False)
 
     double_file = tmp_path / "test_disu_double.grb"
-    grb.write(double_file, precision="double", verbose=False)
+    grb.export(double_file, precision="double", verbose=False)
 
     # Read them back
     grb_single = MfGrdFile(single_file, verbose=False)

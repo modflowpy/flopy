@@ -747,9 +747,9 @@ class MfGrdFile(FlopyBinaryData):
             vertices, cell2d = None, None
         return vertices, cell2d
 
-    def write(self, filename, precision=None, version=1, verbose=False):
+    def export(self, filename, precision=None, version=1, verbose=False):
         """
-        Write the binary grid file to a new file.
+        Export the binary grid file to a new file.
 
         Parameters
         ----------
@@ -767,9 +767,9 @@ class MfGrdFile(FlopyBinaryData):
         --------
         >>> from flopy.mf6.utils import MfGrdFile
         >>> grb = MfGrdFile('model.dis.grb')
-        >>> grb.write('model_copy.dis.grb')
+        >>> grb.export('model_copy.dis.grb')
         >>> # Convert to single precision
-        >>> grb.write('model_single.dis.grb', precision='single')
+        >>> grb.export('model_single.dis.grb', precision='single')
         """
         if precision is None:
             precision = self.precision
