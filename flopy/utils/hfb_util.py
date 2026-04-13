@@ -95,19 +95,25 @@ def _minimize_hfb_deviance(idxs, xyverts, pts):
     return np.sum(mins)
 
 
-def perturb_intersection_coords(idxs, xyverts, ipt, epsilon=1e-06):
+def _perturb_intersection_coords(idxs, xyverts, ipt, epsilon=1e-06):
     """
+    Method to perturb an intersection location by a small amount which is used
+    to handle colinear intersection and intersection at the midpoint of a cell edge.
 
     Parameters
     ----------
-    idxs :
-    xyverts :
-    coords :
-    cidx :
+    idxs : list
+        list of vertex indices
+    xyverts : np.array
+        numpy array of x,y vertices for a cell
+    ipt : iterable
+        intersection point x,y coordinate
+    epsilon : float
+        perturbation value
 
     Returns
     -------
-
+        ipt : list holding x, y coordinate pair of the perturbed intersection
     """
     xyverts = xyverts.T
     xverts = xyverts[0][idxs]
@@ -238,7 +244,7 @@ def make_hfb_array(modelgrid, geom):
         vidx0 = _min_distance_index(xcell, x0, ycell, y0)
         if len(vidx0) > 1:
             # perturb line by small epsilon
-            coords[0] = perturb_intersection_coords(vidx0, xycell, coords[0])
+            coords[0] = _perturb_intersection_coords(vidx0, xycell, coords[0])
             x0, y0 = coords[0, 0], coords[0, 1]
             vidx0 = _min_distance_index(xcell, x0, ycell, y0)
 
@@ -247,7 +253,7 @@ def make_hfb_array(modelgrid, geom):
         vidx1 = _min_distance_index(xcell, x1, ycell, y1)
         if len(vidx1) > 1:
             # perturb line by small epsilon
-            coords[-1] = perturb_intersection_coords(vidx1, xycell, coords[-1])
+            coords[-1] = _perturb_intersection_coords(vidx1, xycell, coords[-1])
             x1, y1 = coords[-1, 0], coords[-1, 1]
             vidx1 = _min_distance_index(xcell, x1, ycell, y1)
 
