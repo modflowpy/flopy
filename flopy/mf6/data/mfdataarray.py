@@ -55,6 +55,12 @@ class MFArray(MFMultiDimVar):
             sim_data, model_or_sim, structure, enable, path, dimensions
         )
         self._block = block
+        if isinstance(data, list):
+            if len(data) == 1:
+                if isinstance(data[0], dict):
+                    default = self.structure.layered
+                    self.structure.layered = data[0].pop("layered", default)
+
         if self.structure.layered:
             try:
                 self._layer_shape = self.layer_shape()

@@ -1479,6 +1479,7 @@ class Mf6Splitter:
         how = kwargs.pop("how", [])
         binary = kwargs.pop("binary", [])
         fnames = kwargs.pop("fnames", None)
+        layered = True
         if not hasattr(mfarray, "size"):
             if mfarray.array is None:
                 if item == "idomain":
@@ -1498,6 +1499,7 @@ class Mf6Splitter:
                 i.fname
                 for i in mfarray._data_storage.layer_storage.multi_dim_list
             ]
+            layered = mfarray._data_storage.layered
             mfarray = mfarray.array
 
         nlay = 1
@@ -1536,7 +1538,10 @@ class Mf6Splitter:
             if how and item != "idomain":
                 new_input = []
                 i0 = 0
-                i1 = new_ncpl
+                if layered:
+                    i1 = new_ncpl
+                else:
+                    i1 = new_ncpl * nlay
                 lay = 0
                 for h in how:
                     if h == 1:
@@ -1559,6 +1564,7 @@ class Mf6Splitter:
                             "iprn": 1,
                             "data": new_array[i0:i1],
                             "binary": binary[lay],
+                            "layered": layered
                         }
 
                         new_input.append(cr)
