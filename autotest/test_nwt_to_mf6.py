@@ -21,11 +21,16 @@ def test_get_icelltype_from_laytyp():
     icelltype = get_icelltype_from_laytyp(laytyp)
     assert icelltype == 1
 
-    # various LAYTYP values
+    # negative laytyp is convertible (wetting disabled, not confined)
+    laytyp = -1
+    icelltype = get_icelltype_from_laytyp(laytyp)
+    assert icelltype == 1
+
+    # various LAYTYP values — any non-zero means convertible
     laytyp = np.array([0, 1, 2, 3, -1])
     icelltype = get_icelltype_from_laytyp(laytyp)
-    # All > 0 map to 1, 0 stays 0, <0 stays 0
-    assert np.array_equal(icelltype, [0, 1, 1, 1, 0])
+    # 0 stays 0, all others (positive or negative) map to 1
+    assert np.array_equal(icelltype, [0, 1, 1, 1, 1])
 
 
 def test_mfgrdfile_write_roundtrip(tmp_path):

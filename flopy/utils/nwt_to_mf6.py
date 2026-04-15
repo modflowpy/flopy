@@ -29,29 +29,38 @@ def get_icelltype_from_laytyp(laytyp):
 
     Notes
     -----
-    In MODFLOW-NWT, LAYTYP indicates layer properties:
+    In MODFLOW-NWT (UPW) and MODFLOW-2005 (LPF), LAYTYP indicates layer
+    properties:
     - LAYTYP = 0: Confined, transmissivity constant
-    - LAYTYP > 0: Convertible, transmissivity varies with saturation
+    - LAYTYP > 0: Convertible with wetting active
+    - LAYTYP < 0: Convertible without wetting (rewetting disabled)
+
+    Any non-zero LAYTYP means the layer is convertible regardless of sign.
+    The sign only controls whether the wetting option is active, not whether
+    the layer can desaturate. (Note: in LPF with THICKSTRT active, negative
+    LAYTYP layers use starting-head-based thickness rather than the full
+    cell thickness, but the layer is still treated as convertible in terms
+    of transmissivity variation with saturation.)
 
     In MODFLOW 6, ICELLTYPE similarly indicates cell properties:
     - ICELLTYPE = 0: Confined
     - ICELLTYPE > 0: Convertible
 
     For conversion, we use a simple mapping:
-    - LAYTYP = 0 → ICELLTYPE = 0
-    - LAYTYP > 0 → ICELLTYPE = 1
+    - LAYTYP = 0  → ICELLTYPE = 0
+    - LAYTYP != 0 → ICELLTYPE = 1
 
     Examples
     --------
     >>> import numpy as np
     >>> from flopy.utils.nwt_to_mf6 import get_icelltype_from_laytyp
-    >>> laytyp = np.array([1, 0, 0])  # Top layer convertible
+    >>> laytyp = np.array([1, 0, -1])  # Top and bottom layers convertible
     >>> icelltype = get_icelltype_from_laytyp(laytyp)
     >>> print(icelltype)
-    [1 0 0]
+    [1 0 1]
     """
     laytyp = np.atleast_1d(laytyp).astype(np.int32)
-    icelltype = np.where(laytyp > 0, 1, 0).astype(np.int32)
+    icelltype = np.where(laytyp != 0, 1, 0).astype(np.int32)
     return icelltype
 
 
@@ -284,20 +293,37 @@ class NwtToMf6Converter:
 
         return {"grb": grb_path, "hds": hds_path, "bud": bud_path}
 
+    def _build_header_lookup(self):
+        """
+        Build a dict mapping (kstp, kper) -> header record from the head file.
+
+        Returns
+        -------
+        dict
+            Keys are (kstp, kper) tuples, values are header records with
+            fields including 'pertim' and 'totim'.
+        """
+        # get_kstpkper() returns 0-based indices; recordarray stores 1-based
+        # file values.  Subtract 1 so the lookup keys match self.kstpkper.
+        return {
+            (int(rec["kstp"]) - 1, int(rec["kper"]) - 1): rec
+            for rec in self.hds_obj.recordarray
+        }
+
     def _write_heads(self, filename, precision, verbose):
         """Write head file with all time steps."""
         from .binaryfile import HeadFile
 
-        # Read all heads
+        header_lookup = self._build_header_lookup()
         head_dict = {}
         totim_dict = {}
         pertim_dict = {}
 
         for idx, kstpkper in enumerate(self.kstpkper):
             head = self.hds_obj.get_data(kstpkper=kstpkper)
-            totim = self.times[idx]
-            # Assume pertim = totim for now (could be refined)
-            pertim = totim
+            rec = header_lookup[kstpkper]
+            totim = float(rec["totim"])
+            pertim = float(rec["pertim"])
 
             head_dict[kstpkper] = head
             totim_dict[kstpkper] = totim
@@ -339,11 +365,22 @@ class NwtToMf6Converter:
         # Build list of records
         records = []
 
+        header_lookup = self._build_header_lookup()
+
         for idx, kstpkper in enumerate(self.kstpkper):
             kstp, kper = kstpkper
-            totim = self.times[idx]
-            pertim = totim  # Simplified
-            delt = 1.0  # Simplified - could calculate from times
+            rec = header_lookup[kstpkper]
+            totim = float(rec["totim"])
+            pertim = float(rec["pertim"])
+
+            # delt: for the first time step within a period pertim equals delt;
+            # for subsequent steps subtract the previous step's pertim.
+            # kstp is 0-based here (from get_kstpkper()).
+            if kstp == 0:
+                delt = pertim
+            else:
+                prev_rec = header_lookup.get((kstp - 1, kper))
+                delt = pertim - float(prev_rec["pertim"]) if prev_rec else pertim
 
             if verbose:
                 print(f"  Processing time step {kstpkper}...")

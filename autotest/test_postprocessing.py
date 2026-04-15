@@ -777,15 +777,22 @@ def test_get_structured_connectivity_corner_cells():
     nlay, nrow, ncol = 1, 3, 3
     ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
 
-    # top-left corner (0,0,0) should have 3 connections: diagonal + right + front
+    # top-left corner (0,0,0): no left or back neighbor at boundary
+    # connections: diagonal + right + front = 3
     node_corner = 0
     nconn = ia[node_corner + 1] - ia[node_corner]
     assert nconn == 3
 
-    # bottom-right corner (0,2,2) should have 1 connection: diagonal only
+    # bottom-right corner (0,2,2): no right or front neighbor at boundary
+    # connections: diagonal + left + back = 3 (full bidirectional connectivity)
     node_corner = 0 * nrow * ncol + 2 * ncol + 2
-    nconn = ia[node_corner + 1] - ia[node_corner]
-    assert nconn == 1
+    conns = ja[ia[node_corner] : ia[node_corner + 1]]
+    nconn = len(conns)
+    assert nconn == 3
+    # left neighbor (0,2,1) = node 7, back neighbor (0,1,2) = node 5
+    assert node_corner in conns  # diagonal
+    assert 7 in conns  # left
+    assert 5 in conns  # back
 
 
 def test_get_structured_flowja_to_connections_simple():
@@ -800,20 +807,36 @@ def test_get_structured_flowja_to_connections_simple():
 
     assert len(flowja) == nja, f"flowja length should be {nja}"
 
-    # first cell (0,0,0) connections
+    # Corner cell (0,0,0): only right and front outflow, no lower (1 layer)
+    # MODFLOW 6 sign convention: outflow from n is negative, inflow is positive.
     node = 0
     conns = ja[ia[node] : ia[node + 1]]
     flows = flowja[ia[node] : ia[node + 1]]
-    for ipos, m in enumerate(conns):
-        if m == node:
-            # diagonal
-            assert flows[ipos] == 0.0
-        elif m == 1:
-            # right
-            assert flows[ipos] == 1.0
-        elif m == 3:
-            # front
-            assert flows[ipos] == 2.0
+    conn_map = dict(zip(conns, flows))
+    assert conn_map[node] == 0.0   # diagonal
+    assert conn_map[1] == -1.0     # right outflow: -qright[0,0,0]
+    assert conn_map[3] == -2.0     # front outflow: -qfront[0,0,0]
+
+    # Interior cell (0,1,1): left/back/right/front all present
+    node = 1 * ncol + 1  # (k=0, i=1, j=1)
+    conns = ja[ia[node] : ia[node + 1]]
+    flows = flowja[ia[node] : ia[node + 1]]
+    conn_map = dict(zip(conns, flows))
+    assert conn_map[node] == 0.0   # diagonal
+    assert conn_map[node - 1] == qright[0, 1, 0]   # left inflow: +qright[0,1,0]
+    assert conn_map[node + 1] == -qright[0, 1, 1]  # right outflow: -qright[0,1,1]
+    assert conn_map[node - ncol] == qfront[0, 0, 1] # back inflow: +qfront[0,0,1]
+    assert conn_map[node + ncol] == -qfront[0, 1, 1] # front outflow: -qfront[0,1,1]
+
+    # Verify roundtrip: flowja → get_structured_faceflows → should recover originals.
+    # Boundary cells with no neighbor in that direction have no stored connection,
+    # so the roundtrip can only recover values for interior faces.
+    from flopy.mf6.utils import get_structured_faceflows
+    frf_rt, fff_rt, flf_rt = get_structured_faceflows(
+        flowja, ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+    )
+    np.testing.assert_array_almost_equal(frf_rt[:, :, :-1], qright[:, :, :-1])
+    np.testing.assert_array_almost_equal(fff_rt[:, :-1, :], qfront[:, :-1, :])
 
 
 def test_get_structured_flowja_to_connections_multilayer():
@@ -826,16 +849,30 @@ def test_get_structured_flowja_to_connections_multilayer():
         (qright, qfront, qlower), ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
     )
 
-    # first cell of top layer should connect to lower layer
+    # Cell (0,0,0): lower connection is outflow from n → negative
     node = 0  # (k=0, i=0, j=0)
     node_below = nrow * ncol  # (k=1, i=0, j=0)
     conns = ja[ia[node] : ia[node + 1]]
     flows = flowja[ia[node] : ia[node + 1]]
+    conn_map = dict(zip(conns, flows))
+    assert conn_map[node_below] == -30.0  # lower outflow: -qlower[0,0,0]
 
-    # check lower connection
-    lower_idx = np.where(conns == node_below)[0]
-    if len(lower_idx) > 0:
-        assert flows[lower_idx[0]] == 30.0
+    # Cell (k=1, i=0, j=0): upper connection is inflow to n from above → positive
+    node_mid = nrow * ncol  # same cell, middle layer
+    node_above = 0
+    conns_mid = ja[ia[node_mid] : ia[node_mid + 1]]
+    flows_mid = flowja[ia[node_mid] : ia[node_mid + 1]]
+    conn_map_mid = dict(zip(conns_mid, flows_mid))
+    assert conn_map_mid[node_above] == 30.0  # upper inflow: +qlower[0,0,0]
+
+    # Verify roundtrip (interior faces only — boundary cells have no stored neighbor)
+    from flopy.mf6.utils import get_structured_faceflows
+    frf_rt, fff_rt, flf_rt = get_structured_faceflows(
+        flowja, ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+    )
+    np.testing.assert_array_almost_equal(frf_rt[:, :, :-1], qright[:, :, :-1])
+    np.testing.assert_array_almost_equal(fff_rt[:, :-1, :], qfront[:, :-1, :])
+    np.testing.assert_array_almost_equal(flf_rt[:-1, :, :], qlower[:-1, :, :])
 
 
 def test_get_saturation_confined_cells():
@@ -963,7 +1000,8 @@ def test_get_structured_connectivity_big_grid():
     # But we only store upper triangle, so expect 4 (diagonal + right + front + lower)
     node = 1 * nrow * ncol + 10 * ncol + 10  # Middle of layer 1
     nconn = ia[node + 1] - ia[node]
-    assert nconn == 4, f"Interior cell should have 4 connections, got {nconn}"
+    # Full bidirectional: diagonal + right + left + front + back + lower + upper = 7
+    assert nconn == 7, f"Interior cell should have 7 connections, got {nconn}"
 
 
 def test_get_structured_flowja_invalid_inputs():

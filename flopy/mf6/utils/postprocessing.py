@@ -33,23 +33,24 @@ def get_structured_connectivity(nlay, nrow, ncol, idomain=None):
 
     Notes
     -----
-    Connectivity order for structured grids (upper triangle only):
-    1. Diagonal (self connection)
-    2. Right (+1 in j, same k, i)
-    3. Front (+1 in i, same k, j)
-    4. Lower (+1 in k, same i, j)
+    The IA/JA arrays encode full bidirectional connectivity as MODFLOW 6
+    requires: every connection between cells n and m appears twice, once
+    in cell n's row and once in cell m's row.  For each cell, the diagonal
+    (self-connection) is stored first, followed by all neighbors in
+    ascending node-number order.
 
     The IA/JA arrays use 0-based indexing (Python convention).
-    When writing to MF6 binary files, add 1 to convert to Fortran 1-based indexing.
+    When writing to MF6 binary files, add 1 to convert to Fortran 1-based
+    indexing.
 
     Examples
     --------
     >>> import numpy as np
-    >>> from flopy.mf6.utils import build_structured_connectivity
+    >>> from flopy.mf6.utils import get_structured_connectivity
     >>> nlay, nrow, ncol = 2, 3, 3
-    >>> ia, ja, nja = build_structured_connectivity(nlay, nrow, ncol)
+    >>> ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
     >>> print(f"Total cells: {nlay * nrow * ncol}, connections: {nja}")
-    Total cells: 18, connections: 42
+    Total cells: 18, connections: 84
     """
     ncells = nlay * nrow * ncol
 
@@ -64,47 +65,44 @@ def get_structured_connectivity(nlay, nrow, ncol, idomain=None):
                 f"({nlay}, {nrow}, {ncol})"
             )
 
+    # First pass: collect all neighbor pairs bidirectionally.
+    # Only iterate right/front/lower to avoid processing each pair twice,
+    # but register the connection in both cells' adjacency sets.
+    adjacency = [set() for _ in range(ncells)]
+    for k in range(nlay):
+        for i in range(nrow):
+            for j in range(ncol):
+                if idomain[k, i, j] <= 0:
+                    continue
+                n = k * nrow * ncol + i * ncol + j
+                for dk, di, dj in ((0, 0, 1), (0, 1, 0), (1, 0, 0)):
+                    k2, i2, j2 = k + dk, i + di, j + dj
+                    if k2 < nlay and i2 < nrow and j2 < ncol:
+                        if idomain[k2, i2, j2] > 0:
+                            m = k2 * nrow * ncol + i2 * ncol + j2
+                            adjacency[n].add(m)
+                            adjacency[m].add(n)
+
+    # Second pass: convert adjacency sets to CSR.
+    # Each cell's entry begins with the diagonal (self), then neighbors
+    # in ascending node-number order.
     ia = np.zeros(ncells + 1, dtype=np.int32)
     ja_list = []
     nja = 0
 
-    for k in range(nlay):
-        for i in range(nrow):
-            for j in range(ncol):
-                node = k * nrow * ncol + i * ncol + j
-
-                # Skip inactive cells - they still get an entry in IA
-                if idomain[k, i, j] <= 0:
-                    ia[node + 1] = nja
-                    continue
-
-                # Add diagonal (self connection)
-                ja_list.append(node)
-                nja += 1
-
-                # Add connections to neighbors (upper triangle only)
-                # Right neighbor (j+1)
-                if j + 1 < ncol and idomain[k, i, j + 1] > 0:
-                    m = k * nrow * ncol + i * ncol + (j + 1)
-                    ja_list.append(m)
-                    nja += 1
-
-                # Front neighbor (i+1)
-                if i + 1 < nrow and idomain[k, i + 1, j] > 0:
-                    m = k * nrow * ncol + (i + 1) * ncol + j
-                    ja_list.append(m)
-                    nja += 1
-
-                # Lower neighbor (k+1)
-                if k + 1 < nlay and idomain[k + 1, i, j] > 0:
-                    m = (k + 1) * nrow * ncol + i * ncol + j
-                    ja_list.append(m)
-                    nja += 1
-
-                ia[node + 1] = nja
+    for n in range(ncells):
+        k, i, j = np.unravel_index(n, (nlay, nrow, ncol))
+        if idomain[k, i, j] <= 0:
+            ia[n + 1] = nja
+            continue
+        ja_list.append(n)  # diagonal
+        nja += 1
+        for m in sorted(adjacency[n]):
+            ja_list.append(m)
+            nja += 1
+        ia[n + 1] = nja
 
     ja = np.array(ja_list, dtype=np.int32)
-
     return ia, ja, nja
 
 
@@ -350,37 +348,58 @@ def get_structured_flowja(
     flowja = np.zeros(nja, dtype=np.float64)
 
     for n in range(ncells):
-        # Skip inactive cells
         k, i, j = np.unravel_index(n, (nlay, nrow, ncol))
         if idomain[k, i, j] <= 0:
             continue
 
-        # Get connections for this cell
-        istart = ia[n]
-        iend = ia[n + 1]
-
-        for ipos in range(istart, iend):
+        for ipos in range(ia[n], ia[n + 1]):
             m = ja[ipos]
 
-            # Diagonal - no self flow
             if m == n:
-                flowja[ipos] = 0.0
+                flowja[ipos] = 0.0  # diagonal (residual; zero here)
                 continue
 
-            # Determine connection type by comparing node numbers
             km, im, jm = np.unravel_index(m, (nlay, nrow, ncol))
 
-            # Right connection (j increases by 1)
+            # MODFLOW 6 sign convention for FLOW-JA-FACE:
+            #   flowja[n→m] < 0  means flow leaving n (outflow from n to m)
+            #   flowja[n→m] > 0  means flow entering n (inflow to n from m)
+            # This matches get_structured_faceflows which does frf[n] = -flowja[n→m_right].
+            #
+            # For each face-flow direction the source array stores the flow
+            # leaving the lower-numbered cell in the positive direction:
+            #   qright[k,i,j]  = flow leaving cell n through its right face
+            #   qfront[k,i,j]  = flow leaving cell n through its front face
+            #   qlower[k,i,j]  = flow leaving cell n through its lower face
+            #
+            # Upper-triangle entry (n→m, m is the higher-indexed neighbor):
+            #   flowja = -face_flow_at_n   (outflow from n → negative)
+            # Lower-triangle entry (n→m, m is the lower-indexed neighbor):
+            #   flowja = +face_flow_at_m   (inflow to n from m → positive)
+
+            # Right (m is to the right of n): outflow from n
             if km == k and im == i and jm == j + 1:
-                flowja[ipos] = qright[k, i, j]
+                flowja[ipos] = -qright[k, i, j]
 
-            # Front connection (i increases by 1)
+            # Left (m is to the left of n): inflow to n from m
+            elif km == k and im == i and jm == j - 1:
+                flowja[ipos] = qright[k, i, jm]
+
+            # Front (m is in front of n): outflow from n
             elif km == k and im == i + 1 and jm == j:
-                flowja[ipos] = qfront[k, i, j]
+                flowja[ipos] = -qfront[k, i, j]
 
-            # Lower connection (k increases by 1)
+            # Back (m is behind n): inflow to n from m
+            elif km == k and im == i - 1 and jm == j:
+                flowja[ipos] = qfront[k, im, j]
+
+            # Lower (m is below n): outflow from n
             elif km == k + 1 and im == i and jm == j:
-                flowja[ipos] = qlower[k, i, j]
+                flowja[ipos] = -qlower[k, i, j]
+
+            # Upper (m is above n): inflow to n from m
+            elif km == k - 1 and im == i and jm == j:
+                flowja[ipos] = qlower[km, i, j]
 
     return flowja
 
