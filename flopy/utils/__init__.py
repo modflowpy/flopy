@@ -31,7 +31,6 @@ from .formattedfile import FormattedHeadFile
 get_modflow = get_modflow_module.run_main
 from .classic_to_mf6 import (
     ClassicMfToMf6Converter,
-    NwtToMf6Converter,  # backward-compatible alias
     get_icelltype_from_laycon,
     get_icelltype_from_laytyp,
 )

@@ -527,13 +527,9 @@ class ClassicMfToMf6Converter:
         for that time step.  The compact budget header stores delt, pertim,
         and totim directly, so no arithmetic is needed to recover them.
         """
-        seen = set()
         result = {}
         for rec in self.cbc_obj.recordarray:
-            key = (int(rec["kstp"]) - 1, int(rec["kper"]) - 1)
-            if key not in seen:
-                result[key] = rec
-                seen.add(key)
+            result.setdefault((int(rec["kstp"]) - 1, int(rec["kper"]) - 1), rec)
         return result
 
     def _write_budget(self, filename, precision, verbose):
@@ -548,6 +544,13 @@ class ClassicMfToMf6Converter:
         records = []
         header_lookup = self._build_budget_header_lookup()
 
+        # for 1D/2D models, some face-flow directions may be absent
+        available_terms = {
+            t.decode().strip() for t in self.cbc_obj.get_unique_record_names()
+        }
+        if verbose:
+            print(f"  Available budget terms: {available_terms}")
+
         for kstpkper in self.kstpkper:
             kstp, kper = kstpkper
             rec = header_lookup[kstpkper]
@@ -560,55 +563,21 @@ class ClassicMfToMf6Converter:
 
             head = self.hds_obj.get_data(kstpkper=kstpkper)
 
-            if verbose:
-                print(
-                    f"    Available budget terms: "
-                    f"{self.cbc_obj.get_unique_record_names()}"
-                )
-
-            # for 1D/2D models, some directions may be missing
-            available_terms = [
-                t.decode().strip() for t in self.cbc_obj.get_unique_record_names()
-            ]
-
-            if "FLOW RIGHT FACE" in available_terms:
-                frf_data = self.cbc_obj.get_data(
-                    text="FLOW RIGHT FACE", kstpkper=kstpkper
-                )
-                if verbose:
-                    print(
-                        f"    FLOW RIGHT FACE: {type(frf_data)}, "
-                        f"len={len(frf_data) if frf_data else 0}"
-                    )
-                frf = frf_data[0] if frf_data and len(frf_data) > 0 else None
-            else:
-                frf = None
-
-            if "FLOW FRONT FACE" in available_terms:
-                fff_data = self.cbc_obj.get_data(
-                    text="FLOW FRONT FACE", kstpkper=kstpkper
-                )
-                if verbose:
-                    print(
-                        f"    FLOW FRONT FACE: {type(fff_data)}, "
-                        f"len={len(fff_data) if fff_data else 0}"
-                    )
-                fff = fff_data[0] if fff_data and len(fff_data) > 0 else None
-            else:
-                fff = None
-
-            if "FLOW LOWER FACE" in available_terms:
-                flf_data = self.cbc_obj.get_data(
-                    text="FLOW LOWER FACE", kstpkper=kstpkper
-                )
-                if verbose:
-                    print(
-                        f"    FLOW LOWER FACE: {type(flf_data)}, "
-                        f"len={len(flf_data) if flf_data else 0}"
-                    )
-                flf = flf_data[0] if flf_data and len(flf_data) > 0 else None
-            else:
-                flf = None
+            frf = (
+                self.cbc_obj.get_data(text="FLOW RIGHT FACE", kstpkper=kstpkper)[0]
+                if "FLOW RIGHT FACE" in available_terms
+                else None
+            )
+            fff = (
+                self.cbc_obj.get_data(text="FLOW FRONT FACE", kstpkper=kstpkper)[0]
+                if "FLOW FRONT FACE" in available_terms
+                else None
+            )
+            flf = (
+                self.cbc_obj.get_data(text="FLOW LOWER FACE", kstpkper=kstpkper)[0]
+                if "FLOW LOWER FACE" in available_terms
+                else None
+            )
 
             if frf is None and fff is None and flf is None:
                 raise ValueError("No face flows found in budget file")
