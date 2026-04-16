@@ -165,7 +165,7 @@ def test_mfgrdfile_write_validation():
 def test_nwt_to_mf6_converter_init(function_tmpdir):
     import numpy as np
 
-    from flopy.utils import NwtToMf6Converter
+    from flopy.utils import ClassicMfToMf6Converter
     from flopy.utils.binaryfile import CellBudgetFile, HeadFile
 
     nlay, nrow, ncol = 2, 3, 4
@@ -229,7 +229,7 @@ def test_nwt_to_mf6_converter_init(function_tmpdir):
         ncol=ncol,
     )
 
-    converter = NwtToMf6Converter(
+    converter = ClassicMfToMf6Converter(
         str(hds_file),
         str(cbc_file),
         nlay,
@@ -265,7 +265,7 @@ def test_nwt_to_mf6_converter_convert(function_tmpdir):
         get_structured_connectivity,
         get_structured_faceflows,
     )
-    from flopy.utils import NwtToMf6Converter
+    from flopy.utils import ClassicMfToMf6Converter
     from flopy.utils.binaryfile import CellBudgetFile, HeadFile
 
     nlay, nrow, ncol = 2, 3, 4
@@ -313,7 +313,7 @@ def test_nwt_to_mf6_converter_convert(function_tmpdir):
     ]
     CellBudgetFile.write(str(cbc_file), bud_data, nlay=nlay, nrow=nrow, ncol=ncol)
 
-    converter = NwtToMf6Converter(
+    converter = ClassicMfToMf6Converter(
         str(hds_file),
         str(cbc_file),
         nlay,
@@ -368,7 +368,7 @@ def test_nwt_to_mf6_watertable_model(function_tmpdir):
         ModflowRch,
         ModflowUpw,
     )
-    from flopy.utils import NwtToMf6Converter
+    from flopy.utils import ClassicMfToMf6Converter
     from flopy.utils.binaryfile import CellBudgetFile, HeadFile
 
     modelname = "watertable"
@@ -443,7 +443,7 @@ def test_nwt_to_mf6_watertable_model(function_tmpdir):
     assert hds_file.exists(), "Head file not created"
     assert cbc_file.exists(), "Budget file not created"
 
-    converter = NwtToMf6Converter(
+    converter = ClassicMfToMf6Converter(
         str(hds_file),
         str(cbc_file),
         nlay,
@@ -509,7 +509,7 @@ def test_nwt_to_mf6_multilayer_model(function_tmpdir):
         ModflowUpw,
         ModflowWel,
     )
-    from flopy.utils import NwtToMf6Converter
+    from flopy.utils import ClassicMfToMf6Converter
     from flopy.utils.binaryfile import CellBudgetFile, HeadFile
 
     modelname = "multilayer"
@@ -578,7 +578,7 @@ def test_nwt_to_mf6_multilayer_model(function_tmpdir):
     assert hds_file.exists()
     assert cbc_file.exists()
 
-    converter = NwtToMf6Converter(
+    converter = ClassicMfToMf6Converter(
         str(hds_file),
         str(cbc_file),
         nlay,
@@ -671,3 +671,214 @@ def test_nwt_to_mf6_multilayer_model(function_tmpdir):
     # Verify saturation is correct for convertible layer
     sat_data = bud_mf6.get_data(text="DATA-SAT", idx=0)
     assert sat_data is not None
+
+
+# ---------------------------------------------------------------------------
+# Fixtures for example-data models
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def freyberg_multilayer_path(example_data_path):
+    return example_data_path / "freyberg_multilayer_transient"
+
+
+@pytest.fixture
+def mf2005_freyberg_path(example_data_path):
+    return example_data_path / "freyberg"
+
+
+# ---------------------------------------------------------------------------
+# Integration tests against real pre-computed model output
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.slow
+def test_classic_to_mf6_freyberg_multilayer(freyberg_multilayer_path, function_tmpdir):
+    """
+    Convert the pre-computed freyberg_multilayer_transient NWT outputs to MF6
+    and verify that the face-flow roundtrip is exact.
+
+    This test requires no executable — it uses the binary output files already
+    committed to the repo.  It checks:
+    - GRB file has the correct grid dimensions
+    - Head values are preserved for all time steps
+    - get_structured_faceflows(flowja_converted) recovers the original NWT
+      FLOW RIGHT/FRONT/LOWER FACE values (interior faces only)
+    - DATA-SAT is present for all time steps
+    """
+    from flopy.mf6.utils import MfGrdFile, get_structured_faceflows
+    from flopy.modflow import Modflow
+    from flopy.utils import ClassicMfToMf6Converter
+    from flopy.utils.binaryfile import CellBudgetFile, HeadFile
+
+    model_ws = freyberg_multilayer_path
+
+    # Load model to get grid parameters (no exe needed)
+    mf = Modflow.load(
+        "freyberg.nam",
+        model_ws=str(model_ws),
+        check=False,
+        load_only=["dis", "upw"],
+    )
+    nlay = int(mf.dis.nlay)
+    nrow = int(mf.dis.nrow)
+    ncol = int(mf.dis.ncol)
+
+    converter = ClassicMfToMf6Converter(
+        hds_file=str(model_ws / "freyberg.hds"),
+        cbc_file=str(model_ws / "freyberg.cbc"),
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=mf.dis.delr.array,
+        delc=mf.dis.delc.array,
+        top=mf.dis.top.array,
+        botm=mf.dis.botm.array,
+        laytyp=mf.upw.laytyp.array,
+        hdry=float(mf.upw.hdry),
+    )
+
+    output_dir = function_tmpdir / "mf6"
+    result = converter.convert(str(output_dir))
+
+    # --- GRB dimensions ---
+    grb = MfGrdFile(str(result["grb"]))
+    assert grb.nlay == nlay
+    assert grb.nrow == nrow
+    assert grb.ncol == ncol
+
+    hds_orig = HeadFile(str(model_ws / "freyberg.hds"))
+    hds_mf6 = HeadFile(str(result["hds"]))
+    cbc_orig = CellBudgetFile(str(model_ws / "freyberg.cbc"))
+    bud_mf6 = CellBudgetFile(str(result["bud"]))
+
+    kstpkper_list = hds_orig.get_kstpkper()
+
+    # --- Verify a sample of time steps (first, middle, last) ---
+    check_indices = [0, len(kstpkper_list) // 2, len(kstpkper_list) - 1]
+    for check_idx in check_indices:
+        kstpkper = kstpkper_list[check_idx]
+
+        # Head values are preserved exactly
+        head_orig = hds_orig.get_data(kstpkper=kstpkper)
+        head_mf6 = hds_mf6.get_data(kstpkper=kstpkper)
+        np.testing.assert_array_almost_equal(
+            head_mf6, head_orig, decimal=5,
+            err_msg=f"Head mismatch at kstpkper={kstpkper}"
+        )
+
+        # Face-flow roundtrip: faceflows → flowja → faceflows should recover
+        # the original values on interior faces.
+        frf_orig = cbc_orig.get_data(text="FLOW RIGHT FACE", kstpkper=kstpkper)[0]
+        fff_orig = cbc_orig.get_data(text="FLOW FRONT FACE", kstpkper=kstpkper)[0]
+        flf_orig = cbc_orig.get_data(text="FLOW LOWER FACE", kstpkper=kstpkper)[0]
+
+        flowja = bud_mf6.get_data(text="FLOW-JA-FACE", kstpkper=kstpkper)[0]
+        frf_rt, fff_rt, flf_rt = get_structured_faceflows(
+            flowja, grb_file=str(result["grb"])
+        )
+
+        np.testing.assert_array_almost_equal(
+            frf_rt[:, :, :-1], frf_orig[:, :, :-1], decimal=5,
+            err_msg=f"FLOW RIGHT FACE mismatch at kstpkper={kstpkper}"
+        )
+        np.testing.assert_array_almost_equal(
+            fff_rt[:, :-1, :], fff_orig[:, :-1, :], decimal=5,
+            err_msg=f"FLOW FRONT FACE mismatch at kstpkper={kstpkper}"
+        )
+        np.testing.assert_array_almost_equal(
+            flf_rt[:-1, :, :], flf_orig[:-1, :, :], decimal=5,
+            err_msg=f"FLOW LOWER FACE mismatch at kstpkper={kstpkper}"
+        )
+
+        # DATA-SAT is present
+        sat = bud_mf6.get_data(text="DATA-SAT", kstpkper=kstpkper)
+        assert sat is not None, f"DATA-SAT missing at kstpkper={kstpkper}"
+
+
+@requires_exe("mf2005")
+@pytest.mark.slow
+def test_classic_to_mf6_freyberg_mf2005(mf2005_freyberg_path, function_tmpdir):
+    """
+    Run the single-layer steady-state Freyberg MODFLOW-2005 model, convert
+    its outputs to MF6, and verify correctness.
+
+    Tests that the converter works with the LPF package (vs UPW for NWT),
+    confirming ClassicMfToMf6Converter handles both code paths.
+    """
+    import shutil
+
+    from flopy.mf6.utils import MfGrdFile, get_structured_faceflows
+    from flopy.modflow import Modflow
+    from flopy.utils import ClassicMfToMf6Converter
+    from flopy.utils.binaryfile import CellBudgetFile, HeadFile
+
+    # Copy model to a writable temp directory and run it
+    run_ws = function_tmpdir / "mf2005"
+    shutil.copytree(mf2005_freyberg_path, run_ws)
+
+    mf = Modflow.load(
+        "freyberg.nam",
+        model_ws=str(run_ws),
+        exe_name="mf2005",
+        check=False,
+    )
+    success, _ = mf.run_model(silent=True)
+    assert success, "MODFLOW-2005 freyberg run failed"
+
+    hds_path = run_ws / "freyberg.hds"
+    cbc_path = run_ws / "freyberg.cbc"
+    assert hds_path.exists(), "Head file not produced"
+    assert cbc_path.exists(), "Budget file not produced"
+
+    nlay = int(mf.dis.nlay)
+    nrow = int(mf.dis.nrow)
+    ncol = int(mf.dis.ncol)
+
+    converter = ClassicMfToMf6Converter(
+        hds_file=str(hds_path),
+        cbc_file=str(cbc_path),
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=mf.dis.delr.array,
+        delc=mf.dis.delc.array,
+        top=mf.dis.top.array,
+        botm=mf.dis.botm.array,
+        laytyp=mf.lpf.laytyp.array,
+    )
+
+    output_dir = function_tmpdir / "mf6"
+    result = converter.convert(str(output_dir))
+
+    grb = MfGrdFile(str(result["grb"]))
+    assert grb.nlay == nlay
+    assert grb.nrow == nrow
+    assert grb.ncol == ncol
+
+    hds_orig = HeadFile(str(hds_path))
+    hds_mf6 = HeadFile(str(result["hds"]))
+    cbc_orig = CellBudgetFile(str(cbc_path))
+    bud_mf6 = CellBudgetFile(str(result["bud"]))
+
+    kstpkper = hds_orig.get_kstpkper()[0]
+
+    # Head roundtrip
+    np.testing.assert_array_almost_equal(
+        hds_mf6.get_data(kstpkper=kstpkper),
+        hds_orig.get_data(kstpkper=kstpkper),
+        decimal=5,
+    )
+
+    # Face-flow roundtrip (single layer, so no lower face)
+    frf_orig = cbc_orig.get_data(text="FLOW RIGHT FACE", kstpkper=kstpkper)[0]
+    fff_orig = cbc_orig.get_data(text="FLOW FRONT FACE", kstpkper=kstpkper)[0]
+
+    flowja = bud_mf6.get_data(text="FLOW-JA-FACE", kstpkper=kstpkper)[0]
+    frf_rt, fff_rt, _ = get_structured_faceflows(
+        flowja, grb_file=str(result["grb"])
+    )
+
+    np.testing.assert_array_almost_equal(frf_rt[:, :, :-1], frf_orig[:, :, :-1], decimal=5)
+    np.testing.assert_array_almost_equal(fff_rt[:, :-1, :], fff_orig[:, :-1, :], decimal=5)

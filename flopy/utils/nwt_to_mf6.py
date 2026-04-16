@@ -64,20 +64,25 @@ def get_icelltype_from_laytyp(laytyp):
     return icelltype
 
 
-class NwtToMf6Converter:
+class ClassicMfToMf6Converter:
     """
-    Convert MODFLOW-NWT binary outputs to MODFLOW 6 binary format.
+    Convert classic MODFLOW binary outputs to MODFLOW 6 binary format.
 
-    This class reads NWT head and budget files, applies necessary
-    transformations, and writes MF6-compatible binary files that can
-    be consumed by PRT or other MF6 post-processors.
+    Supports any structured-grid MODFLOW variant that produces compact
+    budget files with FLOW RIGHT FACE / FLOW FRONT FACE / FLOW LOWER FACE
+    terms — including MODFLOW-NWT (UPW package), MODFLOW-2005 (LPF package),
+    MODFLOW-2000, and MODFLOW-OWHM.
+
+    This class reads head and cell-budget files, applies the transformations
+    needed to express flows in MODFLOW 6 format, and writes MF6-compatible
+    binary files consumable by PRT and other MF6 post-processors.
 
     Parameters
     ----------
     hds_file : str
-        Path to NWT head file (.hds)
+        Path to head file (.hds)
     cbc_file : str
-        Path to NWT cell budget file (.cbc)
+        Path to cell budget file (.cbc)
     nlay : int
         Number of layers
     nrow : int
@@ -93,11 +98,12 @@ class NwtToMf6Converter:
     botm : array_like
         Bottom elevation, shape (nlay, nrow, ncol)
     laytyp : array_like
-        Layer type from LPF/UPW, shape (nlay,).
-        0 = confined, >0 = convertible
+        Layer type from LPF or UPW package, shape (nlay,).
+        0 = confined; any non-zero value = convertible (sign controls
+        wetting, not confinement).
     idomain : array_like, optional
         Domain array, shape (nlay, nrow, ncol).
-        >0 = active, 0 = inactive, <0 = vertical pass-through
+        >0 = active, 0 = inactive, <0 = vertical pass-through.
         If None, all cells are active.
     hdry : float, optional
         Head value for dry cells (default -999.0)
@@ -109,28 +115,20 @@ class NwtToMf6Converter:
     Examples
     --------
     >>> import numpy as np
-    >>> from flopy.utils import NwtToMf6Converter
-    >>> # Set up grid parameters
+    >>> from flopy.utils import ClassicMfToMf6Converter
     >>> nlay, nrow, ncol = 3, 10, 10
     >>> delr = np.ones(ncol) * 100.0
     >>> delc = np.ones(nrow) * 100.0
     >>> top = np.ones((nrow, ncol)) * 10.0
     >>> botm = np.zeros((nlay, nrow, ncol))
-    >>> botm[0] = 5.0
-    >>> botm[1] = 0.0
-    >>> botm[2] = -5.0
-    >>> laytyp = np.array([1, 0, 0])  # Top layer convertible
+    >>> botm[0] = 5.0; botm[1] = 0.0; botm[2] = -5.0
+    >>> laytyp = np.array([1, 0, 0])  # top layer convertible
     >>>
-    >>> # Create converter
-    >>> converter = NwtToMf6Converter(
-    ...     'model.hds',
-    ...     'model.cbc',
+    >>> converter = ClassicMfToMf6Converter(
+    ...     'model.hds', 'model.cbc',
     ...     nlay, nrow, ncol,
-    ...     delr, delc, top, botm,
-    ...     laytyp
+    ...     delr, delc, top, botm, laytyp
     ... )
-    >>>
-    >>> # Convert files
     >>> converter.convert('mf6_output')
     """
 
@@ -325,9 +323,13 @@ class NwtToMf6Converter:
             totim = float(rec["totim"])
             pertim = float(rec["pertim"])
 
-            head_dict[kstpkper] = head
-            totim_dict[kstpkper] = totim
-            pertim_dict[kstpkper] = pertim
+            # Write 1-based (kstp, kper) so MF6 readers that add 1 internally
+            # find the correct records.
+            kstp, kper = kstpkper
+            kstpkper_out = (int(kstp) + 1, int(kper) + 1)
+            head_dict[kstpkper_out] = head
+            totim_dict[kstpkper_out] = totim
+            pertim_dict[kstpkper_out] = pertim
 
             if verbose:
                 print(
@@ -477,8 +479,8 @@ class NwtToMf6Converter:
             records.append(
                 {
                     "data": flowja,
-                    "kstp": kstp,
-                    "kper": kper,
+                    "kstp": int(kstp) + 1,
+                    "kper": int(kper) + 1,
                     "totim": totim,
                     "pertim": pertim,
                     "delt": delt,
@@ -522,8 +524,8 @@ class NwtToMf6Converter:
                 records.append(
                     {
                         "data": sat_data,
-                        "kstp": kstp,
-                        "kper": kper,
+                        "kstp": int(kstp) + 1,
+                        "kper": int(kper) + 1,
                         "totim": totim,
                         "pertim": pertim,
                         "delt": delt,
@@ -549,10 +551,14 @@ class NwtToMf6Converter:
 
     def __repr__(self):
         return (
-            f"NwtToMf6Converter(\n"
+            f"{type(self).__name__}(\n"
             f"  hds_file={self.hds_file},\n"
             f"  cbc_file={self.cbc_file},\n"
             f"  grid={self.nlay}x{self.nrow}x{self.ncol},\n"
             f"  time_steps={len(self.times)}\n"
             f")"
         )
+
+
+#: Backward-compatible alias.  New code should use ClassicMfToMf6Converter.
+NwtToMf6Converter = ClassicMfToMf6Converter
