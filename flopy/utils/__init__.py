@@ -29,6 +29,12 @@ from .flopy_io import read_fixed_var, write_fixed_var
 from .formattedfile import FormattedHeadFile
 
 get_modflow = get_modflow_module.run_main
+from .classic_to_mf6 import (
+    ClassicMfToMf6Converter,
+    NwtToMf6Converter,  # backward-compatible alias
+    get_icelltype_from_laycon,
+    get_icelltype_from_laytyp,
+)
 from .gridintersect import GridIntersect
 from .mflistfile import (
     Mf6ListBudget,
@@ -40,11 +46,6 @@ from .mflistfile import (
 from .mfreadnam import parsenamefile
 from .modpathfile import EndpointFile, PathlineFile, TimeseriesFile
 from .mtlistfile import MtListBudget
-from .nwt_to_mf6 import (
-    ClassicMfToMf6Converter,
-    NwtToMf6Converter,  # backward-compatible alias
-    get_icelltype_from_laytyp,
-)
 from .observationfile import HydmodObs, Mf6Obs, SwrObs
 from .optionblock import OptionBlock
 from .postprocessing import get_specific_discharge, get_transmissivities
