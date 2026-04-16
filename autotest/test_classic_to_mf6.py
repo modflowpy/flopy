@@ -3,6 +3,99 @@ import pytest
 from modflow_devtools.markers import requires_exe
 
 
+def test_headfile_classic_readable_without_conversion(tmp_path):
+    """
+    A classic MODFLOW head file (1-based kstpkper in the binary header) can be
+    read directly by HeadFile without any conversion step.  The values returned
+    by get_data() on the original file must be identical to those returned after
+    round-tripping through _write_heads.
+    """
+    from flopy.utils.binaryfile import HeadFile
+
+    nlay, nrow, ncol = 2, 3, 4
+    rng = np.random.default_rng(0)
+    head1 = rng.standard_normal((nlay, nrow, ncol))
+    head2 = rng.standard_normal((nlay, nrow, ncol))
+
+    # Write with 1-based kstpkper at known timing, as classic MODFLOW does.
+    original = tmp_path / "classic.hds"
+    HeadFile.write(
+        str(original),
+        {(1, 1): head1, (2, 1): head2},
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        precision="double",
+        totim={(1, 1): 1.0, (2, 1): 2.0},
+        pertim={(1, 1): 1.0, (2, 1): 1.0},
+    )
+
+    hds = HeadFile(str(original))
+    # get_kstpkper() returns 0-based — (0,0) and (1,0) for the two records above
+    kstpkper_list = hds.get_kstpkper()
+    assert kstpkper_list == [(0, 0), (1, 0)]
+
+    # Data is retrievable by 0-based index — no conversion needed
+    np.testing.assert_array_equal(hds.get_data(kstpkper=(0, 0)), head1)
+    np.testing.assert_array_equal(hds.get_data(kstpkper=(1, 0)), head2)
+
+
+def test_headfile_convert_is_bytewise_noop(tmp_path):
+    """
+    convert() copies the head file verbatim — the output .hds is byte-for-byte
+    identical to the original classic MODFLOW .hds.
+
+    This confirms that the converter does not need to rewrite head files.
+    """
+    from flopy.utils.binaryfile import CellBudgetFile, HeadFile
+
+    from flopy.utils.classic_to_mf6 import ClassicMfToMf6Converter
+
+    nlay, nrow, ncol = 2, 3, 4
+    rng = np.random.default_rng(1)
+    head = rng.standard_normal((nlay, nrow, ncol))
+
+    original = tmp_path / "classic.hds"
+    HeadFile.write(
+        str(original),
+        {(1, 1): head},
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        precision="double",
+        totim={(1, 1): 1.0},
+        pertim={(1, 1): 1.0},
+    )
+
+    delr = np.ones(ncol) * 100.0
+    delc = np.ones(nrow) * 100.0
+    top = np.ones((nrow, ncol)) * 10.0
+    botm = np.zeros((nlay, nrow, ncol))
+    botm[0] = 5.0
+    laytyp = np.array([1, 0])
+
+    cbc_file = tmp_path / "dummy.cbc"
+    frf = np.zeros((nlay, nrow, ncol))
+    CellBudgetFile.write(
+        str(cbc_file),
+        [{"data": frf.flatten(order="F"), "kstp": 1, "kper": 1,
+          "text": "FLOW RIGHT FACE", "imeth": 1}],
+        nlay=nlay, nrow=nrow, ncol=ncol,
+    )
+
+    converter = ClassicMfToMf6Converter(
+        str(original), str(cbc_file),
+        nlay, nrow, ncol, delr, delc, top, botm, laytyp,
+    )
+
+    output_dir = tmp_path / "mf6_out"
+    result = converter.convert(str(output_dir))
+
+    assert result["hds"].read_bytes() == original.read_bytes(), (
+        "convert() changed the head file — expected a verbatim copy"
+    )
+
+
 def test_get_icelltype_from_laytyp():
     from flopy.utils.classic_to_mf6 import get_icelltype_from_laytyp
 

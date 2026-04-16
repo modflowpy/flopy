@@ -1,72 +1,60 @@
 """
-Utilities for converting classic MODFLOW binary outputs to MODFLOW 6 format.
+Utilities for converting legacy MODFLOW binary outputs to MODFLOW 6 format.
 
 Supported variants
 ------------------
 Any structured-grid MODFLOW variant that writes compact budget files with
-FLOW RIGHT FACE / FLOW FRONT FACE / FLOW LOWER FACE terms is supported,
+FLOW RIGHT FACE, FLOW FRONT FACE, and FLOW LOWER FACE terms is supported,
 including MODFLOW-NWT (UPW), MODFLOW-2005 (LPF), and MODFLOW-2000 (LPF or
 BCF).  Use :class:`ClassicMfToMf6Converter` or its
 :meth:`~ClassicMfToMf6Converter.from_model`
 constructor to perform the conversion.
 
-Binary format differences: classic MODFLOW vs MODFLOW 6
+Binary format differences: compact MODFLOW vs MODFLOW 6
 --------------------------------------------------------
-Understanding what this converter does requires knowing how the two file
-formats differ.
-
 **Head files (.hds)**
     The on-disk layout is essentially identical: one record per layer per
     time step, each prefixed by a header containing ``(kstp, kper, pertim,
-    totim, text, ncol, nrow, ilay)``.  The only practical difference is that
-    MF6 readers add 1 to the caller-supplied ``(kstp, kper)`` before
-    searching, so the values written in the file must be 1-based.  Classic
-    MODFLOW writes 1-based values natively, but flopy's ``get_kstpkper()``
-    returns 0-based pairs; this converter re-adds 1 before writing.
+    totim, text, ncol, nrow, ilay)``.
 
 **Budget files (.cbc / .bud)**
-    This is where the formats diverge significantly.
-
     Classic MODFLOW budget files exist in two sub-formats controlled by the
     OC package keyword ``COMPACT BUDGET [FILES]``:
 
     * *Non-compact* (old-style, ``COMPACT BUDGET`` absent): ``nlay > 0`` in
       every record header; no extended header fields; all records are
-      implicitly full 3-D arrays (``imeth=0``); no timing information is
-      stored.  **This converter does not support the non-compact format.**
+      implicitly full 3-D arrays (``imeth=0``); stress period and time step
+      are stored but no time data. **Not supported by this converter.**
 
     * *Compact* (``COMPACT BUDGET`` or ``COMPACT BUDGET FILES`` in OC):
       ``nlay < 0`` is the binary signal; each record has an extended header
       with ``(imeth, delt, pertim, totim)``; face-flow terms use ``imeth=1``
-      (full 3-D array) and boundary-flux terms use ``imeth=2`` or higher.
+      (full 3-D array) and boundary-flow terms use ``imeth=2`` or higher.
       **This is the format the converter requires.**
 
     Within the compact format, classic and MF6 semantics diverge:
 
-    * *Classic compact* stores each flux component as a separate named
+    * *Classic compact* stores each flow component as a separate named
       record—``FLOW RIGHT FACE``, ``FLOW FRONT FACE``, ``FLOW LOWER FACE``—
       each a 3-D array of shape ``(nlay, nrow, ncol)`` (``imeth=1``).
-      Inter-cell flows are directional and half-edge (each face stored once,
-      positive away from the lower-index cell).
+      Inter-cell flows are directional with each face stored once, in the
+      positive direction (away from the lower-index cell).
 
     * *MF6* stores all inter-cell flows in a single ``FLOW-JA-FACE`` record:
       a 1-D array of length NJA (total number of cell connections) indexed by
       the IA/JA sparse connectivity arrays.  Each connection appears twice
       (once from each side) with opposite signs.  Saturation and specific
       discharge are stored as separate ``DATA-SAT`` and ``DATA-SPDIS``
-      records using the ``imeth=6`` sparse-list format.  MF6 also uses
-      ``nlay < 0``, so it shares the same compact record framing—just
-      entirely different content.
+      records using the ``imeth=6`` sparse-list format.  MF6 budget file
+      headers also use ``nlay < 0``, like classic compact files.
 
 **Grid file (.grb) — new in MF6**
     Classic MODFLOW stores grid geometry in the ASCII DIS file.  MF6
-    requires a binary grid record (``.dis.grb``) that embeds the IA/JA
-    connectivity, cell geometry (TOP, BOT, DELR, DELC), ICELLTYPE, and
-    IDOMAIN.  MF6 post-processors (PRT, etc.) use the GRB to interpret
-    ``FLOW-JA-FACE``; there is no classic-MODFLOW equivalent.
+    flow models create a binary grid file (``.dis.grb``) that encodes
+    the IA/JA connectivity, cell geometry, convertibility, and IDOMAIN.
 """
 
-import os
+import shutil
 from pathlib import Path
 
 import numpy as np
@@ -519,10 +507,11 @@ class ClassicMfToMf6Converter:
             verbose=verbose,
         )
 
-        # Write HDS file
+        # Copy head file verbatim — the on-disk format is identical between
+        # classic MODFLOW and MF6, so no conversion is needed.
         if verbose:
-            print(f"\nWriting head file: {hds_path}")
-        self._write_heads(hds_path, precision, verbose)
+            print(f"\nCopying head file to: {hds_path}")
+        shutil.copy2(self.hds_file, hds_path)
 
         # Write BUD file
         if verbose:
@@ -550,48 +539,6 @@ class ClassicMfToMf6Converter:
             (int(rec["kstp"]) - 1, int(rec["kper"]) - 1): rec
             for rec in self.hds_obj.recordarray
         }
-
-    def _write_heads(self, filename, precision, verbose):
-        """Write head file with all time steps."""
-        from .binaryfile import HeadFile
-
-        header_lookup = self._build_header_lookup()
-        head_dict = {}
-        totim_dict = {}
-        pertim_dict = {}
-
-        for idx, kstpkper in enumerate(self.kstpkper):
-            head = self.hds_obj.get_data(kstpkper=kstpkper)
-            rec = header_lookup[kstpkper]
-            totim = float(rec["totim"])
-            pertim = float(rec["pertim"])
-
-            # Write 1-based (kstp, kper) so MF6 readers that add 1 internally
-            # find the correct records.
-            kstp, kper = kstpkper
-            kstpkper_out = (int(kstp) + 1, int(kper) + 1)
-            head_dict[kstpkper_out] = head
-            totim_dict[kstpkper_out] = totim
-            pertim_dict[kstpkper_out] = pertim
-
-            if verbose:
-                print(
-                    f"  Read head for time step {kstpkper}: "
-                    f"min={head.min():.2f}, max={head.max():.2f}"
-                )
-
-        # Write using HeadFile.write()
-        HeadFile.write(
-            str(filename),
-            head_dict,
-            nlay=self.nlay,
-            nrow=self.nrow,
-            ncol=self.ncol,
-            precision=precision,
-            totim=totim_dict,
-            pertim=pertim_dict,
-            verbose=verbose,
-        )
 
     def _write_budget(self, filename, precision, verbose):
         """Write budget file with FLOW-JA-FACE, DATA-SPDIS, and DATA-SAT."""
