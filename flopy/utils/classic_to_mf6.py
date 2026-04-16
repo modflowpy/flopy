@@ -166,7 +166,7 @@ def get_icelltype_from_laycon(laycon):
 
 class ClassicMfToMf6Converter:
     """
-    Convert classic MODFLOW binary outputs to MODFLOW 6 binary format.
+    Convert classic MODFLOW compact binary files to MODFLOW 6 binary format.
 
     Reads head and cell-budget files produced by any structured-grid MODFLOW
     variant with compact budget output (FLOW RIGHT FACE / FLOW FRONT FACE /
@@ -174,13 +174,12 @@ class ClassicMfToMf6Converter:
     file (``FLOW-JA-FACE``, ``DATA-SAT``), and binary grid record (GRB)
     required by PRT and other MF6 post-processors.
 
-    Confirmed compatible variants: MODFLOW-NWT (UPW), MODFLOW-2005 (LPF),
-    MODFLOW-2000 (LPF or BCF).
+    Compatible with: MODFLOW-NWT (UPW), MODFLOW-2005 (LPF), MODFLOW-2000 (LPF or BCF).
 
     The easiest way to construct a converter from a loaded model is
     :meth:`from_model`, which autodetects the flow package and extracts all
-    required parameters automatically.  Construct directly only when a model
-    object is not available (e.g. you only have the binary files on disk).
+    required parameters automatically.  A converter can also be constructed
+    directly if a model is not available (e.g. you have binary output files).
 
     Parameters
     ----------
@@ -469,7 +468,6 @@ class ClassicMfToMf6Converter:
             - 'bud': Path to budget file
         """
         from ..mf6.utils import MfGrdFile
-        from .binaryfile import CellBudgetFile, HeadFile
 
         # Create output directory
         output_dir = Path(output_dir)
@@ -523,22 +521,20 @@ class ClassicMfToMf6Converter:
 
         return {"grb": grb_path, "hds": hds_path, "bud": bud_path}
 
-    def _build_header_lookup(self):
+    def _build_budget_header_lookup(self):
         """
-        Build a dict mapping (kstp, kper) -> header record from the head file.
-
-        Returns
-        -------
-        dict
-            Keys are (kstp, kper) tuples, values are header records with
-            fields including 'pertim' and 'totim'.
+        Build a dict mapping 0-based (kstp, kper) -> first CBC header record
+        for that time step.  The compact budget header stores delt, pertim,
+        and totim directly, so no arithmetic is needed to recover them.
         """
-        # get_kstpkper() returns 0-based indices; recordarray stores 1-based
-        # file values.  Subtract 1 so the lookup keys match self.kstpkper.
-        return {
-            (int(rec["kstp"]) - 1, int(rec["kper"]) - 1): rec
-            for rec in self.hds_obj.recordarray
-        }
+        seen = set()
+        result = {}
+        for rec in self.cbc_obj.recordarray:
+            key = (int(rec["kstp"]) - 1, int(rec["kper"]) - 1)
+            if key not in seen:
+                result[key] = rec
+                seen.add(key)
+        return result
 
     def _write_budget(self, filename, precision, verbose):
         """Write budget file with FLOW-JA-FACE, DATA-SPDIS, and DATA-SAT."""
@@ -549,114 +545,83 @@ class ClassicMfToMf6Converter:
         if verbose:
             print(f"  Processing {len(self.kstpkper)} time steps...")
 
-        # We'll write three terms per time step:
-        # 1. FLOW-JA-FACE (imeth=1, array)
-        # 2. DATA-SPDIS (imeth=6, list with qx, qy, qz)
-        # 3. DATA-SAT (imeth=6, list)
-
-        # Build list of records
         records = []
+        header_lookup = self._build_budget_header_lookup()
 
-        header_lookup = self._build_header_lookup()
-
-        for idx, kstpkper in enumerate(self.kstpkper):
+        for kstpkper in self.kstpkper:
             kstp, kper = kstpkper
             rec = header_lookup[kstpkper]
             totim = float(rec["totim"])
             pertim = float(rec["pertim"])
-
-            # delt: for the first time step within a period pertim equals delt;
-            # for subsequent steps subtract the previous step's pertim.
-            # kstp is 0-based here (from get_kstpkper()).
-            if kstp == 0:
-                delt = pertim
-            else:
-                prev_rec = header_lookup.get((kstp - 1, kper))
-                delt = pertim - float(prev_rec["pertim"]) if prev_rec else pertim
+            delt = float(rec["delt"])
 
             if verbose:
                 print(f"  Processing time step {kstpkper}...")
 
-            # Get head
             head = self.hds_obj.get_data(kstpkper=kstpkper)
 
-            # Get face flows
             if verbose:
                 print(
                     f"    Available budget terms: "
                     f"{self.cbc_obj.get_unique_record_names()}"
                 )
 
-            # Check which face flows are available
-            # For 1D/2D models, not all face flows may exist
+            # for 1D/2D models, some directions may be missing
             available_terms = [
                 t.decode().strip() for t in self.cbc_obj.get_unique_record_names()
             ]
 
-            try:
-                # FLOW RIGHT FACE (required for X-direction flow)
-                if "FLOW RIGHT FACE" in available_terms:
-                    frf_data = self.cbc_obj.get_data(
-                        text="FLOW RIGHT FACE", kstpkper=kstpkper
-                    )
-                    if verbose:
-                        print(
-                            f"    FLOW RIGHT FACE: {type(frf_data)}, "
-                            f"len={len(frf_data) if frf_data else 0}"
-                        )
-                    frf = frf_data[0] if frf_data and len(frf_data) > 0 else None
-                else:
-                    frf = None
-
-                # FLOW FRONT FACE (required for Y-direction flow)
-                if "FLOW FRONT FACE" in available_terms:
-                    fff_data = self.cbc_obj.get_data(
-                        text="FLOW FRONT FACE", kstpkper=kstpkper
-                    )
-                    if verbose:
-                        print(
-                            f"    FLOW FRONT FACE: {type(fff_data)}, "
-                            f"len={len(fff_data) if fff_data else 0}"
-                        )
-                    fff = fff_data[0] if fff_data and len(fff_data) > 0 else None
-                else:
-                    fff = None
-
-                # FLOW LOWER FACE (required for Z-direction flow)
-                if "FLOW LOWER FACE" in available_terms:
-                    flf_data = self.cbc_obj.get_data(
-                        text="FLOW LOWER FACE", kstpkper=kstpkper
-                    )
-                    if verbose:
-                        print(
-                            f"    FLOW LOWER FACE: {type(flf_data)}, "
-                            f"len={len(flf_data) if flf_data else 0}"
-                        )
-                    flf = flf_data[0] if flf_data and len(flf_data) > 0 else None
-                else:
-                    flf = None
-
-                # Validate at least one face flow exists
-                if frf is None and fff is None and flf is None:
-                    raise ValueError("No face flows found in budget file")
-
-                # Create zero arrays for missing face flows
-                # For 1D/2D models, not all directions have flow
-                shape_3d = (self.nlay, self.nrow, self.ncol)
-                if frf is None:
-                    frf = np.zeros(shape_3d, dtype=np.float64)
-                if fff is None:
-                    fff = np.zeros(shape_3d, dtype=np.float64)
-                if flf is None:
-                    flf = np.zeros(shape_3d, dtype=np.float64)
-
-            except Exception as e:
+            if "FLOW RIGHT FACE" in available_terms:
+                frf_data = self.cbc_obj.get_data(
+                    text="FLOW RIGHT FACE", kstpkper=kstpkper
+                )
                 if verbose:
-                    print(f"    Warning: Could not read face flows: {e}")
-                    print(f"    Skipping time step {kstpkper}")
-                continue
+                    print(
+                        f"    FLOW RIGHT FACE: {type(frf_data)}, "
+                        f"len={len(frf_data) if frf_data else 0}"
+                    )
+                frf = frf_data[0] if frf_data and len(frf_data) > 0 else None
+            else:
+                frf = None
 
-            # 1. Convert to FLOW-JA-FACE
+            if "FLOW FRONT FACE" in available_terms:
+                fff_data = self.cbc_obj.get_data(
+                    text="FLOW FRONT FACE", kstpkper=kstpkper
+                )
+                if verbose:
+                    print(
+                        f"    FLOW FRONT FACE: {type(fff_data)}, "
+                        f"len={len(fff_data) if fff_data else 0}"
+                    )
+                fff = fff_data[0] if fff_data and len(fff_data) > 0 else None
+            else:
+                fff = None
+
+            if "FLOW LOWER FACE" in available_terms:
+                flf_data = self.cbc_obj.get_data(
+                    text="FLOW LOWER FACE", kstpkper=kstpkper
+                )
+                if verbose:
+                    print(
+                        f"    FLOW LOWER FACE: {type(flf_data)}, "
+                        f"len={len(flf_data) if flf_data else 0}"
+                    )
+                flf = flf_data[0] if flf_data and len(flf_data) > 0 else None
+            else:
+                flf = None
+
+            if frf is None and fff is None and flf is None:
+                raise ValueError("No face flows found in budget file")
+
+            # create zero arrays for missing face flows
+            shape_3d = (self.nlay, self.nrow, self.ncol)
+            if frf is None:
+                frf = np.zeros(shape_3d, dtype=np.float64)
+            if fff is None:
+                fff = np.zeros(shape_3d, dtype=np.float64)
+            if flf is None:
+                flf = np.zeros(shape_3d, dtype=np.float64)
+
             flowja = get_structured_flowja(
                 (frf, fff, flf),
                 ia=self.ia,
@@ -665,7 +630,6 @@ class ClassicMfToMf6Converter:
                 nrow=self.nrow,
                 ncol=self.ncol,
             )
-
             records.append(
                 {
                     "data": flowja,
@@ -679,25 +643,19 @@ class ClassicMfToMf6Converter:
                 }
             )
 
-            # 2. DATA-SPDIS (specific discharge) - SKIPPED for now
             # TODO: get_specific_discharge() requires a model object and cannot
-            # easily be driven from binary files alone. PRT can reconstruct
-            # specific discharge from FLOW-JA-FACE if needed.
+            # easily be driven from binary files alone. PRT doesn't need SPDIS,
+            # but other models might, so skip it for now and come back to this.
 
-            # 3. Calculate saturation
             sat = get_saturation(
                 head, self.top, self.botm, self.icelltype_3d, self.hdry, self.hnoflo
             )
 
-            # Build list data for DATA-SAT
             sat_flat = sat.flatten(order="F")
             active_sat = ~np.isnan(sat_flat)
             nlist_sat = np.sum(active_sat)
-
             if nlist_sat > 0:
                 nodes_sat = np.arange(self.ncells)[active_sat] + 1  # 1-based
-
-                # Create structured array for imeth=6
                 dtype = np.dtype(
                     [
                         ("node", np.int32),
@@ -709,7 +667,6 @@ class ClassicMfToMf6Converter:
                 sat_data["node"] = nodes_sat
                 sat_data["node2"] = nodes_sat
                 sat_data["sat"] = sat_flat[active_sat]
-
                 records.append(
                     {
                         "data": sat_data,
@@ -724,7 +681,6 @@ class ClassicMfToMf6Converter:
                     }
                 )
 
-        # Write all records
         if verbose:
             print(f"  Writing {len(records)} budget records...")
 
@@ -747,7 +703,3 @@ class ClassicMfToMf6Converter:
             f"  time_steps={len(self.times)}\n"
             f")"
         )
-
-
-#: Backward-compatible alias.  New code should use ClassicMfToMf6Converter.
-NwtToMf6Converter = ClassicMfToMf6Converter
