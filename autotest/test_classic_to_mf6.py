@@ -48,7 +48,6 @@ def test_headfile_convert_is_bytewise_noop(tmp_path):
     This confirms that the converter does not need to rewrite head files.
     """
     from flopy.utils.binaryfile import CellBudgetFile, HeadFile
-
     from flopy.utils.classic_to_mf6 import ClassicMfToMf6Converter
 
     nlay, nrow, ncol = 2, 3, 4
@@ -78,14 +77,31 @@ def test_headfile_convert_is_bytewise_noop(tmp_path):
     frf = np.zeros((nlay, nrow, ncol))
     CellBudgetFile.write(
         str(cbc_file),
-        [{"data": frf.flatten(order="F"), "kstp": 1, "kper": 1,
-          "text": "FLOW RIGHT FACE", "imeth": 1}],
-        nlay=nlay, nrow=nrow, ncol=ncol,
+        [
+            {
+                "data": frf.flatten(order="F"),
+                "kstp": 1,
+                "kper": 1,
+                "text": "FLOW RIGHT FACE",
+                "imeth": 1,
+            }
+        ],
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
     )
 
     converter = ClassicMfToMf6Converter(
-        str(original), str(cbc_file),
-        nlay, nrow, ncol, delr, delc, top, botm, laytyp,
+        str(original),
+        str(cbc_file),
+        nlay,
+        nrow,
+        ncol,
+        delr,
+        delc,
+        top,
+        botm,
+        laytyp,
     )
 
     output_dir = tmp_path / "mf6_out"
