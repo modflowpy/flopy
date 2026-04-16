@@ -764,8 +764,10 @@ def test_classic_to_mf6_freyberg_multilayer(freyberg_multilayer_path, function_t
         head_orig = hds_orig.get_data(kstpkper=kstpkper)
         head_mf6 = hds_mf6.get_data(kstpkper=kstpkper)
         np.testing.assert_array_almost_equal(
-            head_mf6, head_orig, decimal=5,
-            err_msg=f"Head mismatch at kstpkper={kstpkper}"
+            head_mf6,
+            head_orig,
+            decimal=5,
+            err_msg=f"Head mismatch at kstpkper={kstpkper}",
         )
 
         # Face-flow roundtrip: faceflows → flowja → faceflows should recover
@@ -780,16 +782,22 @@ def test_classic_to_mf6_freyberg_multilayer(freyberg_multilayer_path, function_t
         )
 
         np.testing.assert_array_almost_equal(
-            frf_rt[:, :, :-1], frf_orig[:, :, :-1], decimal=5,
-            err_msg=f"FLOW RIGHT FACE mismatch at kstpkper={kstpkper}"
+            frf_rt[:, :, :-1],
+            frf_orig[:, :, :-1],
+            decimal=5,
+            err_msg=f"FLOW RIGHT FACE mismatch at kstpkper={kstpkper}",
         )
         np.testing.assert_array_almost_equal(
-            fff_rt[:, :-1, :], fff_orig[:, :-1, :], decimal=5,
-            err_msg=f"FLOW FRONT FACE mismatch at kstpkper={kstpkper}"
+            fff_rt[:, :-1, :],
+            fff_orig[:, :-1, :],
+            decimal=5,
+            err_msg=f"FLOW FRONT FACE mismatch at kstpkper={kstpkper}",
         )
         np.testing.assert_array_almost_equal(
-            flf_rt[:-1, :, :], flf_orig[:-1, :, :], decimal=5,
-            err_msg=f"FLOW LOWER FACE mismatch at kstpkper={kstpkper}"
+            flf_rt[:-1, :, :],
+            flf_orig[:-1, :, :],
+            decimal=5,
+            err_msg=f"FLOW LOWER FACE mismatch at kstpkper={kstpkper}",
         )
 
         # DATA-SAT is present
@@ -876,9 +884,11 @@ def test_classic_to_mf6_freyberg_mf2005(mf2005_freyberg_path, function_tmpdir):
     fff_orig = cbc_orig.get_data(text="FLOW FRONT FACE", kstpkper=kstpkper)[0]
 
     flowja = bud_mf6.get_data(text="FLOW-JA-FACE", kstpkper=kstpkper)[0]
-    frf_rt, fff_rt, _ = get_structured_faceflows(
-        flowja, grb_file=str(result["grb"])
-    )
+    frf_rt, fff_rt, _ = get_structured_faceflows(flowja, grb_file=str(result["grb"]))
 
-    np.testing.assert_array_almost_equal(frf_rt[:, :, :-1], frf_orig[:, :, :-1], decimal=5)
-    np.testing.assert_array_almost_equal(fff_rt[:, :-1, :], fff_orig[:, :-1, :], decimal=5)
+    np.testing.assert_array_almost_equal(
+        frf_rt[:, :, :-1], frf_orig[:, :, :-1], decimal=5
+    )
+    np.testing.assert_array_almost_equal(
+        fff_rt[:, :-1, :], fff_orig[:, :-1, :], decimal=5
+    )

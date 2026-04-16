@@ -813,25 +813,26 @@ def test_get_structured_flowja_to_connections_simple():
     conns = ja[ia[node] : ia[node + 1]]
     flows = flowja[ia[node] : ia[node + 1]]
     conn_map = dict(zip(conns, flows))
-    assert conn_map[node] == 0.0   # diagonal
-    assert conn_map[1] == -1.0     # right outflow: -qright[0,0,0]
-    assert conn_map[3] == -2.0     # front outflow: -qfront[0,0,0]
+    assert conn_map[node] == 0.0  # diagonal
+    assert conn_map[1] == -1.0  # right outflow: -qright[0,0,0]
+    assert conn_map[3] == -2.0  # front outflow: -qfront[0,0,0]
 
     # Interior cell (0,1,1): left/back/right/front all present
     node = 1 * ncol + 1  # (k=0, i=1, j=1)
     conns = ja[ia[node] : ia[node + 1]]
     flows = flowja[ia[node] : ia[node + 1]]
     conn_map = dict(zip(conns, flows))
-    assert conn_map[node] == 0.0   # diagonal
-    assert conn_map[node - 1] == qright[0, 1, 0]   # left inflow: +qright[0,1,0]
+    assert conn_map[node] == 0.0  # diagonal
+    assert conn_map[node - 1] == qright[0, 1, 0]  # left inflow: +qright[0,1,0]
     assert conn_map[node + 1] == -qright[0, 1, 1]  # right outflow: -qright[0,1,1]
-    assert conn_map[node - ncol] == qfront[0, 0, 1] # back inflow: +qfront[0,0,1]
-    assert conn_map[node + ncol] == -qfront[0, 1, 1] # front outflow: -qfront[0,1,1]
+    assert conn_map[node - ncol] == qfront[0, 0, 1]  # back inflow: +qfront[0,0,1]
+    assert conn_map[node + ncol] == -qfront[0, 1, 1]  # front outflow: -qfront[0,1,1]
 
     # Verify roundtrip: flowja → get_structured_faceflows → should recover originals.
     # Boundary cells with no neighbor in that direction have no stored connection,
     # so the roundtrip can only recover values for interior faces.
     from flopy.mf6.utils import get_structured_faceflows
+
     frf_rt, fff_rt, flf_rt = get_structured_faceflows(
         flowja, ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
     )
@@ -867,6 +868,7 @@ def test_get_structured_flowja_to_connections_multilayer():
 
     # Verify roundtrip (interior faces only — boundary cells have no stored neighbor)
     from flopy.mf6.utils import get_structured_faceflows
+
     frf_rt, fff_rt, flf_rt = get_structured_faceflows(
         flowja, ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
     )
