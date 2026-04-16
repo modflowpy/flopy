@@ -5,7 +5,7 @@ from flaky import flaky
 from matplotlib import pyplot as plt
 
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
-from flopy.mf6.utils import MfGrdFile
+from flopy.mf6.utils import MfGrdFile, get_structured_connectivity
 
 pytestmark = pytest.mark.mf6
 
@@ -161,7 +161,7 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
     )
 
 
-def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
+def test_mfgrdfile_export_instance_method(tmp_path, mfgrd_test_path):
     original_file = mfgrd_test_path / "nwtp3.dis.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
 
@@ -191,7 +191,9 @@ def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
     np.testing.assert_array_equal(grb_new.idomain, grb_orig.idomain)
 
 
-def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_path):
+def test_mfgrdfile_export_instance_method_precision_conversion(
+    tmp_path, mfgrd_test_path
+):
     original_file = mfgrd_test_path / "nwtp3.dis.grb"
     grb = MfGrdFile(original_file, verbose=False)
 
@@ -209,10 +211,7 @@ def test_write_grb_instance_method_precision_conversion(tmp_path, mfgrd_test_pat
     assert single_file.stat().st_size < double_file.stat().st_size
 
 
-def test_write_grb_disv_roundtrip(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.export() for DISV grid with roundtrip validation."""
-    from flopy.mf6.utils.binarygrid_util import MfGrdFile
-
+def test_mfgrdfile_export_disv_roundtrip(tmp_path, mfgrd_test_path):
     # Read original DISV grb file
     original_file = mfgrd_test_path / "flow.disv.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
@@ -265,10 +264,7 @@ def test_write_grb_disv_roundtrip(tmp_path, mfgrd_test_path):
     )
 
 
-def test_write_grb_disv_precision_conversion(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.export() for DISV grid with precision conversion."""
-    from flopy.mf6.utils.binarygrid_util import MfGrdFile
-
+def test_mfgrdfile_export_disv_precision_conversion(tmp_path, mfgrd_test_path):
     # Read original DISV grb file
     original_file = mfgrd_test_path / "flow.disv.grb"
     grb = MfGrdFile(original_file, verbose=False)
@@ -315,10 +311,7 @@ def test_write_grb_disv_precision_conversion(tmp_path, mfgrd_test_path):
     )
 
 
-def test_write_grb_disu_roundtrip(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.export() for DISU grid with roundtrip validation."""
-    from flopy.mf6.utils.binarygrid_util import MfGrdFile
-
+def test_mfgrdfile_export_disu_roundtrip(tmp_path, mfgrd_test_path):
     # Read original DISU grb file
     original_file = mfgrd_test_path / "flow.disu.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
@@ -360,10 +353,7 @@ def test_write_grb_disu_roundtrip(tmp_path, mfgrd_test_path):
         np.testing.assert_array_equal(grb_new.idomain, grb_orig.idomain)
 
 
-def test_write_grb_disu_precision_conversion(tmp_path, mfgrd_test_path):
-    """Test MfGrdFile.export() for DISU grid with precision conversion."""
-    from flopy.mf6.utils.binarygrid_util import MfGrdFile
-
+def test_mfgrdfile_export_disu_precision_conversion(tmp_path, mfgrd_test_path):
     # Read original DISU grb file
     original_file = mfgrd_test_path / "flow.disu.grb"
     grb = MfGrdFile(original_file, verbose=False)
@@ -396,3 +386,126 @@ def test_write_grb_disu_precision_conversion(tmp_path, mfgrd_test_path):
     # Double precision should match exactly (same precision as original)
     np.testing.assert_allclose(grb_double.top, grb.top, rtol=1e-12)
     np.testing.assert_allclose(grb_double.bot, grb.bot, rtol=1e-12)
+
+
+def test_mfgrdfile_write_dis_roundtrip(tmp_path):
+    nlay, nrow, ncol = 2, 3, 4
+    delr = np.ones(ncol) * 100.0
+    delc = np.ones(nrow) * 50.0
+    top = np.ones((nrow, ncol)) * 10.0
+    botm = np.zeros((nlay, nrow, ncol))
+    botm[0] = 5.0
+
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+
+    icelltype = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+    icelltype[0] = 1  # top layer convertible
+
+    grb_file = tmp_path / "test.dis.grb"
+    MfGrdFile.write_dis(
+        str(grb_file),
+        nlay,
+        nrow,
+        ncol,
+        delr,
+        delc,
+        top,
+        botm,
+        ia,
+        ja,
+        icelltype=icelltype,
+    )
+
+    grb = MfGrdFile(str(grb_file))
+
+    assert grb.nlay == nlay
+    assert grb.nrow == nrow
+    assert grb.ncol == ncol
+    assert grb.nodes == nlay * nrow * ncol
+    assert grb.nja == nja
+
+    np.testing.assert_array_almost_equal(grb.delr, delr)
+    np.testing.assert_array_almost_equal(grb.delc, delc)
+
+    # Build expected TOP for all cells (MF6 format)
+    # Layer 1: model top, Layer 2+: bottom of layer above
+    # In Fortran order (layer-interleaved): [L0[0,0], L1[0,0], L2[0,0], L0[0,1], ...]
+    top_expected = np.zeros(nlay * nrow * ncol)
+    top_flat = top.flatten(order="F")
+    botm_flat = botm.flatten(order="F")
+
+    for i in range(nrow * ncol):
+        # Layer 0: use model top
+        top_expected[i * nlay] = top_flat[i]
+        # Layers 1+: use bottom of layer above
+        for k in range(1, nlay):
+            top_expected[i * nlay + k] = botm_flat[i * nlay + (k - 1)]
+
+    np.testing.assert_array_almost_equal(grb.top, top_expected)
+    np.testing.assert_array_almost_equal(grb.bot, botm.flatten(order="F"))
+
+    np.testing.assert_array_equal(grb.ia, ia)
+    np.testing.assert_array_equal(grb.ja, ja)
+
+    icelltype_read = grb._datadict["ICELLTYPE"]
+    np.testing.assert_array_equal(icelltype_read, icelltype.flatten(order="F"))
+
+
+def test_mfgrdfile_write_dis_with_idomain(tmp_path):
+    nlay, nrow, ncol = 1, 3, 3
+    delr = np.ones(ncol)
+    delc = np.ones(nrow)
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol))
+
+    # center cell inactive
+    idomain = np.ones((nlay, nrow, ncol), dtype=np.int32)
+    idomain[0, 1, 1] = 0
+
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol, idomain)
+
+    grb_file = tmp_path / "test_idomain.dis.grb"
+    MfGrdFile.write_dis(
+        str(grb_file), nlay, nrow, ncol, delr, delc, top, botm, ia, ja, idomain=idomain
+    )
+
+    grb = MfGrdFile(str(grb_file))
+    idomain_read = grb._datadict["IDOMAIN"]
+    np.testing.assert_array_equal(idomain_read, idomain.flatten(order="F"))
+
+
+def test_mfgrdfile_write_dis_validation():
+    nlay, nrow, ncol = 1, 2, 2
+    delr = np.ones(ncol)
+    delc = np.ones(nrow)
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol))
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+
+    with pytest.raises(ValueError, match="delr length"):
+        MfGrdFile.write_dis(
+            "test.grb",
+            nlay,
+            nrow,
+            ncol,
+            np.ones(3),  # Wrong length
+            delc,
+            top,
+            botm,
+            ia,
+            ja,
+        )
+
+    with pytest.raises(ValueError, match="ia length"):
+        MfGrdFile.write_dis(
+            "test.grb",
+            nlay,
+            nrow,
+            ncol,
+            delr,
+            delc,
+            top,
+            botm,
+            np.ones(10),  # Wrong length (should be ncells + 1 = 5)
+            ja,
+        )
