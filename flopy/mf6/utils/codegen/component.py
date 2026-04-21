@@ -30,6 +30,7 @@ def get_component_names(dfn: dict) -> list[tuple[str, str]]:
         ["gwf", "mvr"],
         ["gwf", "gnc"],
         ["gwt", "mvt"],
+        ["gwe", "mve"],
     ]:
         # TODO: deduplicate mfmvr.py/mfgwfmvr.py etc and remove special cases
         return [

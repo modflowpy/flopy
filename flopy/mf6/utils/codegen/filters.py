@@ -110,6 +110,8 @@ def dfn_file_name(component_name: tuple[str, str]) -> str:
         return f"gwf-{component_name[1]}.dfn"
     if tuple(component_name) in [(None, "mvt")]:
         return f"gwt-{component_name[1]}.dfn"
+    if tuple(component_name) in [(None, "mve")]:
+        return f"gwe-{component_name[1]}.dfn"
     return f"{component_name[0] or 'sim'}-{component_name[1]}.dfn"
 
 
