@@ -552,6 +552,8 @@ Well model will use SKIN
 #
         1                                                 Initial well
         1         1         1      0      100    0.5        1        SITE:Well-A
+# stress period 2 has no wells (itmp=0) - should be handled without error
+        0
 #                                Multi-node switch    Switch to specify Hlim         Auxiliary
 #                                         |           as difference from Href        definitions
 #    lay        row       col       Q         rw  Skin   Hlim   Href   QWZN
@@ -565,12 +567,13 @@ Well model will use SKIN
         f.write(mnw1_str)
 
     # Create minimal model files with only 2 stress periods (to match the MNW file)
-    disstr = """1 1 1 2 1 1
+    disstr = """1 1 1 3 1 1
  0 0 0
 constant 1
 constant 1
 constant  0 top of model
 constant -1 bottom of layer 1
+ 1.  1 1. Tr
  1.  1 1. Tr
  1.  1 1. Tr
 """  # noqa: E501
@@ -610,6 +613,8 @@ mnw1 104 test_no_wells.mnw"""  # noqa: E501
     # Verify SP 1 has wells
     assert len(m.mnw1.stress_period_data[0]) >= 1, "SP 1 should have wells"
 
-    # Verify that SP 2 (which has itmp=0) was handled without error
-    # The exact structure may vary, but it should exist
-    assert 1 in m.mnw1.stress_period_data.data, "SP 2 data should exist"
+    # Verify SP 2 has no wells
+    assert len(m.mnw1.stress_period_data[1]) == 0, "SP 2 should have no wells"
+
+    # Verify SP 3 has wells
+    assert len(m.mnw1.stress_period_data[2]) >= 1, "SP 3 should have wells"
