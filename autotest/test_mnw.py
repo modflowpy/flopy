@@ -490,7 +490,7 @@ constant -1 bottom of layer 1
     namstr = """lst  101 test_add.lst
 dis  102 test_add.dis
 bas6 103 test_add.bas
-mnw1 104 test_add.mnw"""
+mnw1 104 test_add.mnw"""  # noqa: E501
     nam_path = ws / "test_add.nam"
     with open(nam_path, "w") as f:
         f.write(namstr)
@@ -535,8 +535,9 @@ mnw1 104 test_add.mnw"""
 
 def test_mnw1_stress_period_no_wells(function_tmpdir):
     """Test MNW1 loading with stress periods that have no wells (itmp <= 0)"""
-    # This tests the fix for handling empty stress periods in the load routine
-    # File format: initial conditions, then for each SP: itmp, then well data (only if itmp > 0)
+    # This tests the fix for handling empty stress periods in the load routine.
+    # File format: initial conditions, then for each SP: itmp, then well data
+    # (only if itmp > 0)
     mnw1_str = """       120       -90       0     REFERENCE SP = 1
 Well model will use SKIN
 #
@@ -582,7 +583,7 @@ constant -1 bottom of layer 1
     namstr = """lst  101 test_no_wells.lst
 dis  102 test_no_wells.dis
 bas6 103 test_no_wells.bas
-mnw1 104 test_no_wells.mnw"""
+mnw1 104 test_no_wells.mnw"""  # noqa: E501
     nam_path = ws / "test_no_wells.nam"
     with open(nam_path, "w") as f:
         f.write(namstr)
