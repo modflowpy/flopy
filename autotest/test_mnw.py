@@ -458,7 +458,7 @@ Well model will use SKIN
 #
         1
         1         1         1  -100.0     100    0.5     1   DD 50   1.e16   1         SITE:Well-A
-"""
+"""  # noqa: E501
     ws = function_tmpdir
     fpth = ws / "test_add.mnw"
     with open(fpth, "w") as f:
@@ -471,8 +471,10 @@ constant 1
 constant 1
 constant  0 top of model
 constant -1 bottom of layer 1
- 1.  1 1. Tr    PERLEN NSTP TSMULT Ss/tr
-"""
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+"""  # noqa: E501
     dis_path = ws / "test_add.dis"
     with open(dis_path, "w") as f:
         f.write(disstr)
@@ -480,7 +482,7 @@ constant -1 bottom of layer 1
     basstr = """         0         0     1     1     1     1     0     0
      1     1     1
         0.
-"""
+"""  # noqa: E501
     bas_path = ws / "test_add.bas"
     with open(bas_path, "w") as f:
         f.write(basstr)
@@ -548,7 +550,7 @@ Well model will use SKIN
 #
         1
         1         1         1  -100.0     100    0.5     1   DD 50   1.e16   1         SITE:Well-A
-"""
+"""  # noqa: E501
     ws = function_tmpdir
     fpth = ws / "test_no_wells.mnw"
     with open(fpth, "w") as f:
@@ -561,8 +563,10 @@ constant 1
 constant 1
 constant  0 top of model
 constant -1 bottom of layer 1
- 1.  1 1. Tr    PERLEN NSTP TSMULT Ss/tr
-"""
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+"""  # noqa: E501
     dis_path = ws / "test_no_wells.dis"
     with open(dis_path, "w") as f:
         f.write(disstr)
@@ -570,7 +574,7 @@ constant -1 bottom of layer 1
     basstr = """         0         0     1     1     1     1     0     0
      1     1     1
         0.
-"""
+"""  # noqa: E501
     bas_path = ws / "test_no_wells.bas"
     with open(bas_path, "w") as f:
         f.write(basstr)
