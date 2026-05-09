@@ -95,16 +95,16 @@ jobs:
       - name: Install Python dependencies
         working-directory: modflow6
         run: |
-          pixi run install
-          pixi run pip install "../flopy[optional,test]"
+          pixi run -e rtd install
+          pixi run -e rtd pip install "../flopy[optional,test]"
 
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
         working-directory: modflow6
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          pixi run pip uninstall vtk
-          pixi run pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+          pixi run -e rtd pip uninstall vtk
+          pixi run -e rtd pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
 
       - name: Install fonts on Linux
         if: runner.os == 'Linux'
@@ -136,14 +136,14 @@ jobs:
       - name: Build MODFLOW 6
         working-directory: modflow6
         run: |
-          pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
-          pixi run meson install -C builddir
-          pixi run meson test --verbose --no-rebuild -C builddir
+          pixi run -e rtd meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+          pixi run -e rtd meson install -C builddir
+          pixi run -e rtd meson test --verbose --no-rebuild -C builddir
           echo "$(pwd)/bin" >> $GITHUB_PATH
 
       - name: Run tutorial and example notebooks
         working-directory: flopy/autotest
-        run: pixi run --manifest-path=../../modflow6/pixi.toml pytest -v -n auto test_example_notebooks.py
+        run: pixi run --manifest-path=../../modflow6/pixi.toml -e rtd pytest -v -n auto test_example_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: |
