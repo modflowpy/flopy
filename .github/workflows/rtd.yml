@@ -86,31 +86,25 @@ jobs:
           echo $GITHUB_REF
           echo $GITHUB_EVENT_NAME
 
-      - name: Setup Micromamba
-        uses: mamba-org/setup-micromamba@v3
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.9.5
         with:
-          environment-file: flopy/etc/environment.yml
-          cache-environment: true
-          cache-downloads: true
-          create-args: >-
-            python=3.12
-          init-shell: >-
-            bash
-            powershell
+          pixi-version: v0.41.4
+          manifest-path: modflow6/pixi.toml
 
       - name: Install Python dependencies
-        working-directory: flopy
+        working-directory: modflow6
         run: |
-          pip install --upgrade pip
-          pip install .
-          pip install meson ninja
+          pixi run install
+          pixi run pip install "../flopy[optional,test]"
 
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
+        working-directory: modflow6
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          pip uninstall -y vtk
-          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+          pixi run pip uninstall vtk
+          pixi run pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
 
       - name: Install fonts on Linux
         if: runner.os == 'Linux'
@@ -142,14 +136,14 @@ jobs:
       - name: Build MODFLOW 6
         working-directory: modflow6
         run: |
-          meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
-          meson install -C builddir
-          meson test --verbose --no-rebuild -C builddir
+          pixi run meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+          pixi run meson install -C builddir
+          pixi run meson test --verbose --no-rebuild -C builddir
           echo "$(pwd)/bin" >> $GITHUB_PATH
 
       - name: Run tutorial and example notebooks
         working-directory: flopy/autotest
-        run: pytest -v -n auto test_example_notebooks.py
+        run: pixi run --manifest-path=../../modflow6/pixi.toml pytest -v -n auto test_example_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: |
