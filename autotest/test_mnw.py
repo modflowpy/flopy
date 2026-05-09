@@ -547,19 +547,19 @@ mnw1 104 test_add_write.mnw"""  # noqa: E501
 def test_mnw1_stress_period_no_wells(function_tmpdir):
     """Test MNW1 loading with stress periods that have no wells (itmp <= 0)"""
     # This tests the fix for handling empty stress periods in the load routine
-    mnw1_str = """       120       -90       0     REFERENCE SP = 1
-Well model will use SKIN
+    mnw1_str = """       984         2         0     10000    !! Item 1: MXMNW IWL2CB IWELPT
+SKIN                                        !! Item 2: LOSSTYPE
 #
-        1                                                 Initial well
-        1         1         1      0      100    0.5        1        SITE:Well-A
+        1           # Item 4, SP  1
+#    lay        row       col       Q         rw  Skin     Hlim   Href   QWZN
+       1          1         1   -10.0        0.5   2.0      0.5   1.e9      0  SITE:Well-A
 # stress period 2 has no wells (itmp=0) - should be handled without error
-        0
+        0           # Item 4, SP  2
+        1           # Item 4, SP  3
 #                                Multi-node switch    Switch to specify Hlim         Auxiliary
 #                                         |           as difference from Href        definitions
-#    lay        row       col       Q         rw  Skin   Hlim   Href   QWZN
-        1
-        1         1         1  -100.0     100    0.5     1   DD 50   1.e16   1         SITE:Well-A
-        0
+#    lay        row       col       Q         rw  Skin      Hlim   Href   QWZN
+       1          1         1  -100.0        0.5    1.0   DD  50  1.e16      1 SITE:Well-A
 """  # noqa: E501
     ws = function_tmpdir
     fpth = ws / "test_no_wells.mnw"
@@ -573,6 +573,7 @@ constant 1
 constant 1
 constant  0 top of model
 constant -1 bottom of layer 1
+ 1.  1 1. Tr
  1.  1 1. Tr
  1.  1 1. Tr
  1.  1 1. Tr
