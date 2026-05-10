@@ -441,3 +441,181 @@ def test_checks(mnw2_examples_path):
     assert "MNWI package present without MNW2 package." in ".".join(
         chk.summary_array.desc
     )
+
+
+def test_mnw1_add_flag(function_tmpdir):
+    """Test MNW1 ADD flag parsing and writing"""
+    mnw1_str = """       120       -90       0     REFERENCE SP = 2
+Well model will use SKIN
+#
+        2                                                 SP 1
+        1         1         1      0      100    0.5        1        SITE:Well-A
+        1         2         2      0      200    0.5        1
+#                                Multi-node switch    Switch to specify Hlim         Auxiliary
+        2 ADD
+        1         1         1  -100.0     100    0.5     1   DD 50   1.e16   1         SITE:Well-A
+        1         2         2  -200.0     200    0.5     1   DD 50   1.e16   1
+#
+        1
+        1         1         1  -100.0     100    0.5     1   DD 50   1.e16   1         SITE:Well-A
+#
+        1
+        1         1         1  -100.0     100    0.5     1   DD 50   1.e16   1         SITE:Well-A
+"""  # noqa: E501
+    ws = function_tmpdir
+    fpth = ws / "test_add.mnw"
+    with open(fpth, "w") as f:
+        f.write(mnw1_str)
+
+    # Create minimal model files
+    disstr = """1 1 1 3 1 1
+ 0 0 0
+constant 1
+constant 1
+constant  0 top of model
+constant -1 bottom of layer 1
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+"""  # noqa: E501
+    dis_path = ws / "test_add.dis"
+    with open(dis_path, "w") as f:
+        f.write(disstr)
+
+    basstr = """         0         0     1     1     1     1     0     0
+     1     1     1
+        0.
+"""  # noqa: E501
+    bas_path = ws / "test_add.bas"
+    with open(bas_path, "w") as f:
+        f.write(basstr)
+
+    namstr = """lst  101 test_add.lst
+dis  102 test_add.dis
+bas6 103 test_add.bas
+mnw1 104 test_add.mnw"""  # noqa: E501
+    nam_path = ws / "test_add.nam"
+    with open(nam_path, "w") as f:
+        f.write(namstr)
+
+    # Load and test ADD flag parsing
+    m = Modflow.load(
+        "test_add.nam",
+        model_ws=ws,
+        load_only=["mnw1"],
+        verbose=True,
+        forgive=False,
+    )
+
+    # Verify add parameter was loaded correctly
+    assert hasattr(m.mnw1, "add"), "MNW1 package missing 'add' attribute"
+    assert len(m.mnw1.add) == 3, (
+        f"Expected 3 stress periods in add, got {len(m.mnw1.add)}"
+    )
+    assert m.mnw1.add[0] is False, "SP 1: add should be False"
+    assert m.mnw1.add[1] is True, "SP 2: add should be True"
+    assert m.mnw1.add[2] is False, "SP 3: add should be False"
+
+    # Write to new file and verify round-trip
+    m.mnw1.fn_path = ws / "test_add_write.mnw"
+    m.mnw1.write_file()
+
+    # Create a new name file pointing to the written MNW file
+    namstr_write = """lst  101 test_add_write.lst
+dis  102 test_add.dis
+bas6 103 test_add.bas
+mnw1 104 test_add_write.mnw"""  # noqa: E501
+    with open(ws / "test_add_write.nam", "w") as f:
+        f.write(namstr_write)
+
+    # Reload the model with the written MNW file
+    m2 = Modflow.load(
+        "test_add_write.nam",
+        model_ws=ws,
+        load_only=["mnw1"],
+        verbose=False,
+        forgive=False,
+    )
+
+    # Verify add flag was preserved after write and reload
+    assert hasattr(m2.mnw1, "add"), "Reloaded MNW1 package missing 'add' attribute"
+    assert m2.mnw1.add[0] is False, "Reloaded SP 1: add should be False"
+    assert m2.mnw1.add[1] is True, "Reloaded SP 2: add should be True"
+    assert m2.mnw1.add[2] is False, "Reloaded SP 3: add should be False"
+
+
+def test_mnw1_stress_period_no_wells(function_tmpdir):
+    """Test MNW1 loading with stress periods that have no wells (itmp <= 0)"""
+    # This tests the fix for handling empty stress periods in the load routine
+    mnw1_str = """       984         2         0     10000    !! Item 1: MXMNW IWL2CB IWELPT
+SKIN                                        !! Item 2: LOSSTYPE
+#
+        1           # Item 4, SP  1
+#    lay        row       col       Q         rw  Skin     Hlim   Href   QWZN
+       1          1         1   -10.0        0.5   2.0      0.5   1.e9      0  SITE:Well-A
+# stress period 2 has no wells (itmp=0) - should be handled without error
+        0           # Item 4, SP  2
+        1           # Item 4, SP  3
+#                                Multi-node switch    Switch to specify Hlim         Auxiliary
+#                                         |           as difference from Href        definitions
+#    lay        row       col       Q         rw  Skin      Hlim   Href   QWZN
+       1          1         1  -100.0        0.5    1.0   DD  50  1.e16      1 SITE:Well-A
+"""  # noqa: E501
+    ws = function_tmpdir
+    fpth = ws / "test_no_wells.mnw"
+    with open(fpth, "w") as f:
+        f.write(mnw1_str)
+
+    # Create minimal model files with only 2 stress periods (to match the MNW file)
+    disstr = """1 1 1 3 1 1
+ 0 0 0
+constant 1
+constant 1
+constant  0 top of model
+constant -1 bottom of layer 1
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+ 1.  1 1. Tr
+"""  # noqa: E501
+    dis_path = ws / "test_no_wells.dis"
+    with open(dis_path, "w") as f:
+        f.write(disstr)
+
+    basstr = """         0         0     1     1     1     1     0     0
+     1     1     1
+        0.
+"""  # noqa: E501
+    bas_path = ws / "test_no_wells.bas"
+    with open(bas_path, "w") as f:
+        f.write(basstr)
+
+    namstr = """lst  101 test_no_wells.lst
+dis  102 test_no_wells.dis
+bas6 103 test_no_wells.bas
+mnw1 104 test_no_wells.mnw"""  # noqa: E501
+    nam_path = ws / "test_no_wells.nam"
+    with open(nam_path, "w") as f:
+        f.write(namstr)
+
+    # Load the file - should not fail when SP 2 has no wells (itmp=0)
+    m = Modflow.load(
+        "test_no_wells.nam",
+        model_ws=ws,
+        load_only=["mnw1"],
+        verbose=False,
+        forgive=False,
+    )
+
+    # Verify the package loaded successfully
+    assert m.mnw1 is not None, "MNW1 package failed to load"
+    assert m.mnw1.stress_period_data is not None, "stress_period_data is None"
+
+    # Verify SP 1 has wells
+    assert len(m.mnw1.stress_period_data[0]) >= 1, "SP 1 should have wells"
+
+    # Verify SP 2 has no wells
+    assert len(m.mnw1.stress_period_data[1]) == 0, "SP 2 should have no wells"
+
+    # Verify SP 3 has wells
+    assert len(m.mnw1.stress_period_data[2]) >= 1, "SP 3 should have wells"

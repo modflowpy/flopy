@@ -697,6 +697,7 @@ class MfList(DataInterface, DataListInterface):
         forceInternal=False,
         write_header=True,
         cln_data=None,
+        additional_data=None,
     ):
         # forceInternal overrides isExternal (set below) for cases where
         # external arrays are not supported (oh hello MNW1!)
@@ -744,8 +745,13 @@ class MfList(DataInterface, DataListInterface):
                 kper_vtype = int
 
             if write_header:
-                if cln_data is None:
+                if cln_data is None and additional_data is None:
                     f.write(f" {itmp:9d} {0:9d} # stress period {kper + 1}\n")
+                elif additional_data is not None:
+                    f.write(
+                        f" {itmp:9d} {additional_data[kper]} "
+                        + f"# stress period {kper + 1}\n"
+                    )
                 elif cln_data.get_itmp(kper) is None:
                     f.write(f" {itmp:9d} {0:9d} # stress period {kper + 1}\n")
                 else:
