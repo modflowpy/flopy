@@ -98,10 +98,6 @@ jobs:
           pixi run -e rtd install
           pixi run -e rtd pip install "../flopy[optional,test]"
 
-      - name: Install pymetis (Windows)
-        working-directory: modflow6
-        run: pixi add pymetis
-
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
         working-directory: modflow6
