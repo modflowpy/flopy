@@ -30,6 +30,7 @@ from .formattedfile import FormattedHeadFile
 
 get_modflow = get_modflow_module.run_main
 from .gridintersect import GridIntersect
+from .hfb_util import make_hfb_array
 from .mflistfile import (
     Mf6ListBudget,
     MfListBudget,
