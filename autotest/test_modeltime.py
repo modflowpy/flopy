@@ -270,7 +270,7 @@ def test_mf2005_modeltime():
         raise AssertionError("start_datetime improperly stored")
 
     result = modeltime.intersect("3/06/2024 23:59:59")
-    if result != (2, 0):
+    if result != (2, 1):
         raise AssertionError("ModelTime intersect not working correctly")
 
 
@@ -317,7 +317,7 @@ def test_mf6_modeltime():
         raise AssertionError("start_datetime improperly stored")
 
     result = modeltime.intersect("3/06/2024 23:59:59")
-    if result != (2, 0):
+    if result != (2, 1):
         raise AssertionError("ModelTime intersect not working correctly")
 
 

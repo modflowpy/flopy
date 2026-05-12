@@ -232,7 +232,6 @@ def make_hfb_array(modelgrid, geom):
     for record in result:
         node = record.cellid
         ixshp = record.ixshapes
-        # todo: numpy array this and Transpose
         coords = np.array(ixshp.coords.xy).T
         x0, y0 = coords[0, 0], coords[0, 1]
         x1, y1 = coords[-1, 0], coords[-1, 1]
