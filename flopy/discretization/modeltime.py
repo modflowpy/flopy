@@ -618,15 +618,14 @@ class ModelTime:
                     "objects, set time units or use totim for intersection"
                 )
 
-            elif self.time_units == "days":
-                totim = timedelta.days
-
-            elif self.time_units in {"hours", "minutes", "seconds"}:
+            elif self.time_units in {"days", "hours", "minutes", "seconds"}:
                 totim = timedelta.total_seconds()
                 if self.time_units == "minutes":
                     totim /= 60
                 elif self.time_units == "hours":
                     totim /= 3600
+                elif self.time_units == "days":
+                    totim /= 86400.
 
             else:
                 # years condition
@@ -647,7 +646,7 @@ class ModelTime:
                 )
 
                 timedelta = datetime_obj - dt_iyear
-                days = timedelta.days
+                days = timedelta.total_seconds() / 86400.
                 yr_frac = days / ndays
                 totim += yr_frac
 
