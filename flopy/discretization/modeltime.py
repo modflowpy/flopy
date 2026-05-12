@@ -625,7 +625,7 @@ class ModelTime:
                 elif self.time_units == "hours":
                     totim /= 3600
                 elif self.time_units == "days":
-                    totim /= 86400.
+                    totim /= 86400.0
 
             else:
                 # years condition
@@ -646,7 +646,7 @@ class ModelTime:
                 )
 
                 timedelta = datetime_obj - dt_iyear
-                days = timedelta.total_seconds() / 86400.
+                days = timedelta.total_seconds() / 86400.0
                 yr_frac = days / ndays
                 totim += yr_frac
 
