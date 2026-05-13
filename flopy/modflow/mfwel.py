@@ -163,6 +163,7 @@ class ModflowWel(Package):
         self.url = "wel.html"
         self.np = 0
 
+        tabfiles = False
         if options is None:
             options = []
         self.specify = False
@@ -178,6 +179,9 @@ class ModflowWel(Package):
             self.phiramp = self.options.phiramp
             self.iunitramp = self.options.iunitramp
             # this is to grab the aux variables...
+            if self.options.tabfiles:
+                tabfiles = True
+
             options = []
 
         else:
@@ -196,7 +200,9 @@ class ModflowWel(Package):
             self.dtype = self.get_default_dtype(structured=self.parent.structured)
 
         # determine if any aux variables in dtype
-        dt = self.get_default_dtype(structured=self.parent.structured)
+        dt = self.get_default_dtype(
+            structured=self.parent.structured, tabfiles=tabfiles
+        )
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
                 ladd = True
