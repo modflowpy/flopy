@@ -295,24 +295,44 @@ class ModflowWel(Package):
             raise Exception(f"mfwel error adding record to list: {e!s}")
 
     @staticmethod
-    def get_default_dtype(structured=True):
-        if structured:
-            dtype = np.dtype(
-                [
-                    ("k", int),
-                    ("i", int),
-                    ("j", int),
-                    ("flux", np.float32),
-                ]
-            )
+    def get_default_dtype(structured=True, tabfiles=False):
+        if not tabfiles:
+            if structured:
+                dtype = np.dtype(
+                    [
+                        ("k", int),
+                        ("i", int),
+                        ("j", int),
+                        ("flux", np.float32),
+                    ]
+                )
+            else:
+                dtype = np.dtype([("node", int), ("flux", np.float32)])
         else:
-            dtype = np.dtype([("node", int), ("flux", np.float32)])
+            if structured:
+                dtype = np.dtype(
+                    [
+                        ("tabunit", int),
+                        ("tabval", int),
+                        ("k", int),
+                        ("i", int),
+                        ("j", int)
+                    ]
+                )
+            else:
+                dtype = np.dtype(
+                    [
+                        ("tabunit", int),
+                        ("tabval", int),
+                        ("node", int)
+                    ]
+                )
         return dtype
 
     @staticmethod
-    def get_empty(ncells=0, aux_names=None, structured=True):
+    def get_empty(ncells=0, aux_names=None, structured=True, tabfiles=False):
         # get an empty recarray that corresponds to dtype
-        dtype = ModflowWel.get_default_dtype(structured=structured)
+        dtype = ModflowWel.get_default_dtype(structured=structured, tabfiles=tabfiles)
         if aux_names is not None:
             dtype = Package.add_to_dtype(dtype, aux_names, np.float32)
         return create_empty_recarray(ncells, dtype, default_value=-1.0e10)

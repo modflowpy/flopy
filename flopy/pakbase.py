@@ -961,6 +961,8 @@ class Package(PackageInterface):
             nwt_options = OptionBlock.load_options(f, pak_type)
             line = f.readline()
 
+        nwt_tabfiles = False
+
         # check for parameters
         nppak = 0
         if "parameter" in line.lower():
@@ -1062,6 +1064,11 @@ class Package(PackageInterface):
                     options = nwt_options
                 else:
                     f.seek(ipos)
+
+                if options:
+                    if options.tabfiles is not None:
+                        nwt_tabfiles = True
+
         elif "flopy.modflow.mfchd.modflowchd".lower() in pak_type_str:
             partype = ["shead", "ehead"]
 
@@ -1085,6 +1092,12 @@ class Package(PackageInterface):
         bnd_output_cln = None
         stress_period_data_cln = {}
         current_cln = None
+
+        if nwt_tabfiles:
+            # pass tabfile flag using the existing usg_args dict, change nper to 1
+            nper = 1
+            usg_args["tabfiles"] = True
+
         for iper in range(nper):
             if model.verbose:
                 msg = f"   loading {pak_type} for kper {iper + 1:5d}"
