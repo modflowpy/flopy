@@ -316,17 +316,11 @@ class ModflowWel(Package):
                         ("tabval", int),
                         ("k", int),
                         ("i", int),
-                        ("j", int)
+                        ("j", int),
                     ]
                 )
             else:
-                dtype = np.dtype(
-                    [
-                        ("tabunit", int),
-                        ("tabval", int),
-                        ("node", int)
-                    ]
-                )
+                dtype = np.dtype([("tabunit", int), ("tabval", int), ("node", int)])
         return dtype
 
     @staticmethod
