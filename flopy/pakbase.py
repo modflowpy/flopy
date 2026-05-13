@@ -1096,6 +1096,7 @@ class Package(PackageInterface):
         if nwt_tabfiles:
             # pass tabfile flag using the existing usg_args dict, change nper to 1
             nper = 1
+            sfac_columns = []
             usg_args["tabfiles"] = True
 
         for iper in range(nper):
