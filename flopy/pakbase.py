@@ -1066,7 +1066,7 @@ class Package(PackageInterface):
                     f.seek(ipos)
 
                 if options:
-                    if options.tabfiles is not None:
+                    if options.tabfiles:
                         nwt_tabfiles = True
 
         elif "flopy.modflow.mfchd.modflowchd".lower() in pak_type_str:
