@@ -1065,7 +1065,7 @@ class Package(PackageInterface):
                 else:
                     f.seek(ipos)
 
-                if options:
+                if isinstance(options, OptionBlock):
                     if options.tabfiles:
                         nwt_tabfiles = True
 
