@@ -1,8 +1,8 @@
 import os
-from platform import system
 import re
 import warnings
 from contextlib import nullcontext
+from platform import system
 from warnings import warn
 
 import matplotlib
