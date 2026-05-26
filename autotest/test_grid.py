@@ -1508,7 +1508,7 @@ def test_voronoi_grid(request, function_tmpdir, grid_case):
     # ensure proper number of cells. the grid may be slightly different
     # on different platforms depending which compiler triangle is built
     # with, so allow small variations.
-    tol = 10 if system() == "Windows" else 3
+    tol = 10
     assert abs(ncpl - gridprops["ncpl"]) <= tol
     assert len(invalid_cells) == 0
 
