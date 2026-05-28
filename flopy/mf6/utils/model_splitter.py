@@ -1694,7 +1694,6 @@ class Mf6Splitter:
             perioddata = package.perioddata.data
 
         for mkey in self._model_dict.keys():
-            flow_package_const = flow_package_name.split(".")
             new_packagedata = self._remap_adv_tag(
                 mkey, packagedata, item, pkg_remap
             )
@@ -1708,8 +1707,7 @@ class Mf6Splitter:
                 )
                 spd[per] = new_recarray
 
-            flow_package_const[-2] += f"_{mkey :0{self._fdigits}d}"
-            new_flow_package_name = ".".join(flow_package_const)
+            new_flow_package_name = flow_package_name
             mapped_data[mkey]["packagedata"] = new_packagedata
             mapped_data[mkey][key] = spd
             mapped_data[mkey]["flow_package_name"] = new_flow_package_name
@@ -2052,7 +2050,7 @@ class Mf6Splitter:
             connectiondata = package.connectiondata.array
             diversions = package.diversions.array
             perioddata = package.perioddata.data
-            name = package.filename
+            name = package.name[0]
             self._sfr_remaps[name] = {}
             sfr_remaps = {}
             div_mvr_conn = {}
