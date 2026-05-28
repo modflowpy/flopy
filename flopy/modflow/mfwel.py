@@ -199,6 +199,9 @@ class ModflowWel(Package):
         dt = self.get_default_dtype(structured=self.parent.structured)
         if len(self.dtype.names) > len(dt.names):
             for name in self.dtype.names[len(dt.names) :]:
+                # Skip comment columns (object dtype) — not AUX variables
+                if self.dtype.fields[name][0] == object:
+                    continue
                 ladd = True
                 for option in options:
                     if name.lower() in option.lower():
