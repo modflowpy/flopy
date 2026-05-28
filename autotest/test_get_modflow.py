@@ -52,7 +52,7 @@ repo_options = {
         "triangle",
         "vs2dt",
         "zbud6",
-        "zonbud3",
+        "zonbud",
         "zonbudusg",
         "libmf6",
     ],
