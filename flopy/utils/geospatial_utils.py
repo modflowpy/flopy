@@ -210,7 +210,16 @@ class GeoSpatialUtil:
         """
         if self.__shapefile is not None:
             if self._shape is None:
-                self._shape = self.__shapefile.Shape._from_geojson(self.__geo_interface)
+                geo_iface = self.__geo_interface
+                # pyshp >= 3.0.11 requires list (not tuple) for Point coordinates
+                if geo_iface.get("type") == "Point" and isinstance(
+                    geo_iface.get("coordinates"), tuple
+                ):
+                    geo_iface = {
+                        **geo_iface,
+                        "coordinates": list(geo_iface["coordinates"]),
+                    }
+                self._shape = self.__shapefile.Shape._from_geojson(geo_iface)
             return self._shape
 
     @property
