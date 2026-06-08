@@ -58,8 +58,8 @@ from flopy.mf6.coordinates.modeldimensions import (
     PackageDimensions,
 )
 from flopy.mf6.data.mffileaccess import MFFileAccessArray
-from flopy.mf6.mfbase import MFDataException
 from flopy.mf6.data.mfstructure import MFDataItemStructure, MFDataStructure
+from flopy.mf6.mfbase import MFDataException
 from flopy.mf6.mfsimbase import MFSimulationData
 from flopy.mf6.modflow import (
     mfgwf,
