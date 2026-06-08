@@ -4,6 +4,7 @@ from pathlib import Path
 from shutil import copytree, which
 
 import numpy as np
+import pandas as pd
 import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import set_dir
@@ -58,6 +59,7 @@ from flopy.mf6.coordinates.modeldimensions import (
 )
 from flopy.mf6.data.mffileaccess import MFFileAccessArray
 from flopy.mf6.data.mfstructure import MFDataItemStructure, MFDataStructure
+from flopy.mf6.mfbase import MFDataException
 from flopy.mf6.mfsimbase import MFSimulationData
 from flopy.mf6.modflow import (
     mfgwf,
@@ -1448,6 +1450,28 @@ def test_get_set_data_record(function_tmpdir):
     assert spd_record[0]["data"][0][0] == (0, 0, 7)
 
     sim.write_simulation()
+
+
+def test_set_data_dataframe_column_mismatch_error(function_tmpdir):
+    """
+    DataFrame with a wrong column count should raise MFDataException.
+    Previously the error message code referenced len(data[0]), which on a
+    DataFrame accesses the column named 0 and raises KeyError instead.
+    """
+    sim = MFSimulation(sim_ws=str(function_tmpdir), exe_name="mf6")
+    ModflowTdis(sim, nper=1, perioddata=[(1.0, 1, 1.0)])
+    ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname="gwf")
+    ModflowGwfdis(gwf, nlay=1, nrow=10, ncol=10)
+    ModflowGwfic(gwf, strt=0.0)
+    ModflowGwfnpf(gwf)
+    ModflowGwfwel(gwf, stress_period_data={0: [[(0, 0, 0), -1.0]]})
+    spd = gwf.get_package("WEL").stress_period_data
+
+    # 3 columns: matches neither _header_names (4) nor _data_item_names (2)
+    df = pd.DataFrame({"a": [0], "b": [3], "c": [-500.0]})
+    with pytest.raises(MFDataException):
+        spd.set_data({0: df})
 
 
 @requires_exe("mf6")
