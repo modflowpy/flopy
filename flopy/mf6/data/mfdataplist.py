@@ -757,7 +757,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 message = (
                     f"ERROR: Data list {self._data_name} supplied the "
                     f"wrong number of columns of data, expected "
-                    f"{len(self._data_item_names)} got {len(data[0])}.\n"
+                    f"{len(self._data_item_names)} got {len(data.columns)}.\n"
                     f"Data columns supplied: {data.columns}\n"
                     f"Data columns expected: {self._header_names}"
                 )
