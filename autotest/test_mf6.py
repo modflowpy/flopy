@@ -1475,7 +1475,7 @@ def test_set_data_dataframe_column_mismatch_error(function_tmpdir):
 
 
 def test_set_data_dataframe_tupled_cellid(function_tmpdir):
-    """DataFrame with a single tupled 'cellid' column is accepted, consistent with recarrays."""
+    """DataFrame with a tuple 'cellid' is accepted, consistent with recarrays."""
     sim = MFSimulation(sim_ws=str(function_tmpdir), exe_name="mf6")
     ModflowTdis(sim, nper=1, perioddata=[(1.0, 1, 1.0)])
     ModflowIms(sim)
