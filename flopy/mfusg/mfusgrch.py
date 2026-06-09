@@ -173,7 +173,7 @@ class MfUsgRch(ModflowRch):
         if self.iconc:
             f_rch.write(" CONC")
         if self.mxrtzones:
-            f_rch.write(f" RTS {self.mxrtzones:4.0d}")
+            f_rch.write(f" RTS {self.mxrtzones:4d}")
         f_rch.write("\n")
 
         mcomp = self.parent.mcomp
