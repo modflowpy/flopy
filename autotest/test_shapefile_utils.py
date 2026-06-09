@@ -66,8 +66,7 @@ def test_model_attributes_to_shapefile_modelgrid_kwarg(function_tmpdir):
     crs = 26916
 
     # Model without a DIS package: modelgrid is a bare Grid with no geometry.
-    # Without the fix, this reproduces the reported error:
-    #   TypeError: Grid.to_geodataframe() missing 1 required positional argument: 'features'
+    # Without the fix, this reproduces the reported TypeError.
     sim = flopy.mf6.MFSimulation(sim_name="test", sim_ws=str(function_tmpdir))
     gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
     mg = StructuredGrid(delr=delr, delc=delc, nlay=1, crs=crs)
