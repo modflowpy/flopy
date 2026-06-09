@@ -3484,7 +3484,7 @@ class Mf6Splitter:
                     pass
 
             if hasattr(package, "obs"):
-                obs_map = {"cellid": self._node_map}
+                obs_map = {"cellid": dict(self._node_map)}
                 for mkey, mdict in mapped_data.items():
                     if "stress_period_data" in mdict:
                         for _, ra in mdict["stress_period_data"].items():
