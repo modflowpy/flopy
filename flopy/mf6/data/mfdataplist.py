@@ -753,7 +753,16 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 # make sure columns are still in correct order
                 data = pandas.DataFrame(data, columns=self._header_names)
         elif isinstance(data, pandas.DataFrame):
-            if len(data.columns) != len(self._header_names):
+            if len(data.columns) == len(self._data_item_names) and len(
+                self._data_item_names
+            ) != len(self._header_names):
+                # data supplied with cellids as tuples (data_item_names format),
+                # consistent with how recarrays are handled above
+                if list(data.columns) != self._data_item_names:
+                    data = data.set_axis(self._data_item_names, axis=1)
+                data = self._untuple_cellids(data)[0]
+                data = pandas.DataFrame(data, columns=self._header_names)
+            elif len(data.columns) != len(self._header_names):
                 message = (
                     f"ERROR: Data list {self._data_name} supplied the "
                     f"wrong number of columns of data, expected "
@@ -775,8 +784,9 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                     message,
                     self._simulation_data.debug,
                 )
-            # set correct data header names
-            data = data.set_axis(self._header_names, axis=1)
+            else:
+                # set correct data header names
+                data = data.set_axis(self._header_names, axis=1)
         else:
             message = (
                 f"ERROR: Data list {self._data_name} is an unsupported type: "

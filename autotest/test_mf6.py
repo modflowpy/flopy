@@ -1474,6 +1474,27 @@ def test_set_data_dataframe_column_mismatch_error(function_tmpdir):
         spd.set_data({0: df})
 
 
+def test_set_data_dataframe_tupled_cellid(function_tmpdir):
+    """DataFrame with a single tupled 'cellid' column is accepted, consistent with recarrays."""
+    sim = MFSimulation(sim_ws=str(function_tmpdir), exe_name="mf6")
+    ModflowTdis(sim, nper=1, perioddata=[(1.0, 1, 1.0)])
+    ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname="gwf")
+    ModflowGwfdis(gwf, nlay=1, nrow=10, ncol=10)
+    ModflowGwfic(gwf, strt=0.0)
+    ModflowGwfnpf(gwf)
+    ModflowGwfwel(gwf, stress_period_data={0: [[(0, 0, 0), -1.0]]})
+    spd = gwf.get_package("WEL").stress_period_data
+
+    df = pd.DataFrame({"cellid": [(0, 3, 4)], "q": [-500.0]})
+    spd.set_data({0: df})
+    result = spd.get_data(key=0)
+    assert result is not None
+    assert len(result) == 1
+    assert result[0]["cellid"] == (0, 3, 4)
+    assert result[0]["q"] == pytest.approx(-500.0)
+
+
 @requires_exe("mf6")
 def test_output(function_tmpdir, example_data_path):
     ex_name = "test001e_UZF_3lay"
