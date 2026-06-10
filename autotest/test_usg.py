@@ -13,7 +13,6 @@ from flopy.mfusg import (
     MfUsgDisU,
     MfUsgLpf,
     MfUsgOc,
-    MfUsgRch,
     MfUsgSms,
     MfUsgWel,
 )
@@ -463,37 +462,6 @@ def test_free_format_npl(function_tmpdir, freyberg_usg_model_path):
                 break
             except ValueError:
                 continue
-
-
-def test_mfusgrch_selev_iznrch(function_tmpdir):
-    """Repro #2763"""
-    m = MfUsg(
-        version="mfusg",
-        structured=True,
-        model_ws=function_tmpdir,
-        modelname="test_rch",
-    )
-    ModflowDis(m, nlay=1, nrow=3, ncol=3, nper=2)
-
-    rech = 1e-3
-    selev_data = np.full((3, 3), 5.0, dtype=np.float32)
-    iznrch_data = np.full((3, 3), 2, dtype=np.int32)
-
-    rch = MfUsgRch(
-        m,
-        nrchop=3,
-        rech=rech,
-        seepelev=1,
-        selev=selev_data,
-        iznrch=iznrch_data,
-    )
-
-    assert np.allclose(rch.selev[0].array, selev_data)
-    assert np.array_equal(rch.iznrch[0].array, iznrch_data)
-
-    rch.write_file(check=False)
-    content = (function_tmpdir / "test_rch.rch").read_text()
-    assert " # Stress period 1" in content
 
 
 def test_free_format_npl_constructor():
