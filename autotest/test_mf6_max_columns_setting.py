@@ -164,6 +164,73 @@ def test_max_columns_internal_array(function_tmpdir):
     check_columns(expected=1)
 
 
+def test_auto_set_ncol_before_set_all_data_external(function_tmpdir):
+    """
+    Auto-set to ncol before set_all_data_external(), not just write_simulation().
+    Repro https://github.com/modflowpy/flopy/issues/2572#issuecomment-3164881948
+    """
+    ncol = 25
+    sim_ws = function_tmpdir / "test_auto_set_ncol"
+    sim_ws.mkdir(exist_ok=True)
+
+    sim = flopy.mf6.MFSimulation(sim_name="test_sim", sim_ws=sim_ws)
+    flopy.mf6.ModflowTdis(sim, time_units="DAYS", nper=1, perioddata=[(1.0, 1, 1.0)])
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="model", model_nam_file="model.nam")
+    flopy.mf6.ModflowGwfdis(
+        gwf, nlay=1, nrow=2, ncol=ncol, delr=100.0, delc=100.0, top=100.0, botm=0.0
+    )
+    flopy.mf6.ModflowGwfic(
+        gwf, strt=np.arange(2 * ncol).reshape(1, 2, ncol).astype(float)
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, save_flows=True, icelltype=0, k=1.0)
+    ims = flopy.mf6.ModflowIms(sim)
+    sim.register_ims_package(ims, [gwf.name])
+
+    sim.set_all_data_external()
+    assert sim.simulation_data.max_columns_of_data == ncol
+    sim.write_simulation(silent=True)
+
+    strt_file = sim_ws / "model.ic_strt.txt"
+    assert strt_file.exists()
+    data_lines = [
+        line.strip()
+        for line in strt_file.read_text().splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    for line in data_lines:
+        assert len(line.split()) == ncol
+
+    # also test the model-level entry point
+    sim2_ws = function_tmpdir / "test_auto_set_ncol_model"
+    sim2_ws.mkdir(exist_ok=True)
+    sim2 = flopy.mf6.MFSimulation(sim_name="test_sim2", sim_ws=sim2_ws)
+    flopy.mf6.ModflowTdis(sim2, time_units="DAYS", nper=1, perioddata=[(1.0, 1, 1.0)])
+    gwf2 = flopy.mf6.ModflowGwf(sim2, modelname="model", model_nam_file="model.nam")
+    flopy.mf6.ModflowGwfdis(
+        gwf2, nlay=1, nrow=2, ncol=ncol, delr=100.0, delc=100.0, top=100.0, botm=0.0
+    )
+    flopy.mf6.ModflowGwfic(
+        gwf2, strt=np.arange(2 * ncol).reshape(1, 2, ncol).astype(float)
+    )
+    flopy.mf6.ModflowGwfnpf(gwf2, save_flows=True, icelltype=0, k=1.0)
+    ims2 = flopy.mf6.ModflowIms(sim2)
+    sim2.register_ims_package(ims2, [gwf2.name])
+
+    gwf2.set_all_data_external()
+    assert sim2.simulation_data.max_columns_of_data == ncol
+    sim2.write_simulation(silent=True)
+
+    strt_file2 = sim2_ws / "model.ic_strt.txt"
+    assert strt_file2.exists()
+    data_lines2 = [
+        line.strip()
+        for line in strt_file2.read_text().splitlines()
+        if line.strip() and not line.strip().startswith("#")
+    ]
+    for line in data_lines2:
+        assert len(line.split()) == ncol
+
+
 reason_ext = (
     "set_all_data_external() writes files immediately. Changing output settings"
     "afterward has no effect unless set_all_data_external() is called again. "
