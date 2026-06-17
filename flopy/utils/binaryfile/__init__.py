@@ -2427,7 +2427,7 @@ class CellBudgetFile:
 
         try:
             self._build_index()
-        except (BudgetIndexError, EOFError) as e:
+        except (BudgetIndexError, EOFError, OSError) as e:
             success = False
             self.__reset()
 
