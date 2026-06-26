@@ -1217,7 +1217,7 @@ class MFFileAccessList(MFFileAccess):
                 (f"{data_item.name}_cell", np.int32),
             ]
         else:
-            return [(f"{data_item.name}_nodes", np.int32)]
+            return [(f"{data_item.name}_node", np.int32)]
 
     def load_from_package(
         self, first_line, file_handle, storage, pre_data_comments=None
