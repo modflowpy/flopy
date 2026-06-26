@@ -551,21 +551,15 @@ def test_write_grb_disv_v1_upgrade_to_v2(tmp_path, mfgrd_test_path):
     np.testing.assert_allclose(
         grb_new._datadict["VERTICES"], grb_orig._datadict["VERTICES"]
     )
-    np.testing.assert_allclose(
-        grb_new._datadict["CELLX"], grb_orig._datadict["CELLX"]
-    )
-    np.testing.assert_allclose(
-        grb_new._datadict["CELLY"], grb_orig._datadict["CELLY"]
-    )
+    np.testing.assert_allclose(grb_new._datadict["CELLX"], grb_orig._datadict["CELLX"])
+    np.testing.assert_allclose(grb_new._datadict["CELLY"], grb_orig._datadict["CELLY"])
 
 
 def test_write_grb_disv_v2_roundtrip(tmp_path, mfgrd_test_path):
     """Round-trip a v2 DISV GRB: version and CRS are preserved."""
     # First create a v2 DISV file by upgrading the v1 source
     v2_file = tmp_path / "flow_v2.disv.grb"
-    MfGrdFile(mfgrd_test_path / "flow.disv.grb").export(
-        v2_file, crs="EPSG:26916"
-    )
+    MfGrdFile(mfgrd_test_path / "flow.disv.grb").export(v2_file, crs="EPSG:26916")
 
     grb_orig = MfGrdFile(v2_file, verbose=False)
     assert grb_orig.version == 2

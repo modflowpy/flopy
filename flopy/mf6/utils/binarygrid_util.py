@@ -189,10 +189,7 @@ class MfGrdFile(FlopyBinaryData):
             self._datadict[key] = v
 
             if self.verbose:
-                if (
-                    nd == 0 or
-                    dt == str
-                ):
+                if nd == 0 or dt == str:
                     print(f"  {key} = {v}")
                 else:
                     print(f"  {key}: min = {v.min()} max = {v.max()}")
@@ -902,9 +899,7 @@ class MfGrdFile(FlopyBinaryData):
             # position (nchar-1).  This matches what MF6 writes and is required
             # for Fortran readers that parse these as fixed-length text records.
             def write_line(text, nchar):
-                writer.file.write(
-                    text.encode("ascii").ljust(nchar - 1) + b"\n"
-                )
+                writer.file.write(text.encode("ascii").ljust(nchar - 1) + b"\n")
 
             header_len = 50
             write_line(f"GRID {self.grid_type}", header_len)
@@ -926,7 +921,9 @@ class MfGrdFile(FlopyBinaryData):
             # Write binary data for each variable
             for name, dtype_str, ndim, dims in var_list:
                 if name not in data_dict:
-                    raise ValueError(f"Required variable '{name}' not found in grid file")
+                    raise ValueError(
+                        f"Required variable '{name}' not found in grid file"
+                    )
 
                 value = data_dict[name]
 
