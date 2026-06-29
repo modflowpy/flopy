@@ -2894,6 +2894,7 @@ class CellBudgetFile:
         paknam=None,
         paknam2=None,
         full3D=False,
+        variable="q",
     ) -> Union[list, np.ndarray]:
         """
         Get data from the binary budget file.
@@ -2922,6 +2923,10 @@ class CellBudgetFile:
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records written as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
+        variable : str
+            The variable name to extract when full3D is True and the record
+            contains auxiliary variables (e.g. 'sat' for 'DATA-SAT' records,
+            or 'qx'/'qy'/'qz' for 'DATA-SPDIS' records).  Default is 'q'.
 
         Returns
         -------
@@ -3000,7 +3005,7 @@ class CellBudgetFile:
                 "'idx', or 'text'"
             )
         return [
-            self.get_record(idx, full3D=full3D)
+            self.get_record(idx, full3D=full3D, variable=variable)
             for idx, t in enumerate(select_indices)
             if t
         ]
@@ -3298,7 +3303,7 @@ class CellBudgetFile:
         nodes_0based = self.modelgrid.get_node(cellids)
         return (np.array(nodes_0based) + 1).tolist()
 
-    def get_record(self, idx, full3D=False):
+    def get_record(self, idx, full3D=False, variable="q"):
         """
         Get a single data record from the budget file.
 
@@ -3310,6 +3315,10 @@ class CellBudgetFile:
             If true, then return the record as a three dimensional numpy
             array, even for those list-style records written as part of a
             'COMPACT BUDGET' MODFLOW budget file.  (Default is False.)
+        variable : str
+            The variable name to extract when full3D is True and the record
+            contains auxiliary variables (e.g. 'sat' for 'DATA-SAT' records,
+            or 'qx'/'qy'/'qz' for 'DATA-SPDIS' records).  Default is 'q'.
 
         Returns
         -------
@@ -3425,7 +3434,7 @@ class CellBudgetFile:
                 if self.verbose:
                     s += f"a list array of shape ({nlay}, {nrow}, {ncol})"
                     print(s)
-                return self.__create3D(data)
+                return self.__create3D(data, variable=variable)
             else:
                 if self.verbose:
                     s += f"a numpy recarray of size ({nlist}, {2 + naux})"
@@ -3451,7 +3460,7 @@ class CellBudgetFile:
                     s += f"a numpy recarray of size ({nlist}, 2)"
                 print(s)
             if full3D:
-                data = self.__create3D(data)
+                data = self.__create3D(data, variable=variable)
                 if self.modelgrid is not None:
                     return np.reshape(data, self.shape)
                 else:
@@ -3464,28 +3473,39 @@ class CellBudgetFile:
         # should not reach this point
         return
 
-    def __create3D(self, data):
+    def __create3D(self, data, variable="q"):
         """
-        Convert a dictionary of {node: q, ...} into a numpy masked array.
+        Convert list budget data into a numpy masked array.
         Used to create full grid arrays when the full3D keyword is set
         to True in get_data.
 
         Parameters
         ----------
-        data : dictionary
-            Dictionary with node keywords and flows (q) items.
+        data : numpy recarray
+            Record array with at least 'node' and the specified variable field.
+        variable : str
+            The field name to map into the 3D array.  Default is 'q'.
 
         Returns
         -------
         out : numpy masked array
-            List contains unique simulation times (totim) in binary file.
+            Masked array of shape self.shape with values from the specified
+            variable mapped to their grid positions.
 
         """
-        out = np.ma.zeros(self.nnodes, dtype=data["q"].dtype)
+        if variable not in data.dtype.names:
+            raise ValueError(
+                f"variable '{variable}' not found in record. "
+                f"Available variables: {list(data.dtype.names)}"
+            )
+        out = np.ma.zeros(self.nnodes, dtype=data[variable].dtype)
         out.mask = True
-        for [node, q] in zip(data["node"], data["q"]):
+        for node, val in zip(data["node"], data[variable]):
             idx = node - 1
-            out.data[idx] += q
+            if variable == "q":
+                out.data[idx] += val
+            else:
+                out.data[idx] = val
             out.mask[idx] = False
         return np.ma.reshape(out, self.shape)
 

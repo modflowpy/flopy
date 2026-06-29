@@ -1159,6 +1159,85 @@ def test_cellbudgetfile_get_ts_backwards_compatible_idx_format(
 
 
 @pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_full3D_aux_var(function_tmpdir):
+    """
+    Reproduce GitHub issue #2774: get_data(full3D=True) should return
+    correct values for auxiliary variables (e.g. sat), not just for q.
+    """
+    from flopy.mf6 import (
+        MFSimulation,
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowGwfic,
+        ModflowGwfnpf,
+        ModflowGwfoc,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    sim_name = "test_full3d_sat"
+    sim = MFSimulation(sim_name=sim_name, sim_ws=function_tmpdir, exe_name="mf6")
+    ModflowTdis(sim, nper=2, perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)])
+    ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=sim_name, save_flows=True)
+    nlay, nrow, ncol = 1, 5, 5
+    ModflowGwfdis(
+        gwf, nlay=nlay, nrow=nrow, ncol=ncol, delr=10.0, delc=10.0, top=10.0, botm=[0.0]
+    )
+    ModflowGwfic(gwf, strt=5.0)
+    ModflowGwfnpf(gwf, k=1.0, icelltype=1, save_saturation=True)
+    ModflowGwfchd(gwf, stress_period_data=[[(0, 0, 0), 9.0], [(0, 4, 4), 1.0]])
+    ModflowGwfoc(
+        gwf,
+        budget_filerecord=f"{sim_name}.cbc",
+        head_filerecord=f"{sim_name}.hds",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    sim.write_simulation()
+    success, _ = sim.run_simulation(silent=True)
+    assert success
+
+    cbc = gwf.output.budget()
+
+    # non-full3D
+    sat_rec = cbc.get_data(text="DATA-SAT")
+    assert len(sat_rec) > 0
+    assert "sat" in sat_rec[0].dtype.names
+    assert "q" in sat_rec[0].dtype.names
+    assert np.allclose(sat_rec[0]["q"], 0.0), "q should be zero in DATA-SAT records"
+    assert not np.allclose(sat_rec[0]["sat"], 0.0), "sat values should be non-zero"
+    assert not np.allclose(sat_rec[0]["sat"], sat_rec[0]["sat"][0]), (
+        "sat values should vary across cells"
+    )
+
+    # full3D with default variable="q"
+    q_3d = cbc.get_data(text="DATA-SAT", full3D=True)
+    assert q_3d[0].shape == (nlay, nrow, ncol)
+    assert np.allclose(np.ma.filled(q_3d[0], 0.0), 0.0)
+
+    # full3D with variable="sat"
+    sat_3d = cbc.get_data(text="DATA-SAT", full3D=True, variable="sat")
+    assert sat_3d[0].shape == (nlay, nrow, ncol)
+    assert not np.allclose(np.ma.filled(sat_3d[0], 0.0), 0.0)
+
+    # check recarray and full 3D array match
+    rec = sat_rec[0]
+    arr = sat_3d[0]
+    for node, sat_val in zip(rec["node"], rec["sat"]):
+        k = (node - 1) // (nrow * ncol)
+        rc = (node - 1) % (nrow * ncol)
+        r = rc // ncol
+        c = rc % ncol
+        np.testing.assert_allclose(
+            arr[k, r, c],
+            sat_val,
+            err_msg=f"3D SAT value mismatch at node {node}",
+        )
+
+
+@pytest.mark.requires_exe("mf6")
 def test_cellbudgetfile_write_preserves_aux_vars(dis_sim, function_tmpdir):
     """Test that write() method preserves auxiliary variables in imeth=6 records."""
     from pathlib import Path
