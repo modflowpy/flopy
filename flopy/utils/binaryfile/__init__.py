@@ -3004,6 +3004,12 @@ class CellBudgetFile:
                 "get_data() missing 1 required argument: 'kstpkper', 'totim', "
                 "'idx', or 'text'"
             )
+        if variable != "q" and not full3D:
+            raise ValueError(
+                "'variable' is only used when full3D=True. "
+                "To access a specific field without full3D, index the "
+                "returned recarray directly, e.g. get_data(...)[0]['sat']."
+            )
         return [
             self.get_record(idx, full3D=full3D, variable=variable)
             for idx, t in enumerate(select_indices)

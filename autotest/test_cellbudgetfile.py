@@ -1237,6 +1237,15 @@ def test_cellbudgetfile_full3D_aux_var(function_tmpdir):
         )
 
 
+def test_cellbudgetfile_get_data_variable_without_full3D(example_data_path):
+    """variable= is only meaningful with full3D=True; without it, raise ValueError."""
+    mf2005_model_path = example_data_path / "mf2005_test"
+    cbc = CellBudgetFile(mf2005_model_path / "test1tr.gitcbc")
+    with pytest.raises(ValueError, match="only used when full3D=True"):
+        cbc.get_data(text="WELLS", variable="IFACE")
+    cbc.close()
+
+
 @pytest.mark.requires_exe("mf6")
 def test_cellbudgetfile_write_preserves_aux_vars(dis_sim, function_tmpdir):
     """Test that write() method preserves auxiliary variables in imeth=6 records."""
