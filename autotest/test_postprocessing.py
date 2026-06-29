@@ -17,12 +17,17 @@ from flopy.mf6 import (
     ModflowTdis,
 )
 from flopy.mf6.utils import get_residuals, get_structured_faceflows
+from flopy.mf6.utils.postprocessing import (
+    get_structured_connectivity,
+    get_structured_flowja,
+)
 from flopy.modflow import Modflow, ModflowDis, ModflowLpf, ModflowUpw
 from flopy.plot import PlotMapView
 from flopy.utils import get_transmissivities
 from flopy.utils.gridutil import get_disv_kwargs
 from flopy.utils.postprocessing import (
     get_gradients,
+    get_saturation,
     get_specific_discharge,
     get_water_table,
 )
@@ -724,3 +729,293 @@ def test_get_transmissivities_fully_saturated(function_tmpdir):
 
     assert np.allclose(T_none, T_saturated)
     assert np.allclose(T_none, T_expected)
+
+
+def test_get_structured_connectivity_simple():
+    nlay, nrow, ncol = 2, 2, 2
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+
+    # Check dimensions
+    ncells = nlay * nrow * ncol
+    assert len(ia) == ncells + 1
+    assert len(ja) == nja
+    assert ia[-1] == nja
+
+    # each active cell should have at least 1 connection (diagonal)
+    for n in range(ncells):
+        nconn = ia[n + 1] - ia[n]
+        assert nconn >= 1
+
+    # first cell (0,0,0) should have 4 connections: diagonal + right + front + lower
+    nconn_first = ia[1] - ia[0]
+    first_conns = ja[ia[0] : ia[1]]
+    assert nconn_first == 4
+    assert first_conns[0] == 0
+    assert 1 in first_conns
+    assert 2 in first_conns
+    assert 4 in first_conns
+
+
+def test_get_structured_connectivity_with_inactive_cells():
+    nlay, nrow, ncol = 2, 3, 3
+    idomain = np.ones((nlay, nrow, ncol), dtype=np.int32)
+    idomain[0, 1, 1] = 0  # center cell of top layer inactive
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol, idomain)
+
+    # inactive cell (node 4) should have 0 connections
+    node_inactive = 0 * nrow * ncol + 1 * ncol + 1  # (k=0, i=1, j=1)
+    nconn_inactive = ia[node_inactive + 1] - ia[node_inactive]
+    assert nconn_inactive == 0
+
+    # neighbors of inactive cell should not connect to it
+    node_left = 0 * nrow * ncol + 1 * ncol + 0  # (k=0, i=1, j=0)
+    conns_left = ja[ia[node_left] : ia[node_left + 1]]
+    assert node_inactive not in conns_left
+
+
+def test_get_structured_connectivity_corner_cells():
+    nlay, nrow, ncol = 1, 3, 3
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+
+    # top-left corner (0,0,0): no left or back neighbor at boundary
+    # connections: diagonal + right + front = 3
+    node_corner = 0
+    nconn = ia[node_corner + 1] - ia[node_corner]
+    assert nconn == 3
+
+    # bottom-right corner (0,2,2): no right or front neighbor at boundary
+    # connections: diagonal + left + back = 3 (full bidirectional connectivity)
+    node_corner = 0 * nrow * ncol + 2 * ncol + 2
+    conns = ja[ia[node_corner] : ia[node_corner + 1]]
+    nconn = len(conns)
+    assert nconn == 3
+    # left neighbor (0,2,1) = node 7, back neighbor (0,1,2) = node 5
+    assert node_corner in conns  # diagonal
+    assert 7 in conns  # left
+    assert 5 in conns  # back
+
+
+def test_get_structured_flowja_to_connections_simple():
+    nlay, nrow, ncol = 1, 3, 3
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+    qright = np.ones((nlay, nrow, ncol)) * 1.0
+    qfront = np.ones((nlay, nrow, ncol)) * 2.0
+    qlower = np.ones((nlay, nrow, ncol)) * 3.0
+    flowja = get_structured_flowja(
+        (qright, qfront, qlower), ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+    )
+
+    assert len(flowja) == nja, f"flowja length should be {nja}"
+
+    # Corner cell (0,0,0): only right and front outflow, no lower (1 layer)
+    # MODFLOW 6 sign convention: outflow from n is negative, inflow is positive.
+    node = 0
+    conns = ja[ia[node] : ia[node + 1]]
+    flows = flowja[ia[node] : ia[node + 1]]
+    conn_map = dict(zip(conns, flows))
+    assert conn_map[node] == 0.0  # diagonal
+    assert conn_map[1] == -1.0  # right outflow: -qright[0,0,0]
+    assert conn_map[3] == -2.0  # front outflow: -qfront[0,0,0]
+
+    # Interior cell (0,1,1): left/back/right/front all present
+    node = 1 * ncol + 1  # (k=0, i=1, j=1)
+    conns = ja[ia[node] : ia[node + 1]]
+    flows = flowja[ia[node] : ia[node + 1]]
+    conn_map = dict(zip(conns, flows))
+    assert conn_map[node] == 0.0  # diagonal
+    assert conn_map[node - 1] == qright[0, 1, 0]  # left inflow: +qright[0,1,0]
+    assert conn_map[node + 1] == -qright[0, 1, 1]  # right outflow: -qright[0,1,1]
+    assert conn_map[node - ncol] == qfront[0, 0, 1]  # back inflow: +qfront[0,0,1]
+    assert conn_map[node + ncol] == -qfront[0, 1, 1]  # front outflow: -qfront[0,1,1]
+
+    # Verify roundtrip: flowja → get_structured_faceflows → should recover originals.
+    # Boundary cells with no neighbor in that direction have no stored connection,
+    # so the roundtrip can only recover values for interior faces.
+    from flopy.mf6.utils import get_structured_faceflows
+
+    frf_rt, fff_rt, flf_rt = get_structured_faceflows(
+        flowja, ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+    )
+    np.testing.assert_array_almost_equal(frf_rt[:, :, :-1], qright[:, :, :-1])
+    np.testing.assert_array_almost_equal(fff_rt[:, :-1, :], qfront[:, :-1, :])
+
+
+def test_get_structured_flowja_to_connections_multilayer():
+    nlay, nrow, ncol = 3, 2, 2
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+    qright = np.ones((nlay, nrow, ncol)) * 10.0
+    qfront = np.ones((nlay, nrow, ncol)) * 20.0
+    qlower = np.ones((nlay, nrow, ncol)) * 30.0
+    flowja = get_structured_flowja(
+        (qright, qfront, qlower), ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+    )
+
+    # Cell (0,0,0): lower connection is outflow from n → negative
+    node = 0  # (k=0, i=0, j=0)
+    node_below = nrow * ncol  # (k=1, i=0, j=0)
+    conns = ja[ia[node] : ia[node + 1]]
+    flows = flowja[ia[node] : ia[node + 1]]
+    conn_map = dict(zip(conns, flows))
+    assert conn_map[node_below] == -30.0  # lower outflow: -qlower[0,0,0]
+
+    # Cell (k=1, i=0, j=0): upper connection is inflow to n from above → positive
+    node_mid = nrow * ncol  # same cell, middle layer
+    node_above = 0
+    conns_mid = ja[ia[node_mid] : ia[node_mid + 1]]
+    flows_mid = flowja[ia[node_mid] : ia[node_mid + 1]]
+    conn_map_mid = dict(zip(conns_mid, flows_mid))
+    assert conn_map_mid[node_above] == 30.0  # upper inflow: +qlower[0,0,0]
+
+    # Verify roundtrip (interior faces only — boundary cells have no stored neighbor)
+    from flopy.mf6.utils import get_structured_faceflows
+
+    frf_rt, fff_rt, flf_rt = get_structured_faceflows(
+        flowja, ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+    )
+    np.testing.assert_array_almost_equal(frf_rt[:, :, :-1], qright[:, :, :-1])
+    np.testing.assert_array_almost_equal(fff_rt[:, :-1, :], qfront[:, :-1, :])
+    np.testing.assert_array_almost_equal(flf_rt[:-1, :, :], qlower[:-1, :, :])
+
+
+def test_get_saturation_confined_cells():
+    nlay, nrow, ncol = 2, 3, 3
+
+    # all cells confined
+    icelltype = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+    head = np.full((nlay, nrow, ncol), 50.0)
+    top = np.full((nrow, ncol), 100.0)
+    botm = np.array(
+        [
+            np.full((nrow, ncol), 75.0),
+            np.full((nrow, ncol), 25.0),
+        ]
+    )
+    sat = get_saturation(head, top, botm, icelltype)
+
+    assert np.allclose(sat, 1.0, equal_nan=True)
+
+
+def test_get_saturation_convertible_cells():
+    nlay, nrow, ncol = 2, 3, 3
+
+    # top layer convertible, bottom layer confined
+    icelltype = np.zeros((nlay, nrow, ncol), dtype=np.int32)
+    icelltype[0] = 1
+    top = np.full((nrow, ncol), 100.0)
+    botm = np.array(
+        [
+            np.full((nrow, ncol), 50.0),
+            np.full((nrow, ncol), 0.0),
+        ]
+    )
+    head = np.full((nlay, nrow, ncol), 75.0)
+    sat = get_saturation(head, top, botm, icelltype)
+
+    assert np.allclose(sat[0], 0.5)  # unconfined layer
+    assert np.allclose(sat[1], 1.0)  # confined layer
+
+
+def test_get_saturation_fully_saturated():
+    nlay, nrow, ncol = 1, 2, 2
+    icelltype = np.ones((nlay, nrow, ncol), dtype=np.int32)
+    top = np.full((nrow, ncol), 100.0)
+    botm = np.full((nlay, nrow, ncol), 50.0)
+    head = np.full((nlay, nrow, ncol), 120.0)  # above top
+    sat = get_saturation(head, top, botm, icelltype)
+
+    assert np.allclose(sat, 1.0)  # clamped to 1.0
+
+
+def test_get_saturation_dry_cells():
+    nlay, nrow, ncol = 1, 2, 2
+    icelltype = np.ones((nlay, nrow, ncol), dtype=np.int32)
+    top = np.full((nrow, ncol), 100.0)
+    botm = np.full((nlay, nrow, ncol), 50.0)
+    head = np.full((nlay, nrow, ncol), 75.0)
+    head[0, 0, 0] = -999.0  # dry
+    head[0, 1, 1] = -9999.0  # inactive
+    sat = get_saturation(head, top, botm, icelltype, hdry=-999.0, hnoflo=-9999.0)
+
+    # dry and inactive cells
+    assert np.isnan(sat[0, 0, 0])
+    assert np.isnan(sat[0, 1, 1])
+
+    # active cells
+    assert np.allclose(sat[0, 0, 1], 0.5)
+    assert np.allclose(sat[0, 1, 0], 0.5)
+
+
+def test_get_saturation_below_bottom():
+    nlay, nrow, ncol = 1, 2, 2
+    icelltype = np.ones((nlay, nrow, ncol), dtype=np.int32)
+    top = np.full((nrow, ncol), 100.0)
+    botm = np.full((nlay, nrow, ncol), 50.0)
+    head = np.full((nlay, nrow, ncol), 30.0)  # below bottom
+    sat = get_saturation(head, top, botm, icelltype)
+
+    assert np.allclose(sat, 0.0)
+
+
+def test_get_saturation_1d():
+    ncells = 10
+    icelltype = np.zeros(ncells, dtype=np.int32)
+    icelltype[0:5] = 1  # first 5 convertible
+    top = np.linspace(100, 50, ncells)
+    botm = np.linspace(50, 0, ncells)
+    head = np.linspace(75, 25, ncells)
+    sat = get_saturation(head, top, botm, icelltype)
+
+    assert len(sat) == ncells
+    assert np.allclose(sat[0], 0.5)  # convertible cell: (75-50)/(100-50) = 0.5
+    assert np.allclose(sat[5:], 1.0)  # confined cells: 1.0
+
+
+def test_get_saturation_invalid_inputs():
+    nlay, nrow, ncol = 2, 3, 3
+
+    head = np.full((nlay, nrow, ncol), 50.0)
+    top = np.full((nrow, ncol), 100.0)
+    botm = np.full((nlay, nrow, ncol), 50.0)
+    icelltype = np.zeros((nlay, nrow - 1, ncol), dtype=np.int32)  # Wrong shape
+
+    with pytest.raises(ValueError, match="does not match"):
+        get_saturation(head, top, botm, icelltype)
+
+
+def test_get_structured_connectivity_big_grid():
+    nlay, nrow, ncol = 3, 40, 20
+    ncells = nlay * nrow * ncol
+
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+
+    # Check array sizes
+    assert len(ia) == ncells + 1
+    assert len(ja) == nja
+    assert ia[-1] == nja
+
+    # Verify all active cells have connections
+    for n in range(ncells):
+        nconn = ia[n + 1] - ia[n]
+        assert nconn >= 1, f"Cell {n} should have at least 1 connection"
+
+    # Interior cell should have 7 connections (diagonal + 6 neighbors)
+    # But we only store upper triangle, so expect 4 (diagonal + right + front + lower)
+    node = 1 * nrow * ncol + 10 * ncol + 10  # Middle of layer 1
+    nconn = ia[node + 1] - ia[node]
+    # Full bidirectional: diagonal + right + left + front + back + lower + upper = 7
+    assert nconn == 7, f"Interior cell should have 7 connections, got {nconn}"
+
+
+def test_get_structured_flowja_invalid_inputs():
+    nlay, nrow, ncol = 2, 3, 3
+
+    ia, ja, nja = get_structured_connectivity(nlay, nrow, ncol)
+
+    qright = np.ones((nlay, nrow, ncol))
+    qfront = np.ones((nlay, nrow, ncol))
+    qlower = np.ones((nlay, nrow, ncol - 1))  # Wrong shape
+
+    with pytest.raises(ValueError, match="does not match grid shape"):
+        get_structured_flowja(
+            (qright, qfront, qlower), ia=ia, ja=ja, nlay=nlay, nrow=nrow, ncol=ncol
+        )

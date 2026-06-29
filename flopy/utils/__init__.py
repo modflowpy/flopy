@@ -29,6 +29,11 @@ from .flopy_io import read_fixed_var, write_fixed_var
 from .formattedfile import FormattedHeadFile
 
 get_modflow = get_modflow_module.run_main
+from .classic_to_mf6 import (
+    ClassicMfToMf6Converter,
+    get_icelltype_from_laycon,
+    get_icelltype_from_laytyp,
+)
 from .gridintersect import GridIntersect
 from .hfb_util import make_hfb_array
 from .mflistfile import (

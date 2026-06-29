@@ -1302,10 +1302,36 @@ def test_headfile_write_scalar_disv_disu(function_tmpdir):
     hds.close()
 
 
-def test_empty_list_error(function_tmpdir):
+def test_write_empty_list_error(function_tmpdir):
     """Test that empty lists raise appropriate errors."""
     with pytest.raises(ValueError, match="Empty data list"):
         HeadFile.write(function_tmpdir / "test.hds", [])
 
     with pytest.raises(ValueError, match="Empty data list"):
         CellBudgetFile.write(function_tmpdir / "test.cbc", [], text="STORAGE")
+
+
+def test_headfile_write_roundtrip(function_tmpdir):
+    nlay, nrow, ncol = 2, 3, 4
+    rng = np.random.default_rng(0)
+    head1 = rng.standard_normal((nlay, nrow, ncol))
+    head2 = rng.standard_normal((nlay, nrow, ncol))
+
+    original = function_tmpdir / "classic.hds"
+    HeadFile.write(
+        str(original),
+        {(1, 1): head1, (2, 1): head2},
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        precision="double",
+        totim={(1, 1): 1.0, (2, 1): 2.0},
+        pertim={(1, 1): 1.0, (2, 1): 1.0},
+    )
+
+    hds = HeadFile(str(original))
+    kstpkper_list = hds.get_kstpkper()
+    assert kstpkper_list == [(0, 0), (1, 0)]
+
+    np.testing.assert_array_equal(hds.get_data(kstpkper=(0, 0)), head1)
+    np.testing.assert_array_equal(hds.get_data(kstpkper=(1, 0)), head2)
