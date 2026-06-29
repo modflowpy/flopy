@@ -453,7 +453,7 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
         col_names = self._get_cellid_columns()
         for field_idx, column_name in fields_to_correct:
             # Extract component values before modifying pdata so that dropping
-            # the source column frees its name for re-use.  This avoids the
+            # the source column frees its name to be reused.  This avoids the
             # name collision that occurs on single-component grids (DISU etc.)
             # where the tuple column and the target scalar column share the
             # same name (e.g. both "cellid_node").
