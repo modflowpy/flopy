@@ -190,11 +190,13 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
 def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
     original_file = mfgrd_test_path / "nwtp3.dis.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
+    _ = grb_orig.modelgrid  # trigger _set_modelgrid so BOTM is reshaped before export
 
     output_file = tmp_path / "test_instance.dis.grb"
     grb_orig.export(output_file, verbose=False)
 
     grb_new = MfGrdFile(output_file, verbose=False)
+    _ = grb_new.modelgrid
 
     assert grb_new.grid_type == grb_orig.grid_type
     assert grb_new.nodes == grb_orig.nodes
@@ -209,6 +211,37 @@ def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
 
     np.testing.assert_allclose(grb_new.delr, grb_orig.delr)
     np.testing.assert_allclose(grb_new.delc, grb_orig.delc)
+    np.testing.assert_allclose(grb_new.top, grb_orig.top)
+    np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
+    np.testing.assert_array_equal(grb_new.idomain, grb_orig.idomain)
+
+
+def test_write_grb_instance_method_disv(tmp_path, mfgrd_test_path):
+    # disv_layered.disv.grb has distinct BOTM values per layer (-10/-20/-30),
+    # which distinguishes C from F flatten order and guards against order regression.
+    original_file = mfgrd_test_path / "disv_layered.disv.grb"
+    grb_orig = MfGrdFile(original_file, verbose=False)
+    _ = grb_orig.modelgrid  # trigger _set_modelgrid so BOTM is reshaped before export
+
+    output_file = tmp_path / "test_instance.disv.grb"
+    grb_orig.export(output_file, verbose=False)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    _ = grb_new.modelgrid
+
+    assert grb_new.grid_type == grb_orig.grid_type
+    assert grb_new.nodes == grb_orig.nodes
+    assert grb_new.nlay == grb_orig.nlay
+    assert grb_new.ncpl == grb_orig.ncpl
+    assert grb_new.nja == grb_orig.nja
+
+    np.testing.assert_allclose(grb_new.xorigin, grb_orig.xorigin)
+    np.testing.assert_allclose(grb_new.yorigin, grb_orig.yorigin)
+    np.testing.assert_allclose(grb_new.angrot, grb_orig.angrot)
+
     np.testing.assert_allclose(grb_new.top, grb_orig.top)
     np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
 
