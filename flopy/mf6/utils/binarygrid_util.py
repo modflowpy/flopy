@@ -957,8 +957,7 @@ class MfGrdFile(FlopyBinaryData):
                     elif dtype_str == "SINGLE":
                         arr = arr.astype(np.float32)
 
-                    # Write array in column-major (Fortran) order
-                    writer.write_record(arr.flatten(order="F"), dtype=arr.dtype)
+                    writer.write_record(arr.flatten(order="C"), dtype=arr.dtype)
 
         if verbose:
             print(f"Successfully wrote {filename}")
