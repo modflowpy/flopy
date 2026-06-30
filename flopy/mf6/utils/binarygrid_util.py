@@ -957,7 +957,7 @@ class MfGrdFile(FlopyBinaryData):
                     elif dtype_str == "SINGLE":
                         arr = arr.astype(np.float32)
 
-                    writer.write_record(arr.flatten(order="C"), dtype=arr.dtype)
+                    writer.write_record(np.ravel(arr, order="C"), dtype=arr.dtype)
 
         if verbose:
             print(f"Successfully wrote {filename}")
