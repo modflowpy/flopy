@@ -846,10 +846,7 @@ class MfGrdFile(FlopyBinaryData):
             precision = self.precision
 
         if isinstance(crs, str) and crs.strip() == "":
-            raise ValueError(
-                "crs='' is not a valid CRS. Omit the crs argument (or pass "
-                "crs=None) to leave the CRS unset."
-            )
+            crs = None
 
         raw_crs = crs if crs is not None else self.crs
         effective_crs = _crs_to_string(raw_crs) if raw_crs is not None else None
