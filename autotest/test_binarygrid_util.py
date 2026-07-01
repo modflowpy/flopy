@@ -629,3 +629,55 @@ def test_write_grb_disu_v1_upgrade_to_v2(tmp_path, mfgrd_test_path):
     np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
     np.testing.assert_allclose(grb_new.top, grb_orig.top)
     np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+
+
+def test_write_grb_export_is_keyword_only(tmp_path, mfgrd_test_path):
+    """A positional call beyond filename raises."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    with pytest.raises(TypeError):
+        grb.export(tmp_path / "out.grb", "double", 1, "EPSG:26916", True)
+
+
+def test_write_grb_empty_crs_argument_falls_back(tmp_path, mfgrd_test_path):
+    """An explicit empty/blank crs argument is treated like crs=None: it
+    falls back to the source file's CRS instead of overriding it."""
+    grb = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=False)
+    assert grb.crs is not None
+
+    output_file = tmp_path / "out.grb"
+    grb.export(output_file, crs="")
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.crs == grb.crs
+
+    output_file2 = tmp_path / "out2.grb"
+    grb.export(output_file2, crs="   ")
+    grb_new2 = MfGrdFile(output_file2, verbose=False)
+    assert grb_new2.crs == grb.crs
+
+
+def test_write_grb_empty_crs_argument_no_source_crs(tmp_path, mfgrd_test_path):
+    """An explicit empty/blank crs argument with no source CRS to fall
+    back on results in a version 1 file with no CRS, same as crs=None."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    assert grb.crs is None
+
+    output_file = tmp_path / "out.grb"
+    grb.export(output_file, crs="")
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 1
+    assert grb_new.crs is None
+
+
+def test_write_grb_blank_source_crs_treated_as_absent(tmp_path, mfgrd_test_path):
+    """A source file's blank CRS is treated as absent on re-export:
+    version drops to 1 and no CRS field is written."""
+    grb = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=False)
+    grb._datadict["CRS"] = ""
+
+    output_file = tmp_path / "blank_crs.grb"
+    grb.export(output_file)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 1
+    assert grb_new.crs is None
+    assert "CRS" not in grb_new._datadict
