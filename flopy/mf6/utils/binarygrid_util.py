@@ -795,7 +795,15 @@ class MfGrdFile(FlopyBinaryData):
             vertices, cell2d = None, None
         return vertices, cell2d
 
-    def export(self, filename, precision=None, version=None, crs=None, verbose=False):
+    def export(
+        self,
+        filename,
+        *,
+        precision=None,
+        version=None,
+        crs=None,
+        verbose=False,
+    ):
         """
         Export the binary grid file to a new file.
 
@@ -818,6 +826,11 @@ class MfGrdFile(FlopyBinaryData):
         verbose : bool, optional
             Print progress messages (default False)
 
+        All parameters except ``filename`` are keyword-only, so adding a
+        new parameter here in the future (e.g. a dedicated parameter and
+        property for a new GRB field, mirroring ``crs``/``.crs``) can
+        never silently change the meaning of an existing positional call.
+
         Examples
         --------
         >>> from flopy.mf6.utils import MfGrdFile
@@ -832,10 +845,20 @@ class MfGrdFile(FlopyBinaryData):
         if precision is None:
             precision = self.precision
 
+        if isinstance(crs, str) and crs.strip() == "":
+            raise ValueError(
+                "crs='' is not a valid CRS. Omit the crs argument (or pass "
+                "crs=None) to leave the CRS unset."
+            )
+
         raw_crs = crs if crs is not None else self.crs
         effective_crs = _crs_to_string(raw_crs) if raw_crs is not None else None
+        if effective_crs is not None and effective_crs.strip() == "":
+            # A blank CRS carries no usable information. Treat it the
+            # same as no CRS rather than writing an empty crs string.
+            effective_crs = None
         if version is None:
-            version = 2 if effective_crs else 1
+            version = 2 if effective_crs is not None else 1
 
         float_type = "SINGLE" if precision.lower() == "single" else "DOUBLE"
 
@@ -864,7 +887,7 @@ class MfGrdFile(FlopyBinaryData):
             data_dict[key] = self._datadict[key]
 
         if version >= 2:
-            if not effective_crs:
+            if effective_crs is None:
                 raise ValueError(
                     "version=2 requires a CRS string. Provide crs= or use a "
                     "version 2 source file."
