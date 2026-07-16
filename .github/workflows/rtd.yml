@@ -39,7 +39,7 @@ jobs:
           echo "ref=$ref" >> $GITHUB_OUTPUT
 
       - name: Checkout flopy repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.set_ref.outputs.ref }}
 
@@ -68,13 +68,13 @@ jobs:
 
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.set_options.outputs.ref }}
           path: flopy
 
       - name: Checkout MODFLOW 6
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: MODFLOW-ORG/modflow6
           path: modflow6
@@ -87,9 +87,9 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.9.5
+        uses: prefix-dev/setup-pixi@v0.10.0
         with:
-          pixi-version: v0.41.4
+          pixi-version: v0.70.1
           manifest-path: modflow6/pixi.toml
 
       - name: Install Python dependencies

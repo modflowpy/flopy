@@ -998,8 +998,12 @@ class Raster:
         """
         import_optional_dependency("rasterio")
         from rasterio.plot import show
-
-        band = kwargs.pop("band", None)
+		
+		band = kwargs.pop("band", None)
+        # rasterio >= 1.5 defaults to adjusting data to [0, 1], which
+        # can clash with user-supplied vmin/vmax. don't adjust unless
+        # the caller explicitly asks for it
+        kwargs.setdefault("adjust", False)
 
         if self._dataset is not None:
             ax = show(self._dataset, ax=ax, contour=contour, **kwargs)

@@ -17,6 +17,8 @@ def mfgrd_test_path(example_data_path):
 
 def test_mfgrddis_MfGrdFile(mfgrd_test_path):
     grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=True)
+    assert grb.version == 1
+
     nodes = grb.nodes
     ia = grb.ia
     shape = ia.shape[0]
@@ -29,6 +31,28 @@ def test_mfgrddis_MfGrdFile(mfgrd_test_path):
 
     modelgrid = grb.modelgrid
     assert isinstance(modelgrid, StructuredGrid)
+
+    assert grb.crs is None
+
+
+def test_mfgrddis_MfGrdFile_v2(mfgrd_test_path):
+    grb = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=True)
+    assert grb.version == 2
+
+    nodes = grb.nodes
+    ia = grb.ia
+    shape = ia.shape[0]
+    assert shape == nodes + 1, f"ia size ({shape}) not equal to {nodes + 1}"
+
+    nnz = ia[-1]
+    ja = grb.ja
+    shape = ja.shape[0]
+    assert shape == nnz, f"ja size ({shape}) not equal to {nnz}"
+
+    modelgrid = grb.modelgrid
+    assert isinstance(modelgrid, StructuredGrid)
+
+    assert grb.crs == "EPSG:26916"
 
 
 def test_mfgrddis_modelgrid(mfgrd_test_path):
@@ -62,6 +86,7 @@ def test_mfgrddis_modelgrid(mfgrd_test_path):
 def test_mfgrddisv_MfGrdFile(mfgrd_test_path):
     fn = mfgrd_test_path / "flow.disv.grb"
     grb = MfGrdFile(fn, verbose=True)
+    assert grb.version == 1
 
     nodes = grb.nodes
     ia = grb.ia
@@ -114,6 +139,7 @@ def test_mfgrddisv_modelgrid(mfgrd_test_path):
 def test_mfgrddisu_MfGrdFile(mfgrd_test_path):
     fn = mfgrd_test_path / "keating.disu.grb"
     grb = MfGrdFile(fn, verbose=True)
+    assert grb.version == 1
 
     nodes = grb.nodes
     ia = grb.ia
@@ -164,11 +190,13 @@ def test_mfgrddisu_modelgrid(mfgrd_test_path):
 def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
     original_file = mfgrd_test_path / "nwtp3.dis.grb"
     grb_orig = MfGrdFile(original_file, verbose=False)
+    _ = grb_orig.modelgrid  # trigger _set_modelgrid so BOTM is reshaped before export
 
     output_file = tmp_path / "test_instance.dis.grb"
     grb_orig.export(output_file, verbose=False)
 
     grb_new = MfGrdFile(output_file, verbose=False)
+    _ = grb_new.modelgrid
 
     assert grb_new.grid_type == grb_orig.grid_type
     assert grb_new.nodes == grb_orig.nodes
@@ -183,6 +211,37 @@ def test_write_grb_instance_method(tmp_path, mfgrd_test_path):
 
     np.testing.assert_allclose(grb_new.delr, grb_orig.delr)
     np.testing.assert_allclose(grb_new.delc, grb_orig.delc)
+    np.testing.assert_allclose(grb_new.top, grb_orig.top)
+    np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
+    np.testing.assert_array_equal(grb_new.idomain, grb_orig.idomain)
+
+
+def test_write_grb_instance_method_disv(tmp_path, mfgrd_test_path):
+    # disv_layered.disv.grb has distinct BOTM values per layer (-10/-20/-30),
+    # which distinguishes C from F flatten order and guards against order regression.
+    original_file = mfgrd_test_path / "disv_layered.disv.grb"
+    grb_orig = MfGrdFile(original_file, verbose=False)
+    _ = grb_orig.modelgrid  # trigger _set_modelgrid so BOTM is reshaped before export
+
+    output_file = tmp_path / "test_instance.disv.grb"
+    grb_orig.export(output_file, verbose=False)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    _ = grb_new.modelgrid
+
+    assert grb_new.grid_type == grb_orig.grid_type
+    assert grb_new.nodes == grb_orig.nodes
+    assert grb_new.nlay == grb_orig.nlay
+    assert grb_new.ncpl == grb_orig.ncpl
+    assert grb_new.nja == grb_orig.nja
+
+    np.testing.assert_allclose(grb_new.xorigin, grb_orig.xorigin)
+    np.testing.assert_allclose(grb_new.yorigin, grb_orig.yorigin)
+    np.testing.assert_allclose(grb_new.angrot, grb_orig.angrot)
+
     np.testing.assert_allclose(grb_new.top, grb_orig.top)
     np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
 
@@ -396,3 +455,229 @@ def test_write_grb_disu_precision_conversion(tmp_path, mfgrd_test_path):
     # Double precision should match exactly (same precision as original)
     np.testing.assert_allclose(grb_double.top, grb.top, rtol=1e-12)
     np.testing.assert_allclose(grb_double.bot, grb.bot, rtol=1e-12)
+
+
+def test_write_grb_v2_roundtrip(tmp_path, mfgrd_test_path):
+    """Round-trip a version 2 GRB: version and CRS are preserved."""
+    grb_orig = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=False)
+    assert grb_orig.version == 2
+    assert grb_orig.crs == "EPSG:26916"
+
+    output_file = tmp_path / "flow_v2_copy.dis.grb"
+    grb_orig.export(output_file, verbose=False)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+    assert grb_new.nodes == grb_orig.nodes
+    np.testing.assert_allclose(grb_new.top, grb_orig.top)
+    np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
+
+
+def test_write_grb_v1_upgrade_to_v2(tmp_path, mfgrd_test_path):
+    """Exporting a v1 GRB with crs= automatically produces a v2 file."""
+    grb_orig = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    assert grb_orig.version == 1
+    assert grb_orig.crs is None
+
+    output_file = tmp_path / "nwtp3_v2.dis.grb"
+    grb_orig.export(output_file, crs="EPSG:26916", verbose=False)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+    assert grb_new.nodes == grb_orig.nodes
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+
+
+def test_write_grb_v1_force_override(tmp_path, mfgrd_test_path):
+    """Explicit version=1 suppresses CRS even when crs= is provided."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    output_file = tmp_path / "forced_v1.dis.grb"
+    grb.export(output_file, version=1, crs="EPSG:26916")
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 1
+    assert grb_new.crs is None
+    assert grb_new.nodes == grb.nodes
+
+
+def test_write_grb_v2_requires_crs(tmp_path, mfgrd_test_path):
+    """Requesting version=2 without a CRS raises ValueError."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    with pytest.raises(ValueError, match="version=2 requires a CRS"):
+        grb.export(tmp_path / "out.grb", version=2)
+
+
+def test_write_grb_v2_crs_too_long(tmp_path, mfgrd_test_path):
+    """A CRS string exceeding 5000 characters raises ValueError."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    with pytest.raises(ValueError, match="exceeds the MODFLOW 6 maximum"):
+        grb.export(tmp_path / "out.grb", crs="X" * 5001)
+
+
+def test_crs_to_string():
+    """_crs_to_string normalizes CRS inputs to strings."""
+    from flopy.mf6.utils.binarygrid_util import _crs_to_string
+
+    # str pass-through
+    assert _crs_to_string("EPSG:26916") == "EPSG:26916"
+    assert _crs_to_string("some WKT...") == "some WKT..."
+
+    # int → EPSG authority string
+    assert _crs_to_string(26916) == "EPSG:26916"
+
+    # pyproj.CRS with a known EPSG code → prefers short EPSG form
+    pyproj = pytest.importorskip("pyproj")
+    crs_obj = pyproj.CRS.from_epsg(26916)
+    assert _crs_to_string(crs_obj) == "EPSG:26916"
+
+    # pyproj.CRS built from WKT that has an EPSG code still normalizes
+    crs_from_wkt = pyproj.CRS.from_wkt(crs_obj.to_wkt())
+    assert _crs_to_string(crs_from_wkt) == "EPSG:26916"
+
+
+def test_write_grb_v2_crs_int(tmp_path, mfgrd_test_path):
+    """Passing an integer EPSG code writes 'EPSG:N' to the GRB."""
+    grb_orig = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    output_file = tmp_path / "nwtp3_v2_int.dis.grb"
+    grb_orig.export(output_file, crs=26916)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+
+
+def test_write_grb_v2_crs_pyproj(tmp_path, mfgrd_test_path):
+    """Passing a pyproj.CRS object normalizes to EPSG string in the GRB."""
+    pyproj = pytest.importorskip("pyproj")
+    grb_orig = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    output_file = tmp_path / "nwtp3_v2_pyproj.dis.grb"
+    grb_orig.export(output_file, crs=pyproj.CRS.from_epsg(26916))
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+
+
+def test_write_grb_disv_v1_upgrade_to_v2(tmp_path, mfgrd_test_path):
+    """Upgrading a v1 DISV GRB to v2 preserves geometry and writes CRS."""
+    grb_orig = MfGrdFile(mfgrd_test_path / "flow.disv.grb", verbose=False)
+    assert grb_orig.version == 1
+    assert grb_orig.crs is None
+
+    output_file = tmp_path / "flow_v2.disv.grb"
+    grb_orig.export(output_file, crs="EPSG:26916")
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+    assert grb_new.grid_type == "DISV"
+    assert grb_new.nodes == grb_orig.nodes
+    assert grb_new.nja == grb_orig.nja
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
+    np.testing.assert_allclose(grb_new.top, grb_orig.top)
+    np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+    np.testing.assert_allclose(
+        grb_new._datadict["VERTICES"], grb_orig._datadict["VERTICES"]
+    )
+    np.testing.assert_allclose(grb_new._datadict["CELLX"], grb_orig._datadict["CELLX"])
+    np.testing.assert_allclose(grb_new._datadict["CELLY"], grb_orig._datadict["CELLY"])
+
+
+def test_write_grb_disv_v2_roundtrip(tmp_path, mfgrd_test_path):
+    """Round-trip a v2 DISV GRB: version and CRS are preserved."""
+    # First create a v2 DISV file by upgrading the v1 source
+    v2_file = tmp_path / "flow_v2.disv.grb"
+    MfGrdFile(mfgrd_test_path / "flow.disv.grb").export(v2_file, crs="EPSG:26916")
+
+    grb_orig = MfGrdFile(v2_file, verbose=False)
+    assert grb_orig.version == 2
+
+    output_file = tmp_path / "flow_v2_copy.disv.grb"
+    grb_orig.export(output_file, verbose=False)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+    assert grb_new.nodes == grb_orig.nodes
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_allclose(
+        grb_new._datadict["VERTICES"], grb_orig._datadict["VERTICES"]
+    )
+
+
+def test_write_grb_disu_v1_upgrade_to_v2(tmp_path, mfgrd_test_path):
+    """Upgrading a v1 DISU GRB to v2 preserves connectivity and writes CRS."""
+    grb_orig = MfGrdFile(mfgrd_test_path / "flow.disu.grb", verbose=False)
+    assert grb_orig.version == 1
+    assert grb_orig.crs is None
+
+    output_file = tmp_path / "flow_v2.disu.grb"
+    grb_orig.export(output_file, crs="EPSG:26916")
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 2
+    assert grb_new.crs == "EPSG:26916"
+    assert grb_new.grid_type == "DISU"
+    assert grb_new.nodes == grb_orig.nodes
+    assert grb_new.nja == grb_orig.nja
+    np.testing.assert_array_equal(grb_new.ia, grb_orig.ia)
+    np.testing.assert_array_equal(grb_new.ja, grb_orig.ja)
+    np.testing.assert_allclose(grb_new.top, grb_orig.top)
+    np.testing.assert_allclose(grb_new.bot, grb_orig.bot)
+
+
+def test_write_grb_export_is_keyword_only(tmp_path, mfgrd_test_path):
+    """A positional call beyond filename raises."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    with pytest.raises(TypeError):
+        grb.export(tmp_path / "out.grb", "double", 1, "EPSG:26916", True)
+
+
+def test_write_grb_empty_crs_argument_falls_back(tmp_path, mfgrd_test_path):
+    """An explicit empty/blank crs argument is treated like crs=None: it
+    falls back to the source file's CRS instead of overriding it."""
+    grb = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=False)
+    assert grb.crs is not None
+
+    output_file = tmp_path / "out.grb"
+    grb.export(output_file, crs="")
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.crs == grb.crs
+
+    output_file2 = tmp_path / "out2.grb"
+    grb.export(output_file2, crs="   ")
+    grb_new2 = MfGrdFile(output_file2, verbose=False)
+    assert grb_new2.crs == grb.crs
+
+
+def test_write_grb_empty_crs_argument_no_source_crs(tmp_path, mfgrd_test_path):
+    """An explicit empty/blank crs argument with no source CRS to fall
+    back on results in a version 1 file with no CRS, same as crs=None."""
+    grb = MfGrdFile(mfgrd_test_path / "nwtp3.dis.grb", verbose=False)
+    assert grb.crs is None
+
+    output_file = tmp_path / "out.grb"
+    grb.export(output_file, crs="")
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 1
+    assert grb_new.crs is None
+
+
+def test_write_grb_blank_source_crs_treated_as_absent(tmp_path, mfgrd_test_path):
+    """A source file's blank CRS is treated as absent on re-export:
+    version drops to 1 and no CRS field is written."""
+    grb = MfGrdFile(mfgrd_test_path / "flow_v2.dis.grb", verbose=False)
+    grb._datadict["CRS"] = ""
+
+    output_file = tmp_path / "blank_crs.grb"
+    grb.export(output_file)
+
+    grb_new = MfGrdFile(output_file, verbose=False)
+    assert grb_new.version == 1
+    assert grb_new.crs is None
+    assert "CRS" not in grb_new._datadict

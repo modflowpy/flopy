@@ -352,6 +352,39 @@ def test_save_load_node_mapping_unstructured(function_tmpdir):
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
+@requires_pkg("h5py")
+def test_save_node_mapping_with_boundnames(function_tmpdir):
+    # regression test for https://github.com/modflowpy/flopy/issues/2735
+    # boundnames in stress packages were being inserted into _node_map,
+    # causing save_node_mapping to fail with ValueError on int() conversion
+    sim = flopy.mf6.MFSimulation(sim_name="test", sim_ws=str(function_tmpdir))
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
+    flopy.mf6.ModflowGwfdis(gwf, nlay=1, nrow=10, ncol=10, top=10, botm=0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10)
+    flopy.mf6.ModflowGwfnpf(gwf)
+    flopy.mf6.ModflowGwfwel(
+        gwf,
+        stress_period_data={0: [((0, 2, 2), -1.0, "my_well")]},
+        boundnames=True,
+    )
+
+    array = np.zeros((10, 10), dtype=int)
+    array[:, 5:] = 1
+    mfsplit = Mf6Splitter(sim)
+    mfsplit.split_model(array)
+
+    non_int_keys = [
+        k for k in mfsplit._node_map if not isinstance(k, (int, np.integer))
+    ]
+    assert not non_int_keys, f"boundnames leaked into _node_map: {non_int_keys}"
+
+    hdf_file = function_tmpdir / "node_map.hdf5"
+    mfsplit.save_node_mapping(hdf_file)
+    assert hdf_file.exists()
+
+
 def test_control_records(function_tmpdir):
     nrow = 10
     ncol = 10

@@ -790,13 +790,20 @@ class BaseModel(ModelInterface):
             gdf : GeoDataFrame
         """
         if gdf is None:
+            from .discretization.grid import Grid
+
             modelgrid = self.modelgrid
-            if modelgrid is not None:
-                gdf = modelgrid.to_geodataframe()
-            else:
+            if modelgrid is None:
                 raise AttributeError(
                     "model does not have a grid instance, please supply a geodataframe"
                 )
+            if type(modelgrid) is Grid:
+                raise AttributeError(
+                    "model does not have a discretization package; cannot build a "
+                    "GeoDataFrame without geometry. Attach a discretization package "
+                    "or supply a gdf."
+                )
+            gdf = modelgrid.to_geodataframe()
 
         if package_names is None:
             package_names = [pak.name[0] for pak in self.packagelist]
