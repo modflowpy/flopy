@@ -81,7 +81,10 @@ class Raster:
         elif array.dtype in Raster.FLOAT64:
             dtype = "float64"
         elif array.dtype in Raster.INT8:
-            dtype = "int8"
+            if np.max(array) > 127:
+                dtype = "uint8"
+            else:
+                dtype = "int8"
         elif array.dtype in Raster.INT16:
             dtype = "int16"
         elif array.dtype in Raster.INT32:
@@ -996,6 +999,8 @@ class Raster:
         import_optional_dependency("rasterio")
         from rasterio.plot import show
 
+        band = kwargs.pop("band", None)
+
         if self._dataset is not None:
             ax = show(self._dataset, ax=ax, contour=contour, **kwargs)
 
@@ -1008,11 +1013,15 @@ class Raster:
             if d1 is None:
                 raise AssertionError("No plottable arrays found")
 
-            data = np.zeros((d0, d1, d2), dtype=float)
-            i = 0
-            for _, arr in sorted(self.__arr_dict.items()):
-                data[i, :, :] = arr
-                i += 1
+            if band is not None:
+                data = np.zeros((1, d1, d2), dtype=float)
+                data[0] = self.__arr_dict[band]
+            else:
+                data = np.zeros((d0, d1, d2), dtype=float)
+                i = 0
+                for _, arr in sorted(self.__arr_dict.items()):
+                    data[i, :, :] = arr
+                    i += 1
 
             data = np.ma.masked_where(data == self.nodatavals, data)
             ax = show(
