@@ -998,8 +998,8 @@ class Raster:
         """
         import_optional_dependency("rasterio")
         from rasterio.plot import show
-		
-		band = kwargs.pop("band", None)
+
+        band = kwargs.pop("band", None)
         # rasterio >= 1.5 defaults to adjusting data to [0, 1], which
         # can clash with user-supplied vmin/vmax. don't adjust unless
         # the caller explicitly asks for it

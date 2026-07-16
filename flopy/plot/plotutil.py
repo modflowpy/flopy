@@ -1685,6 +1685,15 @@ class UnstructuredPlotUtilities:
                     if t:
                         vdict[cell] = t
 
+        # check if line vertex 0 or -1 should be included in the crosssection
+        ptschk = [ptsin[0], ptsin[-1]]
+        for cell, vrts in vdict.items():
+            if len(vrts) == 1:
+                for pt in ptschk:
+                    if np.min(xgrid[cell]) < pt[0] < np.max(xgrid[cell]):
+                        if np.min(ygrid[cell]) < pt[1] < np.max(ygrid[cell]):
+                            vdict[cell] = [vrts[0], tuple(pt)]
+
         return vdict
 
     @staticmethod
@@ -1713,6 +1722,7 @@ class UnstructuredPlotUtilities:
         for node in nodes:
             points = vdict[node]
             if len(points) < 2:
+                # todo: need to pass in cross section points....
                 dist = 0
             else:
                 pt0 = points[0]
