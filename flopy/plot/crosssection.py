@@ -69,7 +69,7 @@ class PlotCrossSection:
         extent=None,
         geographic_coords=False,
         min_segment_length=1e-02,
-        view="auto"
+        view="auto",
     ):
         view = view.lower()
         self.ax = ax
@@ -168,7 +168,10 @@ class PlotCrossSection:
                 yp.append(v2)
 
             xp, yp = self.mg.get_local_coords(xp, yp)
-            if (np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp)) or view not in ("auto", "y"):
+            if (np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp)) or view not in (
+                "auto",
+                "y",
+            ):
                 # this is x-projection and we should buffer x by small amount
                 idx0 = np.argmax(xp)
                 idx1 = np.argmin(xp)
