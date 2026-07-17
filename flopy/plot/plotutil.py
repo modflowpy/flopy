@@ -1722,7 +1722,6 @@ class UnstructuredPlotUtilities:
         for node in nodes:
             points = vdict[node]
             if len(points) < 2:
-                # todo: need to pass in cross section points....
                 dist = 0
             else:
                 pt0 = points[0]
