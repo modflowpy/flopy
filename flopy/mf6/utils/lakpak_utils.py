@@ -9,8 +9,6 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     and are vertically connected to cells at the top of the model. Otherwise
     the lakes are embedded in the grid.
 
-    TODO: implement embedded lakes for VertexGrid
-
     TODO: add support for UnstructuredGrid
 
     Parameters
@@ -154,8 +152,15 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                         lake_map, idomain, cell_index, dx, dy, elevations
                     )
                 elif modelgrid.grid_type == "vertex":
-                    raise NotImplementedError(
-                        "embedded lakes have not been implemented"
+                    (
+                        cellids,
+                        claktypes,
+                        belevs,
+                        televs,
+                        connlens,
+                        connwidths,
+                    ) = __vertex_lake_connections(
+                        lake_map, idomain, cell_index, modelgrid
                     )
             else:
                 cellid = (0,) + cell_index
@@ -281,3 +286,96 @@ def __structured_lake_connections(
                 connwidths.append(0.0)
 
     return cellids, claktypes, belevs, televs, connlens, connwidths
+
+
+def __vertex_lake_connections(
+    lake_map, idomain, cell_index, modelgrid
+):
+    nlay, ncpl = lake_map.shape
+    cellids = []
+    claktypes = []
+    belevs = []
+    televs = []
+    connlens = []
+    connwidths = []
+
+    k, icpl = cell_index
+    node = k * ncpl + icpl
+    neighbors = modelgrid.neighbors(node=node, method="rook")
+
+    cx = modelgrid.xcellcenters[node]
+    cy = modelgrid.ycellcenters[node]
+    centre = (cx, cy)
+
+    elevations = modelgrid.top_botm
+
+    for neighbor in neighbors:
+
+        # Convert global node number to (layer, cell-per-layer)
+        nk = neighbor // ncpl
+        nicpl = neighbor % ncpl
+        ci = (nk, nicpl)
+
+        if not (np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0):
+            continue
+
+        shared = modelgrid.get_shared_edge(node, neighbor)
+
+        if shared is None or len(shared) != 2:
+            continue
+
+        v0, v1 = shared
+        p0 = modelgrid.verts[v0]
+        p1 = modelgrid.verts[v1]
+        connwidth = np.linalg.norm(p1 - p0)
+
+        connlen = __distance_to_segment(centre, p0, p1)
+
+        cellids.append(ci)
+        claktypes.append("horizontal")
+        belevs.append(elevations[nk + 1, nicpl])
+        televs.append(elevations[nk, nicpl])
+        connlens.append(connlen)
+        connwidths.append(connwidth)
+
+    # vertical connection
+    if k < nlay - 1:
+
+        cell_below = (k + 1, icpl)
+
+        if np.ma.is_masked(lake_map[cell_below]) and idomain[cell_below] > 0:
+
+            cellids.append(cell_below)
+            claktypes.append("vertical")
+            belevs.append(0.0)
+            televs.append(0.0)
+            connlens.append(0.0)
+            connwidths.append(0.0)
+
+    return cellids, claktypes, belevs, televs, connlens, connwidths
+
+
+def __distance_to_segment(cell_centre, p0, p1):
+    """
+    Perpendicular distance from a point to a line segment.
+    """
+
+    P = np.asarray(cell_centre, dtype=float)
+    A = np.asarray(p0, dtype=float)
+    B = np.asarray(p1, dtype=float)
+
+    AB = B - A
+    AP = P - A
+
+    denom = np.dot(AB, AB)
+
+    # clamp projections that fall outside the edge
+    if denom == 0:
+        return np.linalg.norm(P - A)
+
+    t = np.dot(AP, AB) / denom
+    t = np.clip(t, 0.0, 1.0)
+
+    C = A + t * AB
+
+    return np.linalg.norm(P - C)
