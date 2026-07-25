@@ -4,12 +4,13 @@ import numpy as np
 import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 
-from flopy.discretization import StructuredGrid
+from flopy.discretization import StructuredGrid, VertexGrid
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,
     ModflowGwfchd,
     ModflowGwfdis,
+    ModflowGwfdisv,
     ModflowGwfevta,
     ModflowGwfic,
     ModflowGwflak,
@@ -623,3 +624,290 @@ def test_embedded_lak_prudic_mixed(example_data_path):
             assert bedleak == "none", f"bedleak for lake 0 is not 'none' ({bedleak})"
         else:
             assert bedleak == 1.0, f"bedleak for lake 1 is not 1.0 ({bedleak})"
+
+
+def build_simple_disv_grid(nlay=1, return_data=False):
+    vertices = [
+        (0, 0.0, 0.0),
+        (1, 1.0, 0.0),
+        (2, 2.0, 0.0),
+        (3, 3.0, 0.0),
+        (4, 0.0, 1.0),
+        (5, 1.0, 1.0),
+        (6, 2.0, 1.0),
+        (7, 3.0, 1.0),
+        (8, 0.0, 2.0),
+        (9, 1.0, 2.0),
+        (10, 2.0, 2.0),
+        (11, 3.0, 2.0),
+        (12, 1.0, 3.0),
+        (13, 2.0, 3.0),
+    ]
+
+    cell2d = [
+        (0, 1.5, 1.5, 4, 5, 6, 10, 9),
+        (1, 1.5, 2.5, 4, 9, 10, 13, 12),
+        (2, 0.5, 1.5, 4, 4, 5, 9, 8),
+        (3, 2.5, 1.5, 4, 6, 7, 11, 10),
+        (4, 1.5, 0.5, 4, 1, 2, 6, 5),
+    ]
+
+    ncpl = len(cell2d)
+
+    top = np.full(ncpl, 1.0)
+    botm = np.vstack(
+        [np.full(ncpl, -(k + 1), dtype=float) for k in range(nlay)]
+    )
+
+    idomain = np.ones((nlay, ncpl), dtype=int)
+
+    grid = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+        nlay=nlay,
+    )
+
+    if return_data:
+        return grid, vertices, cell2d
+
+    return grid
+
+
+def test_disv_horizontal_connections():
+    modelgrid = build_simple_disv_grid()
+
+    lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+    
+    idomain = np.ones((1, modelgrid.ncpl), dtype=int)
+
+    idomain_out, pakdata, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        idomain=idomain,
+        bedleak=1.0,
+    )
+
+    assert pakdata[0] == 4
+
+    expected = {
+        (0, 1),
+        (0, 2),
+        (0, 3),
+        (0, 4),
+    }
+
+    returned = {c[2] for c in connectiondata}
+
+    assert returned == expected
+
+    assert all(c[3] == "horizontal" for c in connectiondata)
+
+
+def test_disv_connection_widths():
+    modelgrid = build_simple_disv_grid()
+
+    lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    _, _, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        bedleak=1.0,
+    )
+
+    horizontal = [c for c in connectiondata if c[3] == "horizontal"]
+
+    assert len(horizontal) == 4
+
+    widths = sorted(conn[8] for conn in horizontal)
+    assert widths == pytest.approx([1.0, 1.0, 1.0, 1.0])
+
+
+def test_disv_connection_lengths():
+    modelgrid = build_simple_disv_grid()
+
+    lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    _, _, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        bedleak=1.0,
+    )
+
+    horizontal = [c for c in connectiondata if c[3] == "horizontal"]
+
+    assert len(horizontal) == 4
+
+    lengths = sorted(conn[7] for conn in horizontal)
+
+    assert lengths == pytest.approx([0.5, 0.5, 0.5, 0.5])
+
+
+def test_disv_vertical_connection():
+    modelgrid = build_simple_disv_grid(nlay=2)
+
+    lake_map = np.full((2, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    _, pakdata, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        bedleak=1.0,
+    )
+
+    assert pakdata[0] == 5
+
+    horizontal = [c for c in connectiondata if c[3] == "horizontal"]
+    vertical = [c for c in connectiondata if c[3] == "vertical"]
+
+    assert len(horizontal) == 4
+    assert len(vertical) == 1
+
+    vconn = vertical[0]
+
+    assert vconn[2] == (1, 0)
+    assert vconn[5:] == [0.0, 0.0, 0.0, 0.0]
+
+
+def test_disv_inactive_neighbor():
+    modelgrid = build_simple_disv_grid()
+
+    lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    idomain = np.ones((1, modelgrid.ncpl), dtype=int)
+
+    # Make the east neighbour inactive
+    idomain[0, 3] = 0
+
+    _, pakdata, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        idomain=idomain,
+        bedleak=1.0,
+    )
+
+    assert pakdata[0] == 3
+
+    expected = {
+        (0, 1),  # north
+        (0, 2),  # west
+        (0, 4),  # south
+    }
+
+    returned = {c[2] for c in connectiondata}
+
+    assert returned == expected
+    assert all(c[3] == "horizontal" for c in connectiondata)
+
+
+def test_disv_idomain_update():
+    modelgrid = build_simple_disv_grid()
+
+    lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    idomain = np.ones((1, modelgrid.ncpl), dtype=int)
+
+    idomain_out, _, _ = get_lak_connections(
+        modelgrid,
+        lake_map,
+        idomain=idomain,
+        bedleak=1.0,
+    )
+
+    expected = np.ones((1, modelgrid.ncpl), dtype=int)
+    expected[0, 0] = 0
+
+    assert np.array_equal(idomain_out, expected)
+
+
+@requires_exe("mf6")
+def test_disv_lake_run(function_tmpdir):
+    modelgrid, vertices, cell2d = build_simple_disv_grid(
+        return_data=True
+    )
+
+    sim = MFSimulation(
+        sim_name="disv_lake_test",
+        sim_ws=function_tmpdir,
+        exe_name="mf6",
+    )
+
+    ModflowTdis(
+        sim,
+        nper=1,
+        perioddata=[(1.0, 1, 1.0)],
+    )
+
+    gwf = ModflowGwf(
+        sim,
+        modelname="disv_lake_test",
+        newtonoptions="newton under_relaxation",
+    )
+
+    ModflowGwfdisv(
+        gwf,
+        nlay=modelgrid.nlay,
+        ncpl=modelgrid.ncpl,
+        top=modelgrid.top,
+        botm=modelgrid.botm,
+        vertices=vertices,
+        cell2d=cell2d,
+    )
+
+    ModflowGwfic(
+        gwf,
+        strt=0.5,
+    )
+
+    ModflowGwfnpf(
+        gwf,
+        icelltype=1,
+        k=1.0,
+    )
+
+    lake_map = np.full((modelgrid.nlay, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    idomain, pakdata_dict, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        bedleak=1.0,
+    )
+
+    assert pakdata_dict[0] == 4
+
+    lak_pak_data = []
+    for key, value in pakdata_dict.items():
+        lak_pak_data.append([key, 0.5, value])
+
+    ModflowGwflak(
+        gwf,
+        print_stage=True,
+        nlakes=1,
+        packagedata=lak_pak_data,
+        connectiondata=connectiondata,
+        perioddata={
+            0: [[0, "rainfall", 0.0]]
+        },
+        pname="LAK-1",
+    )
+
+    gwf.dis.idomain = idomain
+
+    ModflowGwfoc(
+        gwf,
+        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    sim.write_simulation()
+
+    success = sim.run_simulation(silent=False)
+
+    assert success, f"could not run {sim.name}"
