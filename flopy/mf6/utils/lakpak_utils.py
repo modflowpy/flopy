@@ -303,10 +303,6 @@ def __vertex_lake_connections(
     node = k * ncpl + icpl
     neighbors = modelgrid.neighbors(node=node, method="rook")
 
-    cx = modelgrid.xcellcenters[node]
-    cy = modelgrid.ycellcenters[node]
-    centre = (cx, cy)
-
     elevations = modelgrid.top_botm
 
     for neighbor in neighbors:
@@ -319,7 +315,7 @@ def __vertex_lake_connections(
         if not (np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0):
             continue
 
-        shared = modelgrid.get_shared_edge(node, neighbor)
+        shared = modelgrid.get_shared_edge(icpl, nicpl)
 
         if shared is None or len(shared) != 2:
             continue
@@ -329,6 +325,9 @@ def __vertex_lake_connections(
         p1 = modelgrid.verts[v1]
         connwidth = np.linalg.norm(p1 - p0)
 
+        cx = modelgrid.xcellcenters[nicpl]
+        cy = modelgrid.ycellcenters[nicpl]
+        centre = (cx, cy)
         connlen = __distance_to_segment(centre, p0, p1)
 
         cellids.append(ci)
