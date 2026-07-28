@@ -655,9 +655,7 @@ def build_simple_disv_grid(nlay=1, return_data=False):
     ncpl = len(cell2d)
 
     top = np.full(ncpl, 1.0)
-    botm = np.vstack(
-        [np.full(ncpl, -(k + 1), dtype=float) for k in range(nlay)]
-    )
+    botm = np.vstack([np.full(ncpl, -(k + 1), dtype=float) for k in range(nlay)])
 
     idomain = np.ones((nlay, ncpl), dtype=int)
 
@@ -676,12 +674,36 @@ def build_simple_disv_grid(nlay=1, return_data=False):
     return grid
 
 
+def build_asymmetric_disv_grid():
+    vertices = [
+        (0, 0.0, 0.0),
+        (1, 1.0, 0.0),
+        (2, 4.0, 0.0),
+        (3, 0.0, 1.0),
+        (4, 1.0, 1.0),
+        (5, 4.0, 1.0),
+    ]
+    cell2d = [
+        (0, 0.5, 0.5, 4, 0, 1, 4, 3),
+        (1, 2.5, 0.5, 4, 1, 2, 5, 4),
+    ]
+
+    return VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=np.ones(2),
+        botm=-np.ones((1, 2)),
+        idomain=np.ones((1, 2), dtype=int),
+        nlay=1,
+    )
+
+
 def test_disv_horizontal_connections():
     modelgrid = build_simple_disv_grid()
 
     lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
     lake_map[0, 0] = 0
-    
+
     idomain = np.ones((1, modelgrid.ncpl), dtype=int)
 
     idomain_out, pakdata, connectiondata = get_lak_connections(
@@ -748,6 +770,23 @@ def test_disv_connection_lengths():
     assert lengths == pytest.approx([0.5, 0.5, 0.5, 0.5])
 
 
+def test_disv_connection_length_uses_aquifer_cell_center():
+    modelgrid = build_asymmetric_disv_grid()
+
+    lake_map = np.full((1, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, 0] = 0
+
+    _, _, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        bedleak=1.0,
+    )
+
+    assert len(connectiondata) == 1
+    assert connectiondata[0][2] == (0, 1)
+    assert connectiondata[0][7] == pytest.approx(1.5)
+
+
 def test_disv_vertical_connection():
     modelgrid = build_simple_disv_grid(nlay=2)
 
@@ -772,6 +811,28 @@ def test_disv_vertical_connection():
 
     assert vconn[2] == (1, 0)
     assert vconn[5:] == [0.0, 0.0, 0.0, 0.0]
+
+
+def test_disv_horizontal_connections_in_nonzero_layer():
+    modelgrid = build_simple_disv_grid(nlay=2)
+
+    lake_map = np.full((2, modelgrid.ncpl), -1, dtype=int)
+    lake_map[1, 0] = 0
+
+    _, pakdata, connectiondata = get_lak_connections(
+        modelgrid,
+        lake_map,
+        bedleak=1.0,
+    )
+
+    assert pakdata[0] == 4
+    assert {conn[2] for conn in connectiondata} == {
+        (1, 1),
+        (1, 2),
+        (1, 3),
+        (1, 4),
+    }
+    assert all(conn[3] == "horizontal" for conn in connectiondata)
 
 
 def test_disv_inactive_neighbor():
@@ -829,9 +890,7 @@ def test_disv_idomain_update():
 
 @requires_exe("mf6")
 def test_disv_lake_run(function_tmpdir):
-    modelgrid, vertices, cell2d = build_simple_disv_grid(
-        return_data=True
-    )
+    modelgrid, vertices, cell2d = build_simple_disv_grid(return_data=True)
 
     sim = MFSimulation(
         sim_name="disv_lake_test",
@@ -893,9 +952,7 @@ def test_disv_lake_run(function_tmpdir):
         nlakes=1,
         packagedata=lak_pak_data,
         connectiondata=connectiondata,
-        perioddata={
-            0: [[0, "rainfall", 0.0]]
-        },
+        perioddata={0: [[0, "rainfall", 0.0]]},
         pname="LAK-1",
     )
 
