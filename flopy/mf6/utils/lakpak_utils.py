@@ -48,9 +48,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     """
 
     if modelgrid.grid_type in ("unstructured",):
-        raise ValueError(
-            "unstructured grids not supported in get_lak_connections()"
-        )
+        raise ValueError("unstructured grids not supported in get_lak_connections()")
 
     embedded = True
     shape3d = modelgrid.shape
@@ -60,9 +58,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     if isinstance(lake_map, (list, tuple)):
         lake_map = np.array(lake_map, dtype=np.int32)
     elif isinstance(lake_map, (int, float)):
-        raise TypeError(
-            "lake_map must be a Masked Array, ndarray, list, or tuple"
-        )
+        raise TypeError("lake_map must be a Masked Array, ndarray, list, or tuple")
 
     # evaluate lake_map shape
     shape_map = lake_map.shape
@@ -85,9 +81,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
     # check dimensions of idomain
     if idomain.shape != shape3d:
-        raise ValueError(
-            f"shape of idomain ({idomain.shape}) not equal to {shape3d}"
-        )
+        raise ValueError(f"shape of idomain ({idomain.shape}) not equal to {shape3d}")
 
     # convert bedleak to numpy array if necessary
     if bedleak is None:
@@ -100,9 +94,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
     # check the dimensions of the bedleak array
     if bedleak.shape != shape2d:
-        raise ValueError(
-            f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}"
-        )
+        raise ValueError(f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}")
 
     # get the model grid elevations and reset lake_map using idomain
     # if lake is embedded and in an inactive cell
@@ -127,6 +119,8 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     unique = unique[idx]
 
     dx, dy = None, None
+    vertices, iverts = None, None
+    xcenters, ycenters = None, None
 
     # embedded lakes
     for lake_number in unique:
@@ -152,6 +146,11 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                         lake_map, idomain, cell_index, dx, dy, elevations
                     )
                 elif modelgrid.grid_type == "vertex":
+                    if vertices is None:
+                        vertices = modelgrid.verts
+                        iverts = modelgrid.iverts
+                        xcenters = modelgrid.xcellcenters
+                        ycenters = modelgrid.ycellcenters
                     (
                         cellids,
                         claktypes,
@@ -160,7 +159,15 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                         connlens,
                         connwidths,
                     ) = __vertex_lake_connections(
-                        lake_map, idomain, cell_index, modelgrid
+                        lake_map,
+                        idomain,
+                        cell_index,
+                        modelgrid,
+                        elevations,
+                        vertices,
+                        iverts,
+                        xcenters,
+                        ycenters,
                     )
             else:
                 cellid = (0,) + cell_index
@@ -204,17 +211,13 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
         # reset idomain for lake
         if iconn > 0:
-            idx = np.asarray(
-                (lake_map == lake_number) & (idomain > 0)
-            ).nonzero()
+            idx = np.asarray((lake_map == lake_number) & (idomain > 0)).nonzero()
             idomain[idx] = 0
 
     return idomain, connection_dict, connectiondata
 
 
-def __structured_lake_connections(
-    lake_map, idomain, cell_index, dx, dy, elevations
-):
+def __structured_lake_connections(lake_map, idomain, cell_index, dx, dy, elevations):
     nlay, nrow, ncol = lake_map.shape
     cellids = []
     claktypes = []
@@ -289,7 +292,15 @@ def __structured_lake_connections(
 
 
 def __vertex_lake_connections(
-    lake_map, idomain, cell_index, modelgrid
+    lake_map,
+    idomain,
+    cell_index,
+    modelgrid,
+    elevations,
+    vertices,
+    iverts,
+    xcenters,
+    ycenters,
 ):
     nlay, ncpl = lake_map.shape
     cellids = []
@@ -302,11 +313,9 @@ def __vertex_lake_connections(
     k, icpl = cell_index
     node = k * ncpl + icpl
     neighbors = modelgrid.neighbors(node=node, method="rook")
-
-    elevations = modelgrid.top_botm
+    cell_iverts = set(iverts[icpl])
 
     for neighbor in neighbors:
-
         # Convert global node number to (layer, cell-per-layer)
         nk = neighbor // ncpl
         nicpl = neighbor % ncpl
@@ -315,18 +324,18 @@ def __vertex_lake_connections(
         if not (np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0):
             continue
 
-        shared = modelgrid.get_shared_edge(icpl, nicpl)
+        shared = tuple(cell_iverts & set(iverts[nicpl]))
 
         if shared is None or len(shared) != 2:
             continue
 
         v0, v1 = shared
-        p0 = modelgrid.verts[v0]
-        p1 = modelgrid.verts[v1]
+        p0 = vertices[v0]
+        p1 = vertices[v1]
         connwidth = np.linalg.norm(p1 - p0)
 
-        cx = modelgrid.xcellcenters[nicpl]
-        cy = modelgrid.ycellcenters[nicpl]
+        cx = xcenters[nicpl]
+        cy = ycenters[nicpl]
         centre = (cx, cy)
         connlen = __distance_to_segment(centre, p0, p1)
 
@@ -339,11 +348,9 @@ def __vertex_lake_connections(
 
     # vertical connection
     if k < nlay - 1:
-
         cell_below = (k + 1, icpl)
 
         if np.ma.is_masked(lake_map[cell_below]) and idomain[cell_below] > 0:
-
             cellids.append(cell_below)
             claktypes.append("vertical")
             belevs.append(0.0)

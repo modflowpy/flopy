@@ -888,6 +888,39 @@ def test_disv_idomain_update():
     assert np.array_equal(idomain_out, expected)
 
 
+def test_disv_grid_geometry_accessed_once(monkeypatch):
+    modelgrid = build_simple_disv_grid(nlay=2)
+    lake_map = np.full((2, modelgrid.ncpl), -1, dtype=int)
+    lake_map[0, :2] = 0
+
+    # Build neighbor topology before counting geometry accesses. This is cached
+    # independently by Grid.neighbors().
+    modelgrid.neighbors(method="rook")
+
+    properties = ("top_botm", "verts", "iverts", "xcellcenters", "ycellcenters")
+    originals = {name: getattr(VertexGrid, name) for name in properties}
+    access_count = dict.fromkeys(properties, 0)
+
+    def counted_property(name):
+        def getter(grid):
+            access_count[name] += 1
+            return originals[name].fget(grid)
+
+        return property(getter)
+
+    for name in properties:
+        monkeypatch.setattr(VertexGrid, name, counted_property(name))
+
+    def unexpected_get_shared_edge(*args, **kwargs):
+        pytest.fail("get_shared_edge() called inside the neighbor loop")
+
+    monkeypatch.setattr(modelgrid, "get_shared_edge", unexpected_get_shared_edge)
+
+    get_lak_connections(modelgrid, lake_map, bedleak=1.0)
+
+    assert access_count == dict.fromkeys(properties, 1)
+
+
 @requires_exe("mf6")
 def test_disv_lake_run(function_tmpdir):
     modelgrid, vertices, cell2d = build_simple_disv_grid(return_data=True)
