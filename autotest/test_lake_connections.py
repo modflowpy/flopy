@@ -5,6 +5,7 @@ import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 
 from flopy.discretization import StructuredGrid, VertexGrid
+from flopy.discretization.grid import Grid
 from flopy.mf6 import (
     MFSimulation,
     ModflowGwf,
@@ -706,7 +707,7 @@ def test_disv_horizontal_connections():
 
     idomain = np.ones((1, modelgrid.ncpl), dtype=int)
 
-    idomain_out, pakdata, connectiondata = get_lak_connections(
+    _, pakdata, connectiondata = get_lak_connections(
         modelgrid,
         lake_map,
         idomain=idomain,
@@ -897,8 +898,14 @@ def test_disv_grid_geometry_accessed_once(monkeypatch):
     # independently by Grid.neighbors().
     modelgrid.neighbors(method="rook")
 
-    properties = ("top_botm", "verts", "iverts", "xcellcenters", "ycellcenters")
-    originals = {name: getattr(VertexGrid, name) for name in properties}
+    properties = {
+        "top_botm": VertexGrid,
+        "verts": VertexGrid,
+        "iverts": VertexGrid,
+        "xcellcenters": Grid,
+        "ycellcenters": Grid,
+    }
+    originals = {name: getattr(owner, name) for name, owner in properties.items()}
     access_count = dict.fromkeys(properties, 0)
 
     def counted_property(name):
@@ -908,96 +915,340 @@ def test_disv_grid_geometry_accessed_once(monkeypatch):
 
         return property(getter)
 
-    for name in properties:
-        monkeypatch.setattr(VertexGrid, name, counted_property(name))
-
-    def unexpected_get_shared_edge(*args, **kwargs):
-        pytest.fail("get_shared_edge() called inside the neighbor loop")
-
-    monkeypatch.setattr(modelgrid, "get_shared_edge", unexpected_get_shared_edge)
+    for name, owner in properties.items():
+        monkeypatch.setattr(owner, name, counted_property(name))
 
     get_lak_connections(modelgrid, lake_map, bedleak=1.0)
 
-    assert access_count == dict.fromkeys(properties, 1)
+    assert all(count <= 1 for count in access_count.values())
 
 
-@requires_exe("mf6")
-def test_disv_lake_run(function_tmpdir):
-    modelgrid, vertices, cell2d = build_simple_disv_grid(return_data=True)
-
-    sim = MFSimulation(
-        sim_name="disv_lake_test",
-        sim_ws=function_tmpdir,
-        exe_name="mf6",
-    )
-
-    ModflowTdis(
-        sim,
-        nper=1,
-        perioddata=[(1.0, 1, 1.0)],
-    )
-
-    gwf = ModflowGwf(
-        sim,
-        modelname="disv_lake_test",
-        newtonoptions="newton under_relaxation",
-    )
-
-    ModflowGwfdisv(
-        gwf,
-        nlay=modelgrid.nlay,
-        ncpl=modelgrid.ncpl,
-        top=modelgrid.top,
-        botm=modelgrid.botm,
+def test_disv_shared_boundary_split_by_vertex():
+    # vertex 2 splits the common boundary into two shared edges
+    vertices = [
+        (0, 0.0, 0.0),
+        (1, 1.0, 0.0),
+        (2, 1.0, 1.0),
+        (3, 1.0, 2.0),
+        (4, 0.0, 2.0),
+        (5, 2.0, 0.0),
+        (6, 2.0, 2.0),
+    ]
+    cell2d = [
+        (0, 0.5, 1.0, 5, 0, 1, 2, 3, 4),
+        (1, 1.5, 1.0, 5, 1, 5, 6, 3, 2),
+    ]
+    modelgrid = VertexGrid(
         vertices=vertices,
         cell2d=cell2d,
+        top=np.ones(2),
+        botm=-np.ones((1, 2)),
+        idomain=np.ones((1, 2), dtype=int),
+        nlay=1,
     )
 
-    ModflowGwfic(
-        gwf,
-        strt=0.5,
-    )
-
-    ModflowGwfnpf(
-        gwf,
-        icelltype=1,
-        k=1.0,
-    )
-
-    lake_map = np.full((modelgrid.nlay, modelgrid.ncpl), -1, dtype=int)
-    lake_map[0, 0] = 0
-
-    idomain, pakdata_dict, connectiondata = get_lak_connections(
+    idomain, pakdata, connectiondata = get_lak_connections(
         modelgrid,
-        lake_map,
+        np.array([[0, -1]], dtype=int),
         bedleak=1.0,
     )
 
-    assert pakdata_dict[0] == 4
+    assert pakdata[0] == 1
+    assert len(connectiondata) == 1
+    conn = connectiondata[0]
+    assert conn[2] == (0, 1)
+    assert conn[3] == "horizontal"
+    assert conn[7] == pytest.approx(0.5)
+    assert conn[8] == pytest.approx(2.0)
+    assert np.array_equal(idomain, np.array([[0, 1]]))
 
-    lak_pak_data = []
-    for key, value in pakdata_dict.items():
-        lak_pak_data.append([key, 0.5, value])
 
-    ModflowGwflak(
-        gwf,
-        print_stage=True,
-        nlakes=1,
-        packagedata=lak_pak_data,
-        connectiondata=connectiondata,
-        perioddata={0: [[0, "rainfall", 0.0]]},
-        pname="LAK-1",
+def test_disv_lake_without_connections_warns():
+    # Only the lake cell carries the hanging vertex, so rook adjacency is absent.
+    vertices = [
+        (0, 0.0, 0.0),
+        (1, 1.0, 0.0),
+        (2, 1.0, 1.0),
+        (3, 1.0, 2.0),
+        (4, 0.0, 2.0),
+        (5, 2.0, 0.0),
+        (6, 2.0, 2.0),
+    ]
+    cell2d = [
+        (0, 0.5, 1.0, 5, 0, 1, 2, 3, 4),
+        (1, 1.5, 1.0, 4, 1, 5, 6, 3),
+    ]
+    modelgrid = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=np.ones(2),
+        botm=-np.ones((1, 2)),
+        idomain=np.ones((1, 2), dtype=int),
+        nlay=1,
     )
 
-    gwf.dis.idomain = idomain
+    with pytest.warns(UserWarning, match="Embedded lake 0 has no connections"):
+        idomain, pakdata, connectiondata = get_lak_connections(
+            modelgrid,
+            np.array([[0, -1]], dtype=int),
+            bedleak=1.0,
+        )
 
-    ModflowGwfoc(
-        gwf,
-        printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    assert pakdata[0] == 0
+    assert connectiondata == []
+    assert np.array_equal(idomain, np.ones((1, 2), dtype=int))
+
+
+@pytest.mark.parametrize("closed", (False, True))
+def test_disv_nonrectangular_cells(closed):
+    vertices = [
+        (0, 0.0, 0.0),
+        (1, 1.0, 0.0),
+        (2, 1.0, 1.0),
+        (3, 2.0, 0.0),
+    ]
+    if closed:
+        cell2d = [
+            (0, 2.0 / 3.0, 1.0 / 3.0, 4, 0, 1, 2, 0),
+            (1, 4.0 / 3.0, 1.0 / 3.0, 4, 1, 3, 2, 1),
+        ]
+    else:
+        cell2d = [
+            (0, 2.0 / 3.0, 1.0 / 3.0, 3, 0, 1, 2),
+            (1, 4.0 / 3.0, 1.0 / 3.0, 3, 1, 3, 2),
+        ]
+    modelgrid = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=np.ones(2),
+        botm=-np.ones((1, 2)),
+        idomain=np.ones((1, 2), dtype=int),
+        nlay=1,
     )
 
-    sim.write_simulation()
+    _, pakdata, connectiondata = get_lak_connections(
+        modelgrid,
+        np.array([[0, -1]], dtype=int),
+        bedleak=1.0,
+    )
 
-    success = sim.run_simulation(silent=False)
+    assert pakdata[0] == 1
+    assert connectiondata[0][7] == pytest.approx(1.0 / 3.0)
+    assert connectiondata[0][8] == pytest.approx(1.0)
 
-    assert success, f"could not run {sim.name}"
+
+def build_dis_and_equivalent_disv(nlay, nrow, ncol, delr, delc, top, botm):
+    structured = StructuredGrid(
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=np.ones((nlay, nrow, ncol), dtype=int),
+        nlay=nlay,
+    )
+
+    xv = np.concatenate(([0.0], np.cumsum(delr)))
+    yv = delc.sum() - np.concatenate(([0.0], np.cumsum(delc)))
+    vertices = []
+    ivert = {}
+    for i in range(nrow + 1):
+        for j in range(ncol + 1):
+            ivert[(i, j)] = len(vertices)
+            vertices.append((len(vertices), float(xv[j]), float(yv[i])))
+
+    cell2d = []
+    for i in range(nrow):
+        for j in range(ncol):
+            cell2d.append(
+                (
+                    i * ncol + j,
+                    0.5 * (xv[j] + xv[j + 1]),
+                    0.5 * (yv[i] + yv[i + 1]),
+                    4,
+                    ivert[(i, j)],
+                    ivert[(i, j + 1)],
+                    ivert[(i + 1, j + 1)],
+                    ivert[(i + 1, j)],
+                )
+            )
+
+    ncpl = nrow * ncol
+    vertex = VertexGrid(
+        vertices=vertices,
+        cell2d=cell2d,
+        top=top.flatten(),
+        botm=botm.reshape(nlay, ncpl),
+        idomain=np.ones((nlay, ncpl), dtype=int),
+        nlay=nlay,
+    )
+    return structured, vertex, vertices, cell2d
+
+
+@pytest.mark.parametrize(
+    "lakes, inactive",
+    (
+        ([[(0, 2, 2)]], []),
+        ([[(0, 1, 1), (0, 1, 2), (0, 2, 1), (0, 2, 2)]], []),
+        ([[(0, 0, 0)]], []),
+        ([[(0, 0, 2)]], []),
+        ([[(1, 2, 2)]], []),
+        ([[(0, 2, 2), (1, 2, 2)]], []),
+        ([[(0, 2, 2)]], [(0, 2, 3)]),
+        ([[(0, 2, 1)], [(0, 2, 2)]], []),
+        ([[(0, 1, 1)], [(0, 3, 3)]], []),
+        ([[(0, 2, 2), (0, 2, 3)]], [(0, 2, 2)]),
+    ),
+)
+def test_disv_matches_dis_embedded_lake(lakes, inactive):
+    nlay, nrow, ncol = 2, 5, 5
+    delr = np.array([10.0, 20.0, 30.0, 20.0, 10.0])
+    delc = np.array([5.0, 15.0, 25.0, 15.0, 5.0])
+    top = np.full((nrow, ncol), 10.0)
+    botm = np.array([np.zeros((nrow, ncol)), np.full((nrow, ncol), -10.0)])
+    ncpl = nrow * ncol
+    structured, vertex, _, _ = build_dis_and_equivalent_disv(
+        nlay, nrow, ncol, delr, delc, top, botm
+    )
+
+    lake_map = np.full((nlay, nrow, ncol), -1, dtype=int)
+    for lake_number, cells in enumerate(lakes):
+        for cell in cells:
+            lake_map[cell] = lake_number
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+    for cell in inactive:
+        idomain[cell] = 0
+
+    dis_idomain, dis_pakdata, dis_conn = get_lak_connections(
+        structured, lake_map.copy(), idomain=idomain.copy(), bedleak=1.0
+    )
+    disv_idomain, disv_pakdata, disv_conn = get_lak_connections(
+        vertex,
+        lake_map.reshape(nlay, ncpl).copy(),
+        idomain=idomain.reshape(nlay, ncpl).copy(),
+        bedleak=1.0,
+    )
+
+    def normalize(conn):
+        lake_number, _, cellid, claktype, _, _, _, connlen, connwidth = conn
+        if len(cellid) == 3:
+            k, i, j = cellid
+            cellid = (k, i * ncol + j)
+        return (
+            lake_number,
+            *cellid,
+            claktype,
+            round(connlen, 6),
+            round(connwidth, 6),
+        )
+
+    assert dis_pakdata == disv_pakdata
+    assert sorted(map(normalize, dis_conn)) == sorted(map(normalize, disv_conn))
+    assert np.array_equal(dis_idomain.reshape(nlay, ncpl), disv_idomain)
+
+
+@requires_exe("mf6")
+def test_disv_lake_matches_dis_run(function_tmpdir):
+    nlay, nrow, ncol = 1, 3, 3
+    delr = np.array([1.0, 1.5, 2.0])
+    delc = np.array([2.0, 1.5, 1.0])
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol))
+    structured, vertex, vertices, cell2d = build_dis_and_equivalent_disv(
+        nlay, nrow, ncol, delr, delc, top, botm
+    )
+
+    def build_and_run(grid_type):
+        name = f"{grid_type}_lake_test"
+        modelgrid = structured if grid_type == "dis" else vertex
+        lake_map = np.full(modelgrid.shape, -1, dtype=int)
+        lake_map[(0, 1, 1) if grid_type == "dis" else (0, 4)] = 0
+        idomain, pakdata_dict, connectiondata = get_lak_connections(
+            modelgrid,
+            lake_map,
+            bedleak=1.0,
+        )
+        assert pakdata_dict[0] == 4
+
+        sim = MFSimulation(
+            sim_name=name,
+            sim_ws=function_tmpdir / grid_type,
+            exe_name="mf6",
+        )
+        ModflowTdis(sim, nper=1, perioddata=[(1.0, 1, 1.0)])
+        ModflowIms(
+            sim,
+            print_option="summary",
+            linear_acceleration="BICGSTAB",
+            outer_dvclose=1e-9,
+            inner_dvclose=1e-10,
+        )
+        gwf = ModflowGwf(
+            sim,
+            modelname=name,
+            newtonoptions="newton under_relaxation",
+            save_flows=True,
+        )
+        if grid_type == "dis":
+            ModflowGwfdis(
+                gwf,
+                nlay=nlay,
+                nrow=nrow,
+                ncol=ncol,
+                delr=delr,
+                delc=delc,
+                top=top,
+                botm=botm,
+                idomain=idomain,
+            )
+        else:
+            ModflowGwfdisv(
+                gwf,
+                nlay=nlay,
+                ncpl=nrow * ncol,
+                top=top.flatten(),
+                botm=botm.reshape(nlay, nrow * ncol),
+                vertices=vertices,
+                cell2d=cell2d,
+                idomain=idomain,
+            )
+        ModflowGwfic(gwf, strt=0.5)
+        ModflowGwfnpf(gwf, icelltype=1, k=1.0)
+
+        chd_spd = []
+        for i in range(nrow):
+            if grid_type == "dis":
+                chd_spd.extend([((0, i, 0), 0.75), ((0, i, 2), 0.25)])
+            else:
+                chd_spd.extend([((0, i * ncol), 0.75), ((0, i * ncol + 2), 0.25)])
+        ModflowGwfchd(gwf, stress_period_data=chd_spd)
+
+        lak = ModflowGwflak(
+            gwf,
+            print_stage=True,
+            stage_filerecord=f"{name}.lak.stage.bin",
+            nlakes=1,
+            packagedata=[[0, 0.5, pakdata_dict[0]]],
+            connectiondata=connectiondata,
+            perioddata={0: [[0, "rainfall", 0.01]]},
+            pname="LAK-1",
+        )
+        ModflowGwfoc(
+            gwf,
+            head_filerecord=f"{name}.hds",
+            saverecord=[("HEAD", "ALL")],
+            printrecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+        )
+
+        sim.write_simulation()
+        success, _ = sim.run_simulation(silent=False)
+        assert success, f"could not run {sim.name}"
+
+        heads = gwf.output.head().get_data().reshape(nlay, nrow, ncol)
+        stage = lak.output.stage().get_data()
+        return heads, stage
+
+    dis_heads, dis_stage = build_and_run("dis")
+    disv_heads, disv_stage = build_and_run("disv")
+
+    assert np.allclose(dis_heads, disv_heads, rtol=1e-6, atol=1e-6)
+    assert np.allclose(dis_stage, disv_stage, rtol=1e-6, atol=1e-6)

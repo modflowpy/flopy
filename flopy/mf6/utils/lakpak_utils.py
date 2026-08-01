@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 
@@ -44,6 +46,11 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
         connections in a lake values
     connectiondata : list of lists
         connectiondata block for the lake package
+
+    Warns
+    -----
+    UserWarning
+        If an embedded lake has no connections to active model cells.
 
     """
 
@@ -119,7 +126,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     unique = unique[idx]
 
     dx, dy = None, None
-    vertices, iverts = None, None
+    vertices, cell_edges = None, None
     xcenters, ycenters = None, None
 
     # embedded lakes
@@ -148,7 +155,9 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                 elif modelgrid.grid_type == "vertex":
                     if vertices is None:
                         vertices = modelgrid.verts
-                        iverts = modelgrid.iverts
+                        cell_edges = tuple(
+                            __cell_edges(poly) for poly in modelgrid.iverts
+                        )
                         xcenters = modelgrid.xcellcenters
                         ycenters = modelgrid.ycellcenters
                     (
@@ -165,7 +174,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                         modelgrid,
                         elevations,
                         vertices,
-                        iverts,
+                        cell_edges,
                         xcenters,
                         ycenters,
                     )
@@ -208,6 +217,14 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
         # set number of connections for lake
         connection_dict[lake_number] = iconn
+
+        if embedded and iconn == 0:
+            warnings.warn(
+                f"Embedded lake {lake_number} has no connections to active "
+                "model cells.",
+                UserWarning,
+                stacklevel=2,
+            )
 
         # reset idomain for lake
         if iconn > 0:
@@ -298,7 +315,7 @@ def __vertex_lake_connections(
     modelgrid,
     elevations,
     vertices,
-    iverts,
+    cell_edges,
     xcenters,
     ycenters,
 ):
@@ -311,59 +328,69 @@ def __vertex_lake_connections(
     connwidths = []
 
     k, icpl = cell_index
-    node = k * ncpl + icpl
-    neighbors = modelgrid.neighbors(node=node, method="rook")
-    cell_iverts = set(iverts[icpl])
+    if idomain[cell_index] > 0:
+        node = k * ncpl + icpl
+        neighbors = modelgrid.neighbors(node=node, method="rook")
 
-    for neighbor in neighbors:
-        # Convert global node number to (layer, cell-per-layer)
-        nk = neighbor // ncpl
-        nicpl = neighbor % ncpl
-        ci = (nk, nicpl)
+        for neighbor in neighbors:
+            # neighbors() returns 2D adjacency offset to the requested layer
+            nicpl = neighbor % ncpl
+            ci = (k, nicpl)
 
-        if not (np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0):
-            continue
+            if not (np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0):
+                continue
 
-        shared = tuple(cell_iverts & set(iverts[nicpl]))
+            # A face can contain multiple edges when split by hanging vertices.
+            shared = cell_edges[icpl] & cell_edges[nicpl]
+            if not shared:
+                continue
 
-        if shared is None or len(shared) != 2:
-            continue
+            centre = (xcenters[nicpl], ycenters[nicpl])
+            connwidth = 0.0
+            connlen = None
+            for v0, v1 in shared:
+                p0 = vertices[v0]
+                p1 = vertices[v1]
+                connwidth += np.linalg.norm(p1 - p0)
+                distance = __distance_to_segment(centre, p0, p1)
+                if connlen is None or distance < connlen:
+                    connlen = distance
 
-        v0, v1 = shared
-        p0 = vertices[v0]
-        p1 = vertices[v1]
-        connwidth = np.linalg.norm(p1 - p0)
+            cellids.append(ci)
+            claktypes.append("horizontal")
+            belevs.append(elevations[k + 1, nicpl])
+            televs.append(elevations[k, nicpl])
+            connlens.append(connlen)
+            connwidths.append(connwidth)
 
-        cx = xcenters[nicpl]
-        cy = ycenters[nicpl]
-        centre = (cx, cy)
-        connlen = __distance_to_segment(centre, p0, p1)
+        # vertical connection
+        if k < nlay - 1:
+            cell_below = (k + 1, icpl)
 
-        cellids.append(ci)
-        claktypes.append("horizontal")
-        belevs.append(elevations[nk + 1, nicpl])
-        televs.append(elevations[nk, nicpl])
-        connlens.append(connlen)
-        connwidths.append(connwidth)
-
-    # vertical connection
-    if k < nlay - 1:
-        cell_below = (k + 1, icpl)
-
-        if np.ma.is_masked(lake_map[cell_below]) and idomain[cell_below] > 0:
-            cellids.append(cell_below)
-            claktypes.append("vertical")
-            belevs.append(0.0)
-            televs.append(0.0)
-            connlens.append(0.0)
-            connwidths.append(0.0)
+            if np.ma.is_masked(lake_map[cell_below]) and idomain[cell_below] > 0:
+                cellids.append(cell_below)
+                claktypes.append("vertical")
+                belevs.append(0.0)
+                televs.append(0.0)
+                connlens.append(0.0)
+                connwidths.append(0.0)
 
     return cellids, claktypes, belevs, televs, connlens, connwidths
 
 
+def __cell_edges(poly):
+    """Return normalized vertex pairs defining a cell's edges."""
+    if poly[0] == poly[-1]:
+        poly = poly[:-1]
+
+    return {tuple(sorted((poly[v - 1], poly[v]))) for v in range(len(poly))}
+
+
 def __distance_to_segment(cell_centre, p0, p1):
     """
-    Perpendicular distance from a point to a line segment.
+    Shortest distance from a point to a line segment.
+
+    Projections beyond the segment are clamped to the nearest endpoint.
     """
 
     P = np.asarray(cell_centre, dtype=float)
