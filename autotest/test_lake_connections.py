@@ -987,7 +987,7 @@ def test_disv_lake_without_connections_warns():
         nlay=1,
     )
 
-    with pytest.warns(UserWarning, match="Embedded lake 0 has no connections"):
+    with pytest.warns(UserWarning, match="embedded lake 0 has no connections"):
         idomain, pakdata, connectiondata = get_lak_connections(
             modelgrid,
             np.array([[0, -1]], dtype=int),

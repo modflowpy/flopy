@@ -220,7 +220,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
         if embedded and iconn == 0:
             warnings.warn(
-                f"Embedded lake {lake_number} has no connections to active "
+                f"embedded lake {lake_number} has no connections to active "
                 "model cells.",
                 UserWarning,
                 stacklevel=2,
