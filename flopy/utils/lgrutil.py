@@ -5,6 +5,7 @@ import numpy as np
 from ..discretization import StructuredGrid
 from ..modflow import Modflow
 from .cvfdutil import get_disv_gridprops, gridlist_to_verts
+from .gnc import get_gnc_exchange
 from .util_array import Util2d, Util3d
 
 
@@ -719,6 +720,40 @@ class Lgr:
             nlayc, nrowc, ncolc, delrc, delcc, topc, botmc, idomainc, xorigin, yorigin
         )
         return simple_regular_grid
+
+    def get_gnc_data(self, numalphaj=None):
+        """
+        Get a dictionary of information needed to create the GNC package of
+        the GWF-GWF exchange between the parent and child models.  The
+        returned dictionary can be unpacked directly into the gnc package of
+        the exchange.
+
+        Parameters
+        ----------
+        numalphaj : int
+            Number of contributing cells written per ghost node.  The largest
+            number found is used if None.
+
+        Returns
+        -------
+        gridprops : dict
+
+        Notes
+        -----
+        The ghost nodes are in the parent model, which must be the first model
+        of the exchange.  MODFLOW 6 requires one record for every exchange
+        record, so connections that need no correction, such as a child cell
+        centered on the face of a parent cell, are written with a cellid of
+        zero and a contributing factor of zero.
+
+        """
+        return get_gnc_exchange(
+            self.parent,
+            self.child,
+            self.get_exchange_data(),
+            idomain1=self.refine_mask,
+            numalphaj=numalphaj,
+        )
 
     def to_disv_gridprops(self):
         """

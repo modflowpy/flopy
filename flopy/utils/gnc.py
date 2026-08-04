@@ -481,3 +481,129 @@ def get_gridprops_gnc5(gnc, i2kn=0, isymgncn=0, ia=None, ja=None, iac=None, chec
         "iflalphan": iflalphan,
         "gncdata": gncdata,
     }
+
+
+def get_gnc_exchange(
+    modelgrid1,
+    modelgrid2,
+    exchangedata,
+    idomain1=None,
+    numalphaj=None,
+    rtol=1.0e-6,
+):
+    """
+    Compute ghost node correction data for a GWF-GWF exchange
+
+    A ghost node is added in the cell of model 1 for every horizontal exchange
+    connection to a finer cell of model 2 whose center is offset transverse to
+    the connection.  The head at the ghost node is interpolated between the
+    cell of model 1 and its own neighbors, so model 1 must be the coarser of
+    the two models.
+
+    Parameters
+    ----------
+    modelgrid1 : flopy.discretization.Grid
+        Grid of the first model of the exchange, which holds the ghost nodes
+        and the contributing cells
+    modelgrid2 : flopy.discretization.Grid
+        Grid of the second model of the exchange
+    exchangedata : list
+        Exchange records, each starting with cellidm1, cellidm2, and ihc, as
+        returned by :meth:`flopy.utils.lgrutil.Lgr.get_exchange_data`
+    idomain1 : array_like
+        Idomain of the first model, used to skip inactive contributing cells.
+        Taken from modelgrid1 if None.
+    numalphaj : int
+        Number of contributing cells written per ghost node.  The largest
+        number found is used if None.
+    rtol : float
+        Relative tolerance used to decide whether the center of the cell of
+        model 2 is offset from the center of the cell of model 1 (default is
+        1.0e-6).
+
+    Returns
+    -------
+    gridprops : dict
+        Dictionary with numgnc, numalphaj, and gncdata, which can be unpacked
+        into the gnc package of a ModflowGwfgwf exchange.
+
+    Notes
+    -----
+    MODFLOW 6 requires one ghost node record for every exchange record, in the
+    same order, so connections that need no correction are written with a
+    cellid of zero and a contributing factor of zero.  Only horizontal
+    corrections are computed.
+
+    """
+    if idomain1 is None:
+        idomain1 = getattr(modelgrid1, "idomain", None)
+
+    xc1, yc1 = _node_centers(modelgrid1)
+    xc2, yc2 = _node_centers(modelgrid2)
+    area1, area2 = _cell_areas(modelgrid1), _cell_areas(modelgrid2)
+    active1 = None if idomain1 is None else np.asarray(idomain1).ravel() > 0
+    neighbors = modelgrid1.neighbors(method="rook")
+
+    # the contributing cells of a cell are the same for every exchange record
+    # that uses it, so the offsets to its neighbors are built once
+    cache = {}
+
+    def offsets(node):
+        if node not in cache:
+            conn = np.array(sorted(neighbors.get(node, [])), dtype=int)
+            if active1 is not None and conn.size:
+                conn = conn[active1[conn]]
+            if conn.size == 0:
+                cache[node] = (conn, None, None)
+            else:
+                dn = np.column_stack((xc1[conn] - xc1[node], yc1[conn] - yc1[node]))
+                cache[node] = (conn, dn, np.argmax(np.abs(dn), axis=1))
+        return cache[node]
+
+    records = []
+    for rec in exchangedata:
+        cellidn, cellidm, ihc = rec[0], rec[1], rec[2]
+        n = modelgrid1.get_node([tuple(cellidn)])[0]
+        m = modelgrid2.get_node([tuple(cellidm)])[0]
+
+        js, alpha = np.array([], dtype=int), 0.0
+        if ihc != 0 and area2[m] < area1[n]:
+            conn, dn, naxis = offsets(n)
+            if dn is not None:
+                d_nm = np.array([xc2[m] - xc1[n], yc2[m] - yc1[n]])
+                sel, total = _contributing_cells(dn, naxis, d_nm, rtol)
+                if sel is not None:
+                    js, alpha = conn[sel], total / sel.sum()
+        records.append((cellidn, cellidm, js, alpha))
+
+    if numalphaj is None:
+        numalphaj = max((len(rec[2]) for rec in records), default=1)
+
+    ndim1 = len(records[0][0]) if records else 3
+    none_cellid = tuple([-1] * ndim1)  # written as a cellid of zero
+
+    gncdata = []
+    for irec, (cellidn, cellidm, js, alpha) in enumerate(records):
+        if len(js) > numalphaj:
+            raise ValueError(
+                f"gnc record {irec}: cell {cellidn} has {len(js)} contributing "
+                f"cells, which is more than numalphaj of {numalphaj}"
+            )
+        cellids = [tuple(int(v) for v in modelgrid1.get_lrc([int(j)])[0]) for j in js]
+        alphas = [float(alpha)] * len(js)
+        # pad with a cellid of zero, which MODFLOW 6 skips
+        cellids += [none_cellid] * (numalphaj - len(js))
+        alphas += [0.0] * (numalphaj - len(js))
+        gncdata.append(
+            tuple(
+                [tuple(int(v) for v in cellidn), tuple(int(v) for v in cellidm)]
+                + cellids
+                + alphas
+            )
+        )
+
+    return {
+        "numgnc": len(gncdata),
+        "numalphaj": numalphaj,
+        "gncdata": gncdata,
+    }
