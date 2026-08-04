@@ -191,12 +191,9 @@ class MfUsgGnc(Package):
         for idx in range(self.numalphaj):
             gdata[f"Node{idx:d}"] += 1
 
-        # the gnc list is read with URWORD, so it is not fixed-width, the
-        # contributing factors do not need to be truncated to %10.2e, and the
-        # fields are separated so that a value filling its width still reads
-        np.savetxt(
-            f_gnc, gdata, fmt=fmt_string(gdata, free=True, sep=" "), delimiter=""
-        )
+        # the gnc list is read with URWORD, so it is not fixed-width and the
+        # contributing factors do not need to be truncated to %10.2e
+        np.savetxt(f_gnc, gdata, fmt=fmt_string(gdata, free=True), delimiter="")
 
         f_gnc.write("\n")
         f_gnc.close()

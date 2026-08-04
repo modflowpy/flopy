@@ -6,6 +6,8 @@ Cases:
   - gridgen   : the computed data must reproduce gridgen's qtg.gnc.dat.
 """
 
+import io
+
 import numpy as np
 import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
@@ -502,3 +504,33 @@ def test_mfusg_gnc_file_fields_stay_separated(function_tmpdir):
 
     # the contributing factors must not be truncated
     assert np.allclose(float(records[0].split()[5]), 0.166667, atol=1e-6)
+
+
+def test_fmt_string_separates_free_format_fields():
+    """A free format list is read with URWORD, so its fields must be separated
+
+    A value that fills its format width runs into the next value when the
+    field formats are concatenated, which made a record unreadable.  Ten digit
+    node numbers fill the %10d field width.
+    """
+    from flopy.mfusg.cln_dtypes import MfUsgClnDtypes
+    from flopy.mfusg.mfusg import fmt_string
+
+    dtypes = {
+        "gnc": flopy.mfusg.MfUsgGnc.get_default_dtype(2, 0),
+        "cln node": MfUsgClnDtypes.get_clnnode_dtype(),
+    }
+    for name, dtype in dtypes.items():
+        record = np.zeros(1, dtype=dtype)
+        for field in dtype.names:
+            if np.issubdtype(dtype[field], np.integer):
+                record[0][field] = 1234567889
+
+        buff = io.StringIO()
+        np.savetxt(buff, record, fmt=fmt_string(record, free=True), delimiter="")
+        assert len(buff.getvalue().split()) == len(dtype.names), name
+
+        # a fixed format list is read by position, so it stays unseparated
+        buff = io.StringIO()
+        np.savetxt(buff, record, fmt=fmt_string(record, free=False), delimiter="")
+        assert len(buff.getvalue().split()) < len(dtype.names), name
