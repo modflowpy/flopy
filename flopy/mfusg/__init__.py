@@ -36,7 +36,6 @@ __all__ = [
     "MfUsgDpt",
     "MfUsgEvt",
     "MfUsgGnc",
-    "MfUsgGnc",
     "MfUsgLak",
     "MfUsgLpf",
     "MfUsgMdt",
