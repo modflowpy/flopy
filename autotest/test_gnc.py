@@ -16,10 +16,11 @@ from flopy.utils.gnc import (
     _check_gnc,
     get_gnc,
     get_gnc_dtype,
+    get_gridprops_gnc5,
     get_gridprops_gnc6,
     get_numalphaj,
 )
-from flopy.utils.gridgen import Gridgen
+from flopy.utils.gridgen import Gridgen, get_ia_from_iac
 
 
 def synthetic_grid(connectivity=True):
@@ -337,3 +338,167 @@ def test_get_gnc_connectivity_needs_constant_ncpl():
     assert grid.iac is None
     with pytest.raises(ValueError, match="different"):
         get_gnc(grid)
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_get_gnc_inputs_agree(function_tmpdir):
+    g = build_gridgen(function_tmpdir)
+    expected = gnc_key(g.get_gnc())
+
+    grid = UnstructuredGrid(**g.get_gridprops_unstructuredgrid())
+    iac = g.get_iac()
+    ia, ja = get_ia_from_iac(iac), g.get_ja(iac.sum())
+
+    # refinement level of every cell, where level 0 is the base grid cell
+    area = g.get_area()
+    level = np.round(np.log2(np.sqrt(area.max() / area))).astype(int)
+    assert level.max() > 0
+
+    ncpl = g.get_gridprops_disv()["ncpl"]
+    vertex_grid = VertexGrid(**g.get_gridprops_vertexgrid())
+
+    for tag, gnc in [
+        ("level", get_gnc(grid, level=level, numalphaj=2)),
+        ("level per layer", get_gnc(grid, level=level[:ncpl], numalphaj=2)),
+        ("vertex grid", get_gnc(vertex_grid, ia=ia, ja=ja, numalphaj=2)),
+        ("iac", get_gnc(grid, iac=iac, ja=ja, numalphaj=2)),
+        # connectivity built from the grid, either the iac and ja an
+        # unstructured grid carries or the cells that share an edge
+        ("unstructured grid only", get_gnc(grid, numalphaj=2)),
+        ("vertex grid only", get_gnc(vertex_grid, numalphaj=2)),
+    ]:
+        assert np.allclose(gnc_key(gnc), expected, atol=2.0e-6), tag
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_get_gridprops_gnc_matches_gridgen(function_tmpdir):
+    g = build_gridgen(function_tmpdir, nlay=1)
+    iac = g.get_iac()
+    ia, ja = get_ia_from_iac(iac), g.get_ja(iac.sum())
+    ncpl = g.get_gridprops_disv()["ncpl"]
+
+    grid = UnstructuredGrid(**g.get_gridprops_unstructuredgrid())
+    gnc = get_gnc(grid, numalphaj=2)
+
+    gridprops = get_gridprops_gnc6(gnc, dis_type="disv", ncpl=ncpl, ia=ia, ja=ja)
+    expected = g.get_gridprops_gnc6(dis_type="disv")
+    assert gridprops["numgnc"] == expected["numgnc"]
+    assert gridprops["numalphaj"] == expected["numalphaj"]
+
+    gridprops = get_gridprops_gnc5(gnc, ia=ia, ja=ja)
+    expected = g.get_gridprops_gnc5()
+    assert gridprops["numgnc"] == expected["numgnc"]
+    assert gridprops["iflalphan"] == 0
+    assert gridprops["gncdata"].dtype == expected["gncdata"].dtype
+
+
+@pytest.mark.slow
+@requires_exe("mf6", "gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_mf6disv_gnc_padding(function_tmpdir):
+    """Repeating a contributing cell must not change the solution"""
+    g = build_gridgen(function_tmpdir, nlay=1)
+    disv_gridprops = g.get_gridprops_disv()
+    iac = g.get_iac()
+    ia, ja = get_ia_from_iac(iac), g.get_ja(iac.sum())
+    grid = UnstructuredGrid(**g.get_gridprops_unstructuredgrid())
+
+    chdspd = []
+    for x, y, head in [(0, 10, 1.0), (10, 0, 0.0)]:
+        ic = g.intersect([(x, y)], "point", 0)["nodenumber"][0]
+        chdspd.append([(0, ic), head])
+
+    def run(numalphaj):
+        gnc = get_gnc(grid, numalphaj=numalphaj)
+        assert get_numalphaj(gnc) == numalphaj
+        gridprops = get_gridprops_gnc6(
+            gnc, dis_type="disv", ncpl=disv_gridprops["ncpl"], ia=ia, ja=ja
+        )
+        ws = function_tmpdir / f"j{numalphaj}"
+        sim = flopy.mf6.MFSimulation(sim_name="m", sim_ws=ws, exe_name="mf6")
+        flopy.mf6.ModflowTdis(sim)
+        flopy.mf6.ModflowIms(
+            sim,
+            linear_acceleration="bicgstab",
+            inner_dvclose=1e-11,
+            outer_dvclose=1e-11,
+        )
+        gwf = flopy.mf6.ModflowGwf(sim, modelname="m")
+        flopy.mf6.ModflowGwfdisv(gwf, **disv_gridprops)
+        flopy.mf6.ModflowGwfic(gwf)
+        flopy.mf6.ModflowGwfnpf(gwf)
+        flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
+        flopy.mf6.ModflowGwfoc(
+            gwf, head_filerecord="m.hds", saverecord=[("HEAD", "ALL")]
+        )
+        flopy.mf6.ModflowGwfgnc(gwf, **gridprops)
+        sim.write_simulation()
+        success, buff = sim.run_simulation(silent=True)
+        assert success, "\n".join(buff[-25:])
+        return gwf.output.head().get_data().flatten()
+
+    assert np.allclose(run(2), run(4), atol=1e-8)
+
+
+@pytest.mark.slow
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_mfusg_gnc_padding(function_tmpdir):
+    """Repeating a contributing cell must not change the solution"""
+    g = build_gridgen(function_tmpdir, nlay=1)
+    disu_gridprops = g.get_gridprops_disu5()
+    iac = g.get_iac()
+    ia, ja = get_ia_from_iac(iac), g.get_ja(iac.sum())
+    grid = UnstructuredGrid(**g.get_gridprops_unstructuredgrid())
+
+    chdspd = []
+    for x, y, head in [(0, 10, 1.0), (10, 0, 0.0)]:
+        ic = g.intersect([(x, y)], "point", 0)["nodenumber"][0]
+        chdspd.append([ic, head, head])
+
+    def run(numalphaj):
+        gridprops = get_gridprops_gnc5(get_gnc(grid, numalphaj=numalphaj), ia=ia, ja=ja)
+        ws = function_tmpdir / f"j{numalphaj}"
+        m = flopy.mfusg.MfUsg(
+            modelname="m", model_ws=ws, exe_name="mfusg", structured=False
+        )
+        flopy.mfusg.MfUsgDisU(m, **disu_gridprops)
+        flopy.mfusg.MfUsgBas(m)
+        flopy.mfusg.MfUsgLpf(m)
+        flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
+        flopy.mfusg.MfUsgSms(m, options="COMPLEX")
+        flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ["save head"]})
+        flopy.mfusg.MfUsgGnc(m, **gridprops)
+        m.write_input()
+        success, buff = m.run_model(silent=True)
+        assert success, "\n".join(buff[-25:])
+        return np.concatenate(flopy.utils.HeadUFile(ws / "m.hds").get_data())
+
+    assert np.allclose(run(2), run(4), atol=1e-8)
+
+    assert np.allclose(run(2), run(4), atol=1e-8)
+
+
+def test_mfusg_gnc_file_fields_stay_separated(function_tmpdir):
+    """A value that fills its format width must not run into the next field"""
+    model = flopy.mfusg.MfUsg(modelname="m", model_ws=function_tmpdir, structured=False)
+    dtype = flopy.mfusg.MfUsgGnc.get_default_dtype(2, 0)
+    gncdata = np.zeros(2, dtype=dtype)
+    gncdata[0] = (23, 33, 22, 22, 0.125, 0.166667)
+    # ten digit node numbers fill the %10d field width
+    gncdata[1] = (1234567889, 1234567889, 1234567889, 1234567889, 0.125, 0.125)
+    flopy.mfusg.MfUsgGnc(model, numgnc=2, numalphaj=2, gncdata=gncdata)
+    model.write_input()
+
+    # the list is read with URWORD, so every record must have one token per field
+    records = (function_tmpdir / "m.gnc").open().readlines()[2:]
+    for line in records:
+        if line.strip():
+            assert len(line.split()) == 6
+
+    # the contributing factors must not be truncated
+    assert np.allclose(float(records[0].split()[5]), 0.166667, atol=1e-6)

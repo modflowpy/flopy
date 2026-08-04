@@ -174,10 +174,14 @@ class MfUsgGnc(Package):
 
         f_gnc.write(f"{self.heading}\n")
 
+        # options are keywords, so write them as words rather than as a list
+        options = (
+            self.options if isinstance(self.options, str) else " ".join(self.options)
+        )
         f_gnc.write(
             f" {0:9d} {0:9d} {self.numgnc:9d} {self.numalphaj:9d}"
             f" {self.i2kn:9d} {self.isymgncn:9d} {self.iflalphan:9d}"
-            f" {self.options}\n"
+            f" {options}\n"
         )
 
         gdata = self.gncdata.copy()
@@ -187,7 +191,12 @@ class MfUsgGnc(Package):
         for idx in range(self.numalphaj):
             gdata[f"Node{idx:d}"] += 1
 
-        np.savetxt(f_gnc, gdata, fmt=fmt_string(gdata), delimiter="")
+        # the gnc list is read with URWORD, so it is not fixed-width, the
+        # contributing factors do not need to be truncated to %10.2e, and the
+        # fields are separated so that a value filling its width still reads
+        np.savetxt(
+            f_gnc, gdata, fmt=fmt_string(gdata, free=True, sep=" "), delimiter=""
+        )
 
         f_gnc.write("\n")
         f_gnc.close()

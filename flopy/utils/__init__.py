@@ -29,7 +29,7 @@ from .flopy_io import read_fixed_var, write_fixed_var
 from .formattedfile import FormattedHeadFile
 
 get_modflow = get_modflow_module.run_main
-from .gnc import get_gnc, get_gridprops_gnc6
+from .gnc import get_gnc, get_gridprops_gnc5, get_gridprops_gnc6
 from .gridintersect import GridIntersect
 from .hfb_util import make_hfb_array
 from .mflistfile import (

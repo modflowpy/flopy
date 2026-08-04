@@ -542,7 +542,7 @@ class MfUsg(Modflow):
                     print(f"      {os.path.basename(fname)}")
 
 
-def fmt_string(array, free=False):
+def fmt_string(array, free=False, sep=""):
     """
     Returns a C-style fmt string for numpy savetxt that corresponds to
     the dtype.
@@ -554,6 +554,10 @@ def fmt_string(array, free=False):
         If True, use high-precision format (%16.9G) for floats which requires
         FREE format in the BAS file. If False (default), use fixed 10-character
         format (%10.2e) compatible with MODFLOW-USG's fixed-width input format.
+    sep : str, optional
+        Separator between fields. The default of no separator relies on the
+        field widths to keep values apart, which fails when a value fills its
+        width. Use a space for lists that are read with URWORD.
     """
     fmts = []
     # When FREE format is enabled in BAS, we can use high-precision output.
@@ -576,4 +580,4 @@ def fmt_string(array, free=False):
             raise TypeError(msg)
         else:
             raise TypeError(f"mfusg.fmt_string error: unknown vtype in field: {field}")
-    return "".join(fmts)
+    return sep.join(fmts)
