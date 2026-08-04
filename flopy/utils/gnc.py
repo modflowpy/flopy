@@ -95,13 +95,21 @@ def _check_gnc(gnc, ia=None, ja=None, iac=None):
         return
     ia = np.asarray(ia, dtype=int)
     ja = np.asarray(ja, dtype=int)
+    nodes = ia.shape[0] - 1
     for irec, rec in enumerate(gnc):
-        n = rec["n"]
-        neighbors = ja[ia[n] : ia[n + 1]]
+        n, m = rec["n"], rec["m"]
+        # a node number outside the grid would either index past the end of ia
+        # or, when it is negative, silently wrap and check the wrong cell
+        for name, node in (("n", n), ("m", m)):
+            if not 0 <= node < nodes:
+                raise ValueError(
+                    f"gnc record {irec}: cell {name} is {node}, which is not a "
+                    f"cell of a grid with {nodes} cells"
+                )
         # MODFLOW 6 rejects a ghost node whose n-m connection is absent
-        if rec["m"] not in neighbors:
+        if m not in ja[ia[n] : ia[n + 1]]:
             raise ValueError(
-                f"gnc record {irec}: cell {n} is not connected to cell {rec['m']}"
+                f"gnc record {irec}: cell {n} is not connected to cell {m}"
             )
 
 

@@ -212,6 +212,16 @@ def test_check_gnc():
         _check_gnc(gnc, ia=ia, ja=ja)
 
 
+@pytest.mark.parametrize("n,m", [(5, 1), (1, 5), (-3, 1), (1, -3)])
+def test_check_gnc_node_out_of_range(n, m):
+    """A node outside the grid is reported rather than indexed"""
+    gnc = np.recarray((1,), dtype=get_gnc_dtype(1))
+    gnc[0] = (n, m, 0, 0.1)
+    # a negative node would otherwise wrap and check the wrong cell
+    with pytest.raises(ValueError, match="which is not a cell of a grid"):
+        _check_gnc(gnc, ia=np.array([0, 2, 3]), ja=np.array([0, 1, 1, 0]))
+
+
 def test_get_gridprops_gnc6_requires_ncpl():
     grid, level = synthetic_grid()
     gnc = get_gnc(grid, level=level)
