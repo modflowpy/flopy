@@ -1,6 +1,28 @@
+import subprocess
 from pathlib import Path
 
 project_root_path = Path(__file__).parent.parent
+
+
+def added_order(path):
+    """Sort key that puts notebooks in the order they were added
+
+    Notebooks added in the same commit keep their alphabetical order, and one
+    that is not in the history yet sorts last.  The order falls back to
+    alphabetical when the history is not available, as in a shallow clone.
+    """
+    try:
+        added = subprocess.run(
+            ["git", "log", "--diff-filter=A", "--format=%at", "-1", "--", str(path)],
+            capture_output=True,
+            text=True,
+            cwd=project_root_path,
+            timeout=10,
+            check=False,
+        ).stdout.strip()
+    except (OSError, subprocess.SubprocessError):
+        added = ""
+    return (int(added) if added else 2**31, path.name)
 
 
 def get_section(f):
@@ -33,9 +55,11 @@ def create_gallery_section(f, name, title, stems):
 def create_tutorials_rst():
     rst_path = project_root_path / ".docs" / "tutorials.rst"
     nbs_path = project_root_path / ".docs" / "Notebooks"
-    filenames = sorted(
-        [path.name for path in nbs_path.rglob("*.py") if "tutorial" in path.name]
-    )
+    filenames = [
+        path.name
+        for path in sorted(nbs_path.rglob("*.py"), key=added_order)
+        if "tutorial" in path.name
+    ]
 
     print(f"Creating {rst_path}")
     with open(rst_path, "w") as rst_file:
@@ -73,9 +97,11 @@ def create_tutorials_rst():
 def create_examples_rst():
     rst_path = project_root_path / ".docs" / "examples.rst"
     nbs_path = project_root_path / ".docs" / "Notebooks"
-    filenames = sorted(
-        [path.name for path in nbs_path.rglob("*.py") if "example" in path.name]
-    )
+    filenames = [
+        path.name
+        for path in sorted(nbs_path.rglob("*.py"), key=added_order)
+        if "example" in path.name
+    ]
 
     print(f"Creating {rst_path}")
     with open(rst_path, "w") as rst_file:
