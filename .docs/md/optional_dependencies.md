@@ -11,7 +11,6 @@ Dependencies for optional features are listed below. These may be installed with
 | `.export(*.tif)`                                                                     | **rasterio**                                                             |
 | `.export_array(*.asc)` in `flopy.export.utils`                                       | **scipy.ndimage**                                                        |
 | `.resample_to_grid()` in `flopy.utils.rasters`                                       | **scipy.interpolate**                                                    |
-| `.interpolate()` in `flopy.mf6.utils.reference` `StructuredSpatialReference` class   | **scipy.interpolate**                                                    |
 | `.get_authority_crs()` in `flopy.utils.crs`                                          | **pyproj** >= 2.2.0                                                      |
 | `.generate_classes()` in `flopy.mf6.utils`                                           | [**modflow-devtools**](https://github.com/MODFLOW-ORG/modflow-devtools)  |
 | `GridIntersect()` in `flopy.utils.gridintersect`                                     | **shapely**                                                              |

@@ -17,7 +17,13 @@ from scipy.spatial import Delaunay
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
-from flopy.mf6 import MFSimulation
+from flopy.mf6 import (
+    MFSimulation,
+    ModflowGwf,
+    ModflowGwfdis,
+    ModflowGwfdisu,
+    ModflowGwfdisv,
+)
 from flopy.modflow import Modflow, ModflowDis
 from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
@@ -1898,3 +1904,90 @@ def test_unstructured_grid_get_node():
 
     with pytest.raises(IndexError, match=r"Node .* out of range"):
         ug.get_node(200)
+
+
+@pytest.mark.mf6
+def test_structured_mf6_gridprops(example_data_path):
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6-freyberg")
+    gwf = sim.get_model()
+    dis = gwf.dis
+    modelgrid = gwf.modelgrid
+
+    new_sim = MFSimulation()
+    new_gwf = ModflowGwf(new_sim)
+    new_dis = ModflowGwfdis(new_gwf, **modelgrid.dis_properties())
+    attrs = ("delc", "delr", "top", "botm", "idomain", "xorigin", "yorigin", "angrot")
+    for attr in attrs:
+        v0 = getattr(dis, attr).array
+        v1 = getattr(new_dis, attr).array
+        if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
+            v0 = 0
+        np.testing.assert_allclose(
+            v0, v1, err_msg=f"{attr} not consistent with valid array data"
+        )
+
+
+@pytest.mark.mf6
+def test_vertex_mf6_gridprops(example_data_path):
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwftri_disv")
+    gwf = sim.get_model()
+    disv = gwf.disv
+    modelgrid = gwf.modelgrid
+
+    new_sim = MFSimulation()
+    new_gwf = ModflowGwf(new_sim)
+    new_disv = ModflowGwfdisv(new_gwf, **modelgrid.disv_properties())
+
+    attrs = (
+        "vertices",
+        "top",
+        "botm",
+        "idomain",
+        "xorigin",
+        "yorigin",
+        "angrot",
+        "cell2d",
+    )
+    for attr in attrs:
+        v0 = getattr(disv, attr).array
+        v1 = getattr(new_disv, attr).array
+        if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
+            v0 = 0
+
+        if attr in ("cell2d", "vertices"):
+            for col in v0.dtype.names:
+                np.testing.assert_allclose(
+                    v0[col],
+                    v1[col],
+                    err_msg=f"{attr} not consistent with valid array data",
+                )
+        else:
+            np.testing.assert_allclose(
+                v0, v1, err_msg=f"{attr} not consistent with valid array data"
+            )
+
+
+@pytest.mark.mf6
+def test_unstructured_mf6_gridprops(example_data_path):
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test006_gwf3")
+    gwf = sim.get_model()
+    disu = gwf.disu
+    modelgrid = gwf.modelgrid
+
+    new_sim = MFSimulation()
+    new_gwf = ModflowGwf(new_sim)
+    dis_props = modelgrid.disu_properties()
+    dis_props["area"] = disu.area.array
+    dis_props["cl12"] = disu.cl12.array
+    new_disu = ModflowGwfdisu(new_gwf, **dis_props)
+
+    attrs = ("top", "bot", "iac", "ja", "nodes", "ihc", "xorigin", "yorigin", "angrot")
+    for attr in attrs:
+        v0 = getattr(disu, attr).array
+        v1 = getattr(new_disu, attr).array
+        if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
+            v0 = 0
+
+        np.testing.assert_allclose(
+            v0, v1, err_msg=f"{attr} not consistent with valid array data"
+        )
