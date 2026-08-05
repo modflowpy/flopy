@@ -13,9 +13,11 @@ import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
-from flopy.discretization import UnstructuredGrid, VertexGrid
+from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.utils.gnc import (
+    _as_cellid,
     _check_gnc,
+    _node_to_cellid,
     get_gnc,
     get_gnc_dtype,
     get_gnc_exchange,
@@ -724,3 +726,36 @@ def test_lgr_get_gnc_data_numalphaj_too_small():
     lgr = lgr_pair()
     with pytest.raises(ValueError, match="more than numalphaj"):
         get_gnc_exchange(lgr.parent, lgr.child, lgr.get_exchange_data(), numalphaj=0)
+
+
+def test_cellid_conversion_by_grid_type():
+    """Cellids are built for the grid type, not only for a structured grid"""
+    structured = StructuredGrid(
+        delr=np.ones(3),
+        delc=np.ones(2),
+        top=np.ones((2, 3)),
+        botm=np.zeros((2, 2, 3)),
+    )
+    vertex = VertexGrid(
+        vertices=[[0, 0.0, 0.0], [1, 1.0, 0.0], [2, 1.0, 1.0], [3, 0.0, 1.0]],
+        cell2d=[[i, 0.5, 0.5, 4, 0, 1, 2, 3] for i in range(4)],
+        nlay=2,
+        top=np.ones(4),
+        botm=np.zeros((2, 4)),
+    )
+    unstructured, _ = synthetic_grid()
+
+    assert _node_to_cellid(structured, 4) == (0, 1, 1)
+    assert _node_to_cellid(vertex, 4) == (1, 0)
+    assert _node_to_cellid(unstructured, 4) == (4,)
+
+    # every cellid must map back to the node it came from
+    for grid in (structured, vertex, unstructured):
+        for node in range(grid.nnodes):
+            cellid = _node_to_cellid(grid, node)
+            assert int(grid.get_node([cellid])[0]) == node
+
+    # a cellid may be given as a bare node number
+    assert _as_cellid(5) == (5,)
+    assert _as_cellid((0, 1, 2)) == (0, 1, 2)
+    assert _as_cellid(np.array([0, 1, 2])) == (0, 1, 2)

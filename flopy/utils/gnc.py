@@ -483,6 +483,27 @@ def get_gridprops_gnc5(gnc, i2kn=0, isymgncn=0, ia=None, ja=None, iac=None, chec
     }
 
 
+def _as_cellid(cellid):
+    """Return a cellid as a tuple, accepting a bare node number"""
+    if np.isscalar(cellid):
+        return (int(cellid),)
+    return tuple(int(v) for v in cellid)
+
+
+def _node_to_cellid(modelgrid, node):
+    """Return the cellid of a node number for any grid type"""
+    node = int(node)
+    if hasattr(modelgrid, "get_lrc"):
+        # a structured grid addresses a cell by layer, row, and column
+        return tuple(int(v) for v in modelgrid.get_lrc([node])[0])
+    ncpl = modelgrid.ncpl
+    if np.isscalar(ncpl):
+        # a vertex grid addresses a cell by layer and cell2d number
+        return (node // int(ncpl), node % int(ncpl))
+    # an unstructured grid addresses a cell by node number
+    return (node,)
+
+
 def get_gnc_exchange(
     modelgrid1,
     modelgrid2,
@@ -563,8 +584,8 @@ def get_gnc_exchange(
     records = []
     for rec in exchangedata:
         cellidn, cellidm, ihc = rec[0], rec[1], rec[2]
-        n = modelgrid1.get_node([tuple(cellidn)])[0]
-        m = modelgrid2.get_node([tuple(cellidm)])[0]
+        n = int(modelgrid1.get_node([_as_cellid(cellidn)])[0])
+        m = int(modelgrid2.get_node([_as_cellid(cellidm)])[0])
 
         js, alpha = np.array([], dtype=int), 0.0
         if ihc != 0 and area2[m] < area1[n]:
@@ -582,8 +603,8 @@ def get_gnc_exchange(
         # least one contributing cell per record
         numalphaj = max(max((len(rec[2]) for rec in records), default=1), 1)
 
-    ndim1 = len(records[0][0]) if records else 3
-    none_cellid = tuple([-1] * ndim1)  # written as a cellid of zero
+    # a cellid of -1 in every dimension is written as a cellid of zero
+    none_cellid = tuple([-1] * len(_node_to_cellid(modelgrid1, 0)))
 
     gncdata = []
     for irec, (cellidn, cellidm, js, alpha) in enumerate(records):
@@ -592,17 +613,13 @@ def get_gnc_exchange(
                 f"gnc record {irec}: cell {cellidn} has {len(js)} contributing "
                 f"cells, which is more than numalphaj of {numalphaj}"
             )
-        cellids = [tuple(int(v) for v in modelgrid1.get_lrc([int(j)])[0]) for j in js]
+        cellids = [_node_to_cellid(modelgrid1, j) for j in js]
         alphas = [float(alpha)] * len(js)
         # pad with a cellid of zero, which MODFLOW 6 skips
         cellids += [none_cellid] * (numalphaj - len(js))
         alphas += [0.0] * (numalphaj - len(js))
         gncdata.append(
-            tuple(
-                [tuple(int(v) for v in cellidn), tuple(int(v) for v in cellidm)]
-                + cellids
-                + alphas
-            )
+            tuple([_as_cellid(cellidn), _as_cellid(cellidm)] + cellids + alphas)
         )
 
     return {
