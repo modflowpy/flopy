@@ -375,8 +375,6 @@ def test_get_gnc_inputs_agree(function_tmpdir):
 
 @requires_exe("gridgen")
 @requires_pkg("shapely", "geopandas")
-@requires_exe("gridgen")
-@requires_pkg("shapely", "geopandas")
 def test_get_gridprops_gnc_matches_gridgen(function_tmpdir):
     g = build_gridgen(function_tmpdir, nlay=1)
     iac = g.get_iac()
@@ -479,8 +477,6 @@ def test_mfusg_gnc_padding(function_tmpdir):
         success, buff = m.run_model(silent=True)
         assert success, "\n".join(buff[-25:])
         return np.concatenate(flopy.utils.HeadUFile(ws / "m.hds").get_data())
-
-    assert np.allclose(run(2), run(4), atol=1e-8)
 
     assert np.allclose(run(2), run(4), atol=1e-8)
 
