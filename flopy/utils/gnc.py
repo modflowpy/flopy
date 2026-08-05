@@ -1,9 +1,12 @@
 """
 Ghost node correction (GNC) data for quadtree-like grids.
 
-Ghost node data is computed from a grid, a grid conforming array of refinement
-levels, and the grid connectivity by :func:`get_gnc`, and is converted to
-MODFLOW 6 package input by :func:`get_gridprops_gnc6`.
+Ghost node data can be computed from a grid, a grid conforming array of
+refinement levels, and the grid connectivity, or read from gridgen output
+using :meth:`flopy.utils.gridgen.Gridgen.get_gnc`.  The record arrays produced
+by either route are converted to MODFLOW 6 and MODFLOW-USG package input by
+:func:`get_gridprops_gnc6` and :func:`get_gridprops_gnc5`.
+
 """
 
 import numpy as np
@@ -410,5 +413,71 @@ def get_gridprops_gnc6(
     return {
         "numgnc": len(gncdata),
         "numalphaj": numalphaj,
+        "gncdata": gncdata,
+    }
+
+
+def get_gridprops_gnc5(gnc, i2kn=0, isymgncn=0, ia=None, ja=None, iac=None, check=True):
+    """
+    Get a dictionary of information needed to create a MODFLOW-USG GNC
+    Package.  The returned dictionary can be unpacked directly into the
+    MfUsgGnc constructor.
+
+    Parameters
+    ----------
+    gnc : np.recarray
+        Ghost node data with zero-based node numbers
+    i2kn : int
+        Apply the second-order correction to unconfined transmissivity
+        (default is 0).
+    isymgncn : int
+        Update the right-hand side vector for symmetric systems instead of
+        the left-hand side matrix (default is 0).
+    ia : array_like
+        Zero-based CRS row pointer, used to check connectivity
+    ja : array_like
+        Zero-based CRS column indices, used to check connectivity
+    iac : array_like
+        Number of connections per cell, used if ia is None
+    check : bool
+        Verify that each n-m pair is connected and that the contributing
+        factors sum to less than one (default is True).
+
+    Returns
+    -------
+    gridprops : dict
+
+    Notes
+    -----
+    Contributing factors are always written, so iflalphan is 0.  The default
+    asymmetric implementation requires an asymmetric solver.  numgnc is zero
+    for a grid without ghost nodes, in which case the package should not be
+    created.
+
+    """
+    # imported here because flopy.mfusg imports flopy.utils
+    from ..mfusg.mfusggnc import MfUsgGnc
+
+    if check:
+        _check_gnc(gnc, ia=ia, ja=ja, iac=iac)
+
+    numalphaj = get_numalphaj(gnc)
+    iflalphan = 0
+    gncdata = MfUsgGnc.get_empty(
+        numgnc=len(gnc), numalphaj=numalphaj, iflalphan=iflalphan
+    )
+    # MfUsgGnc.write_file converts to one-based node numbers
+    gncdata["NodeN"] = gnc["n"]
+    gncdata["NodeM"] = gnc["m"]
+    for i in range(numalphaj):
+        gncdata[f"Node{i}"] = gnc[f"j{i}"]
+        gncdata[f"Alpha{i}"] = gnc[f"alpha{i}"]
+
+    return {
+        "numgnc": len(gncdata),
+        "numalphaj": numalphaj,
+        "i2kn": i2kn,
+        "isymgncn": isymgncn,
+        "iflalphan": iflalphan,
         "gncdata": gncdata,
     }
