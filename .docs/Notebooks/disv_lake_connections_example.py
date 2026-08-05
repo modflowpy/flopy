@@ -123,10 +123,16 @@ def normalize(row):
     if len(cellid) == 3:
         k, i, j = cellid
         cellid = (k, i * ncol + j)
-    return (lakeno, *cellid, claktype, connlen, connwidth)
+    return (lakeno, *cellid, claktype), (connlen, connwidth)
 
 
-assert sorted(map(normalize, dis_data)) == sorted(map(normalize, disv_data))
+dis_sorted = sorted(map(normalize, dis_data))
+disv_sorted = sorted(map(normalize, disv_data))
+
+# the cells and the connection types must match exactly, and the lengths and
+# widths to within rounding, because the two grids compute them differently
+assert [cells for cells, _ in dis_sorted] == [cells for cells, _ in disv_sorted]
+assert np.allclose([size for _, size in dis_sorted], [size for _, size in disv_sorted])
 assert np.array_equal(dis_idomain.reshape(nlay, ncpl), disv_idomain)
 print("The vertex grid reproduces the structured grid connections.")
 # -
