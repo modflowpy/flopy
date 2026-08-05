@@ -1,6 +1,6 @@
 import calendar
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from difflib import SequenceMatcher
 
 import numpy as np
@@ -479,7 +479,8 @@ class ModelTime:
         elif isinstance(datetime_obj, np.datetime64):
             unix_time_0 = datetime(1970, 1, 1)
             ts = (datetime_obj - np.datetime64(unix_time_0)) / np.timedelta64(1, "s")
-            datetime_obj = datetime.utcfromtimestamp(ts)
+            datetime_obj = datetime.fromtimestamp(ts, tz=timezone.utc)
+            datetime_obj = datetime_obj.replace(tzinfo=None)
         elif isinstance(datetime_obj, pd.Timestamp):
             datetime_obj = datetime_obj.to_pydatetime()
         elif isinstance(datetime_obj, datetime):
