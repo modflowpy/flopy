@@ -15,6 +15,7 @@ from ..mfusg.mfusgdisu import MfUsgDisU
 from ..modflow import ModflowDis
 from ..utils import import_optional_dependency
 from ..utils.flopy_io import relpath_safe
+from .gnc import get_gnc_dtype, get_gridprops_gnc5, get_gridprops_gnc6
 from .util_array import Util2d
 
 # todo
@@ -22,6 +23,12 @@ from .util_array import Util2d
 # program layer functionality for plot method
 # support an asciigrid option for top and bottom interpolation
 # add intersection capability
+
+# gridgen always writes two contributing cells per ghost node.  When only one
+# contributing cell exists it is repeated with alpha halved, which both
+# MODFLOW 6 and MODFLOW-USG accumulate into the same matrix position.
+GNC_NUMALPHAJ = 2
+GNC_DTYPE = get_gnc_dtype(GNC_NUMALPHAJ)
 
 
 def read1d(f, a):
@@ -1256,6 +1263,31 @@ class Gridgen:
         anglex = np.where(fldr == 2, 4.712389, anglex)
         return anglex
 
+    def get_gnc(self):
+        """
+        Get the ghost node correction data computed by gridgen
+
+        Returns
+        -------
+        gnc : np.recarray
+            Record array with fields n, m, j0, j1, alpha0, and alpha1.  Node
+            numbers are zero-based.  Cell n is the cell containing the ghost
+            node, cell m is the connecting cell, and cells j0 and j1 are the
+            contributing cells.
+
+        Notes
+        -----
+        Gridgen only computes horizontal ghost node corrections and drops
+        records where a contributing cell is inactive.
+
+        """
+        return self.read_qtg_gnc_dat(model_ws=self.model_ws)
+
+    def _gnc_connectivity(self):
+        """Return the zero-based ia and ja arrays"""
+        iac = self.get_iac()
+        return get_ia_from_iac(iac), self.get_ja(iac.sum())
+
     def get_verts_iverts(self, ncells, verbose=False):
         """
         Return a 2d array of x and y vertices and a list of size ncells that
@@ -1510,6 +1542,96 @@ class Gridgen:
         gridprops["cell2d"] = cell2d
 
         return gridprops
+
+    def _gnc_ncpl(self, dis_type):
+        """Return the number of cells per layer for dis_type"""
+        if dis_type.lower() != "disv":
+            return None
+        nodelay = self.get_nodelay()
+        ncpl = nodelay.min()
+        if ncpl != nodelay.max():
+            raise ValueError(
+                "Cannot create DISV ghost node properties because the "
+                "number of cells is not the same for all layers"
+            )
+        return ncpl
+
+    def get_gridprops_gnc6(self, dis_type="disv", check=True):
+        """
+        Get a dictionary of information needed to create a MODFLOW 6 GNC
+        Package.  The returned dictionary can be unpacked directly into the
+        ModflowGwfgnc constructor.
+
+        Parameters
+        ----------
+        dis_type : str
+            Discretization the cellids are built for.  Valid options are
+            'disv' (default) and 'disu'.
+        check : bool
+            Verify that each n-m pair is connected and that the contributing
+            factors sum to less than one (default is True).
+
+        Returns
+        -------
+        gridprops : dict
+
+        Notes
+        -----
+        The correction is applied implicitly unless the explicit option is
+        set, so the BICGSTAB linear acceleration option should be specified
+        in the IMS Package.  numgnc is zero for a grid without ghost nodes,
+        in which case the package should not be created.
+
+        """
+        ia, ja = self._gnc_connectivity() if check else (None, None)
+        return get_gridprops_gnc6(
+            self.get_gnc(),
+            dis_type=dis_type,
+            ncpl=self._gnc_ncpl(dis_type),
+            ia=ia,
+            ja=ja,
+            check=check,
+        )
+
+    def get_gridprops_gnc5(self, i2kn=0, isymgncn=0, check=True):
+        """
+        Get a dictionary of information needed to create a MODFLOW-USG GNC
+        Package.  The returned dictionary can be unpacked directly into the
+        MfUsgGnc constructor.
+
+        Parameters
+        ----------
+        i2kn : int
+            Apply the second-order correction to unconfined transmissivity
+            (default is 0).
+        isymgncn : int
+            Update the right-hand side vector for symmetric systems instead
+            of the left-hand side matrix (default is 0).
+        check : bool
+            Verify that each n-m pair is connected and that the contributing
+            factors sum to less than one (default is True).
+
+        Returns
+        -------
+        gridprops : dict
+
+        Notes
+        -----
+        Gridgen writes contributing factors, so iflalphan is always 0.  The
+        default asymmetric implementation requires an asymmetric solver.
+        numgnc is zero for a grid without ghost nodes, in which case the
+        package should not be created.
+
+        """
+        ia, ja = self._gnc_connectivity() if check else (None, None)
+        return get_gridprops_gnc5(
+            self.get_gnc(),
+            i2kn=i2kn,
+            isymgncn=isymgncn,
+            ia=ia,
+            ja=ja,
+            check=check,
+        )
 
     def get_gridprops_vertexgrid(self):
         """
@@ -2103,3 +2225,27 @@ class Gridgen:
         fname = os.path.join(model_ws, "qtg.fahl.dat")
         with open(fname, "r") as f:
             return read1d(f=f, a=np.empty((nja), dtype=np.float32))
+
+    @staticmethod
+    def read_qtg_gnc_dat(model_ws: Union[str, PathLike]):
+        """Read qtg.gnc.dat file
+
+        Parameters
+        ----------
+        model_ws : str or PathLike
+            Directory where file is stored
+
+        Returns
+        -------
+        np.recarray
+            Ghost node records with zero-based node numbers.  The record is
+            empty if gridgen did not find any ghost nodes.
+        """
+        fname = os.path.join(model_ws, "qtg.gnc.dat")
+        # gridgen writes an empty file when the grid has no ghost nodes
+        if os.path.getsize(fname) == 0:
+            return np.recarray((0,), dtype=GNC_DTYPE)
+        gnc = np.atleast_1d(np.genfromtxt(fname, dtype=GNC_DTYPE))
+        for name in ("n", "m", "j0", "j1"):
+            gnc[name] -= 1
+        return gnc.view(np.recarray)
