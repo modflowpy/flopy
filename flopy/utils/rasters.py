@@ -588,7 +588,7 @@ class Raster:
             data = np.where(np.isnan(data), extrapolate, data)
 
         # step 4: return grid to user in shape provided
-        data.shape = data_shape
+        data = data.reshape(data_shape)
 
         # step 5: re-apply nodata values
         data[np.isnan(data)] = self.nodatavals[0]

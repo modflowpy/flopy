@@ -2057,8 +2057,8 @@ class StructuredGrid(Grid):
         nlay, nrow, ncol = (grb_obj.nlay, grb_obj.nrow, grb_obj.ncol)
         delr, delc = grb_obj.delr, grb_obj.delc
         top, botm = grb_obj.top, grb_obj.bot
-        top.shape = (nrow, ncol)
-        botm.shape = (nlay, nrow, ncol)
+        top = top.reshape((nrow, ncol))
+        botm = botm.reshape((nlay, nrow, ncol))
         return cls(
             delc,
             delr,

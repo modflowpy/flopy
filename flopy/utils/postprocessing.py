@@ -801,7 +801,7 @@ def get_specific_discharge(
     modelgrid = model.modelgrid
 
     if head is not None:
-        head.shape = modelgrid.shape
+        head = head.reshape(modelgrid.shape)
 
     if isinstance(vectors, (list, tuple)):
         classical_budget = True
@@ -857,7 +857,7 @@ def get_specific_discharge(
                 head, mask=[model.hdry, model.hnoflo]
             )
 
-        saturated_thickness.shape = modelgrid.shape
+        saturated_thickness = saturated_thickness.reshape(modelgrid.shape)
 
         # inform modelgrid of no-flow and dry cells
         modelgrid = model.modelgrid
@@ -927,9 +927,9 @@ def get_specific_discharge(
         qx[idx] = spdis["qx"]
         qy[idx] = spdis["qy"]
         qz[idx] = spdis["qz"]
-        qx.shape = modelgrid.shape
-        qy.shape = modelgrid.shape
-        qz.shape = modelgrid.shape
+        qx = qx.reshape(modelgrid.shape)
+        qy = qy.reshape(modelgrid.shape)
+        qz = qz.reshape(modelgrid.shape)
 
     # set no-flow and dry cells to NaN
     if head is not None and position == "centers":
