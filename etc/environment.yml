@@ -55,10 +55,12 @@ dependencies:
   - pymetis
   - pyproj
   - pyshp
+  - pyvista
   - rasterio
   - rasterstats
   - scipy
   - shapely>=2.0
+  - vtk
   - xmipy
   - h5py
   - scikit-learn
