@@ -577,7 +577,10 @@ def get_gnc_exchange(
         records.append((cellidn, cellidm, js, alpha))
 
     if numalphaj is None:
-        numalphaj = max((len(rec[2]) for rec in records), default=1)
+        # every exchange gets a record, so a connection that needs no
+        # correction contributes a length of zero; MODFLOW 6 still needs at
+        # least one contributing cell per record
+        numalphaj = max(max((len(rec[2]) for rec in records), default=1), 1)
 
     ndim1 = len(records[0][0]) if records else 3
     none_cellid = tuple([-1] * ndim1)  # written as a cellid of zero

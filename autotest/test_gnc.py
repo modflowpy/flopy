@@ -18,6 +18,7 @@ from flopy.utils.gnc import (
     _check_gnc,
     get_gnc,
     get_gnc_dtype,
+    get_gnc_exchange,
     get_gridprops_gnc5,
     get_gridprops_gnc6,
     get_numalphaj,
@@ -690,3 +691,36 @@ def test_lgr_gnc_exchange(function_tmpdir):
     # the linear head field is exact once the correction is applied
     assert errors["gnc"] < 1.0e-6
     assert errors["gnc"] < errors["uncorrected"] / 1000.0
+
+
+def test_lgr_get_gnc_data_without_idomain():
+    """The idomain is taken from the grid when it is not supplied"""
+    lgr = lgr_pair()
+    supplied = lgr.get_gnc_data()
+    from_grid = get_gnc_exchange(lgr.parent, lgr.child, lgr.get_exchange_data())
+    assert from_grid["numgnc"] == supplied["numgnc"]
+    assert from_grid["gncdata"] == supplied["gncdata"]
+
+
+def test_lgr_get_gnc_data_no_contributing_cells():
+    """A record is still written when no contributing cell is active"""
+    lgr = lgr_pair()
+    gridprops = get_gnc_exchange(
+        lgr.parent,
+        lgr.child,
+        lgr.get_exchange_data(),
+        idomain1=np.zeros_like(lgr.refine_mask),
+    )
+
+    # MODFLOW 6 needs one record per exchange and at least one contributing
+    # cell per record, even when none of them is used
+    assert gridprops["numgnc"] == len(lgr.get_exchange_data())
+    assert gridprops["numalphaj"] == 1
+    assert all(rec[2] == (-1, -1, -1) for rec in gridprops["gncdata"])
+    assert all(rec[-1] == 0.0 for rec in gridprops["gncdata"])
+
+
+def test_lgr_get_gnc_data_numalphaj_too_small():
+    lgr = lgr_pair()
+    with pytest.raises(ValueError, match="more than numalphaj"):
+        get_gnc_exchange(lgr.parent, lgr.child, lgr.get_exchange_data(), numalphaj=0)
