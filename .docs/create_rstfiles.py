@@ -1,9 +1,11 @@
 import subprocess
+from functools import lru_cache
 from pathlib import Path
 
 project_root_path = Path(__file__).parent.parent
 
 
+@lru_cache(maxsize=None)
 def added_order(path):
     """Sort key that puts notebooks in the order they were added
 
@@ -12,17 +14,19 @@ def added_order(path):
     alphabetical when the history is not available, as in a shallow clone.
     """
     try:
+        # git wants a pathspec relative to the repository it is run in
+        pathspec = str(path.relative_to(project_root_path))
         added = subprocess.run(
-            ["git", "log", "--diff-filter=A", "--format=%at", "-1", "--", str(path)],
+            ["git", "log", "--diff-filter=A", "--format=%at", "-1", "--", pathspec],
             capture_output=True,
             text=True,
             cwd=project_root_path,
             timeout=10,
             check=False,
         ).stdout.strip()
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, ValueError, subprocess.SubprocessError):
         added = ""
-    return (int(added) if added else 2**31, path.name)
+    return (float(added) if added else float("inf"), path.name)
 
 
 def get_section(f):
@@ -57,8 +61,10 @@ def create_tutorials_rst():
     nbs_path = project_root_path / ".docs" / "Notebooks"
     filenames = [
         path.name
-        for path in sorted(nbs_path.rglob("*.py"), key=added_order)
-        if "tutorial" in path.name
+        for path in sorted(
+            (p for p in nbs_path.rglob("*.py") if "tutorial" in p.name),
+            key=added_order,
+        )
     ]
 
     print(f"Creating {rst_path}")
@@ -99,8 +105,10 @@ def create_examples_rst():
     nbs_path = project_root_path / ".docs" / "Notebooks"
     filenames = [
         path.name
-        for path in sorted(nbs_path.rglob("*.py"), key=added_order)
-        if "example" in path.name
+        for path in sorted(
+            (p for p in nbs_path.rglob("*.py") if "example" in p.name),
+            key=added_order,
+        )
     ]
 
     print(f"Creating {rst_path}")
