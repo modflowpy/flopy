@@ -238,7 +238,7 @@ class MfGrdFile(FlopyBinaryData):
                 nlay, ncpl = self.nlay, self.ncpl
                 vertices, cell2d = self.cell2d
                 top = np.ravel(top)
-                botm.shape = (nlay, ncpl)
+                botm = botm.reshape((nlay, ncpl))
                 modelgrid = VertexGrid(
                     vertices,
                     cell2d,
@@ -258,8 +258,8 @@ class MfGrdFile(FlopyBinaryData):
                 )
                 delr, delc = self.delr, self.delc
 
-                top.shape = (nrow, ncol)
-                botm.shape = (nlay, nrow, ncol)
+                top.reshape((nrow, ncol))
+                botm = botm.reshape((nlay, nrow, ncol))
                 modelgrid = StructuredGrid(
                     delc,
                     delr,

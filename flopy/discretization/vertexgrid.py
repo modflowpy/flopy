@@ -847,7 +847,7 @@ class VertexGrid(Grid):
         nlay, ncpl = grb_obj.nlay, grb_obj.ncpl
         top = np.ravel(grb_obj.top)
         botm = grb_obj.bot
-        botm.shape = (nlay, ncpl)
+        botm = botm.reshape((nlay, ncpl))
         vertices, cell2d = grb_obj.cell2d
 
         return cls(
