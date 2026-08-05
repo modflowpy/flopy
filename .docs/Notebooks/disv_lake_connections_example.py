@@ -19,9 +19,9 @@
 
 # # Embedded Lake Connections for a Vertex Grid
 #
-# `get_lak_connections()` builds Lake (LAK) Package connection data for a lake embedded in a vertex grid as well as a structured one. The cells a lake touches are found from the cells that share an edge with it, and the width of a connection is the length of the shared edge.
+# `get_lak_connections()` builds MODFLOW 6 Lake (LAK) Package connection data for a lake embedded in a vertex grid as well as a structured one. The cells a lake touches are found from the cells that share an edge with it, and the width of a connection is the length of the shared edge.
 #
-# This notebook puts the same lake used in the [structured grid example](https://flopy.readthedocs.io/en/latest/Notebooks/dis_lake_connections_example.html) on a vertex grid, and checks that the two agree.
+# We put the same lake used in the [structured grid example](https://flopy.readthedocs.io/en/latest/Notebooks/dis_lake_connections_example.html) on a vertex grid, check that the two agree, and put the simulated lake stage into the head array so that a single map shows the water surface.
 
 # +
 import sys
@@ -43,7 +43,7 @@ print(f"flopy version: {flopy.__version__}")
 
 # ## Build a vertex grid and the equivalent structured grid
 #
-# The vertex grid discretizes the same domain as the structured grid, one cell2d for every row and column, so the two must give the same lake connections.
+# We build a vertex grid that discretizes the same domain as the structured grid, one cell2d for every row and column, so the two must give the same lake connections.
 
 # +
 nlay, nrow, ncol = 2, 7, 7
@@ -114,7 +114,7 @@ print(f"vertex connections    : {disv_conn}")
 print(f"first vertex record   : {disv_data[0]}")
 # -
 
-# The two grids give the same connections. A structured cellid is a layer, row, and column while a vertex cellid is a layer and a cell2d number, so the structured cellids are flattened before the two are compared.
+# The two grids give the same connections. A structured cellid is a layer, row, and column while a vertex cellid is a layer and a cell2d number, so we flatten the structured cellids before comparing the two.
 
 
 # +
@@ -134,8 +134,8 @@ print("The vertex grid reproduces the structured grid connections.")
 # ## Run the model
 #
 # The connectiondata and the idomain from the vertex grid go straight into a
-# DISV model. Constant heads on the left and right edges drive flow across the
-# lake.
+# MODFLOW 6 DISV model. We set constant heads on the left and right edges to
+# drive flow across the lake.
 
 # +
 temp_dir = TemporaryDirectory()
@@ -186,9 +186,9 @@ print("model converged")
 
 # ## Put the lake stage into the head array
 #
-# The lake cells are inactive, so the head array has no value there. Filling
-# those cells with the stage of the lake that occupies them gives a single
-# array of the water surface that can be plotted in one pass.
+# The lake cells are inactive, so the head array has no value there. We fill
+# those cells with the stage of the lake that occupies them, which gives a
+# single array of the water surface that can be plotted in one pass.
 
 # +
 lake_map_masked = np.ma.masked_where(lake_map_disv < 0, lake_map_disv)

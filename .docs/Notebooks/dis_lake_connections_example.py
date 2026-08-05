@@ -19,9 +19,9 @@
 
 # # Embedded Lake Connections for a Structured Grid
 #
-# A lake embedded in the model domain replaces the cells it occupies, so the Lake (LAK) Package needs a connection to every active cell that touches it. `get_lak_connections()` builds those connections from an array of lake numbers, and returns the idomain with the lake cells deactivated, the number of connections in each lake, and the connectiondata block for the package.
+# A lake embedded in the model domain replaces the cells it occupies, so the MODFLOW 6 Lake (LAK) Package needs a connection to every active cell that touches it. `get_lak_connections()` builds those connections from an array of lake numbers, and returns the idomain with the lake cells deactivated, the number of connections in each lake, and the connectiondata block for the package.
 #
-# This notebook builds a lake embedded in one layer of a structured grid. The companion notebook does the same thing on a vertex grid.
+# We build a lake embedded in one layer of a structured grid, and put the simulated lake stage into the head array so that a single map shows the water surface. The companion notebook does the same thing on a vertex grid.
 
 # +
 import sys
@@ -44,7 +44,7 @@ print(f"flopy version: {flopy.__version__}")
 
 # ## Build the grid and the lake
 #
-# The grid is two layers of 7 rows and 7 columns. The lake occupies a three by three block in the upper layer, and is given lake number 0. Cells that are not part of a lake are masked.
+# We use a grid of two layers with 7 rows and 7 columns. The lake occupies a three by three block in the upper layer, and is given lake number 0. Cells that are not part of a lake are masked.
 
 # +
 nlay, nrow, ncol = 2, 7, 7
@@ -63,7 +63,7 @@ print(f"Lake cells in layer 1: {(~lake_map.mask[0]).sum()}")
 
 # ## Build the lake connections
 #
-# The lake map is the same shape as the model grid, so the lake is embedded rather than sitting on top of the model. A bed leakance is given for every connection.
+# The lake map is the same shape as the model grid, so the lake is embedded rather than sitting on top of the model. We give the same bed leakance to every connection.
 
 # +
 idomain, connection_dict, connectiondata = get_lak_connections(
@@ -101,8 +101,8 @@ print(f"active cells remaining   : {(idomain > 0).sum()} of {idomain.size}")
 
 # ## Run the model
 #
-# The connectiondata and the idomain go straight into the model. Constant heads
-# on the left and right edges drive flow across the lake.
+# The connectiondata and the idomain go straight into the MODFLOW 6 model. We
+# set constant heads on the left and right edges to drive flow across the lake.
 
 # +
 temp_dir = TemporaryDirectory()
@@ -154,9 +154,9 @@ print("model converged")
 
 # ## Put the lake stage into the head array
 #
-# The lake cells are inactive, so the head array has no value there. Filling
-# those cells with the stage of the lake that occupies them gives a single
-# array of the water surface that can be plotted in one pass.
+# The lake cells are inactive, so the head array has no value there. We fill
+# those cells with the stage of the lake that occupies them, which gives a
+# single array of the water surface that can be plotted in one pass.
 
 # +
 head = gwf.output.head().get_data()
