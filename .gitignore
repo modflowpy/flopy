@@ -113,3 +113,7 @@ flopy/mf6/data/toml/
 
 # uv lockfile
 uv.lock
+
+# MODFLOW cell-by-cell budget output
+*.cbb
+*.CBB
