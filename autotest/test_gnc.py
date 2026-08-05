@@ -13,11 +13,14 @@ import pytest
 from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
-from flopy.discretization import UnstructuredGrid, VertexGrid
+from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
 from flopy.utils.gnc import (
+    _as_cellid,
     _check_gnc,
+    _node_to_cellid,
     get_gnc,
     get_gnc_dtype,
+    get_gnc_exchange,
     get_gridprops_gnc5,
     get_gridprops_gnc6,
     get_numalphaj,
@@ -530,3 +533,229 @@ def test_fmt_string_separates_free_format_fields():
         buff = io.StringIO()
         np.savetxt(buff, record, fmt=fmt_string(record, free=False), delimiter="")
         assert len(buff.getvalue().split()) < len(dtype.names), name
+
+
+def lgr_pair(ncpp=3, nrowp=12, ncolp=12):
+    """A parent grid with a refined block in the middle"""
+    from flopy.utils.lgrutil import Lgr
+
+    idomain = np.ones((1, nrowp, ncolp), dtype=int)
+    idomain[:, 4:8, 4:8] = 0
+    return Lgr(
+        1,
+        nrowp,
+        ncolp,
+        1.0,
+        1.0,
+        np.ones((nrowp, ncolp)),
+        np.zeros((1, nrowp, ncolp)),
+        idomain,
+        ncpp=ncpp,
+        ncppl=[1],
+    )
+
+
+def test_lgr_get_gnc_data():
+    lgr = lgr_pair()
+    exchangedata = lgr.get_exchange_data()
+    gridprops = lgr.get_gnc_data()
+
+    # MODFLOW 6 requires one ghost node record for every exchange record
+    assert gridprops["numgnc"] == len(exchangedata)
+    assert gridprops["numalphaj"] == 1
+
+    corrected = [rec for rec in gridprops["gncdata"] if rec[-1] != 0.0]
+    skipped = [rec for rec in gridprops["gncdata"] if rec[-1] == 0.0]
+
+    # with three child cells per parent cell the middle one is centered on the
+    # face of the parent cell and needs no correction
+    assert len(corrected) == 2 * len(skipped)
+    assert np.allclose([rec[-1] for rec in corrected], 1.0 / 3.0)
+
+    # a skipped record carries a cellid of zero, written by flopy as 0 0 0
+    assert all(rec[2] == (-1, -1, -1) for rec in skipped)
+
+    # the ghost node and the contributing cell are both in the parent model,
+    # and the connected cell is in the child model
+    for cellidn, cellidm, cellidj, _ in corrected:
+        assert cellidn != cellidj
+        assert lgr.refine_mask[cellidn] > 0
+        assert lgr.refine_mask[cellidj] > 0
+
+    # the records follow the exchange records, cell for cell
+    for exchange, gnc in zip(exchangedata, gridprops["gncdata"]):
+        assert tuple(exchange[0]) == gnc[0]
+        assert tuple(exchange[1]) == gnc[1]
+
+
+def test_lgr_get_gnc_data_even_refinement():
+    """With an even refinement every child cell is offset from the parent"""
+    gridprops = lgr_pair(ncpp=2).get_gnc_data()
+    assert all(rec[-1] != 0.0 for rec in gridprops["gncdata"])
+    assert np.allclose([rec[-1] for rec in gridprops["gncdata"]], 0.25)
+
+
+@pytest.mark.slow
+@requires_exe("mf6")
+def test_lgr_gnc_exchange(function_tmpdir):
+    """The correction must remove the error on an exact linear head field"""
+    lgr = lgr_pair()
+    exchangedata = lgr.get_exchange_data(angldegx=True, cdist=True)
+    gnc_gridprops = lgr.get_gnc_data()
+    parent, child = lgr.parent, lgr.child
+    h_left, h_right = 1.0, 0.0
+
+    def exact(grid):
+        x = grid.xcellcenters
+        x0, x1 = parent.xcellcenters[0, 0], parent.xcellcenters[0, -1]
+        return h_left + (h_right - h_left) * (x - x0) / (x1 - x0)
+
+    def run(name, gnc=False):
+        ws = function_tmpdir / name
+        sim = flopy.mf6.MFSimulation(sim_name="s", sim_ws=str(ws), exe_name="mf6")
+        flopy.mf6.ModflowTdis(sim)
+        flopy.mf6.ModflowIms(
+            sim,
+            linear_acceleration="bicgstab",
+            inner_maximum=1000,
+            inner_dvclose=1e-11,
+            outer_dvclose=1e-11,
+        )
+        p = flopy.mf6.ModflowGwf(sim, modelname="parent")
+        flopy.mf6.ModflowGwfdis(
+            p,
+            nlay=1,
+            nrow=parent.nrow,
+            ncol=parent.ncol,
+            delr=1.0,
+            delc=1.0,
+            top=1.0,
+            botm=[0.0],
+            idomain=lgr.refine_mask,
+        )
+        flopy.mf6.ModflowGwfic(p, strt=0.5)
+        flopy.mf6.ModflowGwfnpf(p, icelltype=0, k=1.0)
+        flopy.mf6.ModflowGwfchd(
+            p,
+            stress_period_data=[[(0, i, 0), h_left] for i in range(parent.nrow)]
+            + [[(0, i, parent.ncol - 1), h_right] for i in range(parent.nrow)],
+        )
+        flopy.mf6.ModflowGwfoc(
+            p, head_filerecord="parent.hds", saverecord=[("HEAD", "ALL")]
+        )
+        c = flopy.mf6.ModflowGwf(sim, modelname="child")
+        flopy.mf6.ModflowGwfdis(
+            c,
+            nlay=child.nlay,
+            nrow=child.nrow,
+            ncol=child.ncol,
+            delr=child.delr,
+            delc=child.delc,
+            top=1.0,
+            botm=[0.0],
+            xorigin=child.xoffset,
+            yorigin=child.yoffset,
+        )
+        flopy.mf6.ModflowGwfic(c, strt=0.5)
+        flopy.mf6.ModflowGwfnpf(c, icelltype=0, k=1.0)
+        flopy.mf6.ModflowGwfoc(
+            c, head_filerecord="child.hds", saverecord=[("HEAD", "ALL")]
+        )
+        exchange = flopy.mf6.ModflowGwfgwf(
+            sim,
+            exgtype="GWF6-GWF6",
+            nexg=len(exchangedata),
+            exgmnamea="parent",
+            exgmnameb="child",
+            exchangedata=exchangedata,
+            auxiliary=["angldegx", "cdist"],
+        )
+        if gnc:
+            exchange.gnc.initialize(filename="s.gnc", **gnc_gridprops)
+        sim.write_simulation()
+        success, buff = sim.run_simulation(silent=True)
+        assert success, "\n".join(buff[-20:])
+        return (
+            flopy.utils.HeadFile(ws / "parent.hds").get_data()[0],
+            flopy.utils.HeadFile(ws / "child.hds").get_data()[0],
+        )
+
+    active = lgr.refine_mask[0] > 0
+    errors = {}
+    for name, gnc in [("uncorrected", False), ("gnc", True)]:
+        head_parent, head_child = run(name, gnc=gnc)
+        errors[name] = max(
+            np.abs(head_parent - exact(parent))[active].max(),
+            np.abs(head_child - exact(child)).max(),
+        )
+        print(f"{name} max error {errors[name]:.3e}")
+
+    # the linear head field is exact once the correction is applied
+    assert errors["gnc"] < 1.0e-6
+    assert errors["gnc"] < errors["uncorrected"] / 1000.0
+
+
+def test_lgr_get_gnc_data_without_idomain():
+    """The idomain is taken from the grid when it is not supplied"""
+    lgr = lgr_pair()
+    supplied = lgr.get_gnc_data()
+    from_grid = get_gnc_exchange(lgr.parent, lgr.child, lgr.get_exchange_data())
+    assert from_grid["numgnc"] == supplied["numgnc"]
+    assert from_grid["gncdata"] == supplied["gncdata"]
+
+
+def test_lgr_get_gnc_data_no_contributing_cells():
+    """A record is still written when no contributing cell is active"""
+    lgr = lgr_pair()
+    gridprops = get_gnc_exchange(
+        lgr.parent,
+        lgr.child,
+        lgr.get_exchange_data(),
+        idomain1=np.zeros_like(lgr.refine_mask),
+    )
+
+    # MODFLOW 6 needs one record per exchange and at least one contributing
+    # cell per record, even when none of them is used
+    assert gridprops["numgnc"] == len(lgr.get_exchange_data())
+    assert gridprops["numalphaj"] == 1
+    assert all(rec[2] == (-1, -1, -1) for rec in gridprops["gncdata"])
+    assert all(rec[-1] == 0.0 for rec in gridprops["gncdata"])
+
+
+def test_lgr_get_gnc_data_numalphaj_too_small():
+    lgr = lgr_pair()
+    with pytest.raises(ValueError, match="more than numalphaj"):
+        get_gnc_exchange(lgr.parent, lgr.child, lgr.get_exchange_data(), numalphaj=0)
+
+
+def test_cellid_conversion_by_grid_type():
+    """Cellids are built for the grid type, not only for a structured grid"""
+    structured = StructuredGrid(
+        delr=np.ones(3),
+        delc=np.ones(2),
+        top=np.ones((2, 3)),
+        botm=np.zeros((2, 2, 3)),
+    )
+    vertex = VertexGrid(
+        vertices=[[0, 0.0, 0.0], [1, 1.0, 0.0], [2, 1.0, 1.0], [3, 0.0, 1.0]],
+        cell2d=[[i, 0.5, 0.5, 4, 0, 1, 2, 3] for i in range(4)],
+        nlay=2,
+        top=np.ones(4),
+        botm=np.zeros((2, 4)),
+    )
+    unstructured, _ = synthetic_grid()
+
+    assert _node_to_cellid(structured, 4) == (0, 1, 1)
+    assert _node_to_cellid(vertex, 4) == (1, 0)
+    assert _node_to_cellid(unstructured, 4) == (4,)
+
+    # every cellid must map back to the node it came from
+    for grid in (structured, vertex, unstructured):
+        for node in range(grid.nnodes):
+            cellid = _node_to_cellid(grid, node)
+            assert int(grid.get_node([cellid])[0]) == node
+
+    # a cellid may be given as a bare node number
+    assert _as_cellid(5) == (5,)
+    assert _as_cellid((0, 1, 2)) == (0, 1, 2)
+    assert _as_cellid(np.array([0, 1, 2])) == (0, 1, 2)
