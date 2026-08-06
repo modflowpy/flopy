@@ -1804,6 +1804,7 @@ def test_tri_grid_intersect_multiple_polygon_array(rtree):
         ix.intersect(p, geo_dataframe=df_toggle)
 
 
+@requires_pkg("shapely")
 def test_rtree_false_raises_in_points_to_cellids():
     """rtree=False raises error in points_to_cellids."""
     gr = get_rect_grid()
@@ -1816,6 +1817,7 @@ def test_rtree_false_raises_in_points_to_cellids():
         ix.points_to_cellids(pts)
 
 
+@requires_pkg("shapely")
 def test_rtree_false_raises_with_arrays_in_intersects():
     """rtree=False raises error in points_to_cellids."""
     gr = get_rect_grid()

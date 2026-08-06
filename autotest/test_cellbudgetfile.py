@@ -3,6 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 import pytest
+from modflow_devtools.markers import requires_pkg
 
 from autotest.conftest import get_example_data_path
 from flopy.mf6.modflow.mfsimulation import MFSimulation
@@ -861,6 +862,7 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_dis(dis_sim):
 
 
 @pytest.mark.requires_exe("mf6")
+@requires_pkg("shapely")
 def test_cellbudgetfile_get_ts_aux_vars_mf6_disv(dis_sim):
     from flopy.mf6 import ModflowGwfchd, ModflowGwfdisv
 
@@ -938,6 +940,7 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disv(dis_sim):
 
 
 @pytest.mark.requires_exe("mf6")
+@requires_pkg("shapely")
 def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
     from flopy.mf6 import ModflowGwfchd, ModflowGwfdisu
 
@@ -1013,6 +1016,7 @@ def test_cellbudgetfile_get_ts_aux_vars_mf6_disu(dis_sim):
 
 
 @pytest.mark.requires_exe("mf6")
+@requires_pkg("shapely")
 def test_cellbudgetfile_get_ts_imeth1_disv_grid(dis_sim, function_tmpdir):
     """Test that IMETH=1 budget terms (like STO-SS) work with DISV grids.
 
@@ -1074,6 +1078,7 @@ def test_cellbudgetfile_get_ts_imeth1_disv_grid(dis_sim, function_tmpdir):
 
 
 @pytest.mark.requires_exe("mf6")
+@requires_pkg("shapely")
 def test_cellbudgetfile_get_ts_backwards_compatible_idx_format(
     dis_sim, function_tmpdir
 ):

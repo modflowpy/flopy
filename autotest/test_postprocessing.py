@@ -2,7 +2,7 @@ import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.mf6 import (
@@ -556,6 +556,7 @@ def test_get_transmissivities_mf6_structured(function_tmpdir):
     assert np.array_equal(Tcoords, Tcellids)
 
 
+@requires_pkg("shapely")
 def test_get_transmissivities_mf6_vertex(function_tmpdir):
     nl = 1
     nr = 8
@@ -593,6 +594,7 @@ def test_get_transmissivities_mf6_vertex(function_tmpdir):
         assert "r, c parameters only valid for structured grids" in str(e.value)
 
 
+@requires_pkg("shapely")
 def test_get_transmissivities_mf6_unstructured(function_tmpdir):
     nl = 1
     nr = 8

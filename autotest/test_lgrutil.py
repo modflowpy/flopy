@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from modflow_devtools.markers import requires_pkg
 
 from flopy.discretization import StructuredGrid
 from flopy.utils.cvfdutil import get_disv_gridprops, gridlist_to_verts
@@ -148,6 +149,7 @@ def test_lgr_variable_rc_spacing():
     assert np.allclose(lgr.delc, answer), f"{lgr.delc} /= {answer}"
 
 
+@requires_pkg("shapely")
 def test_lgr_hanging_vertices():
     # Define parent grid information
     xoffp = 0.0
