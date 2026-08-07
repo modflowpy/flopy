@@ -1,10 +1,13 @@
 import numpy as np
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.utils.hfb_util import make_hfb_array
 from flopy.utils.triangle import Triangle
 from flopy.utils.voronoi import VoronoiGrid
+
+# every test builds the hfb array, which is done with shapely
+pytestmark = requires_pkg("shapely")
 
 
 def structured_sim():

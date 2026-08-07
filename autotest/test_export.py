@@ -7,7 +7,6 @@ from pprint import pformat
 import matplotlib.pyplot as plt
 import numpy as np
 import pytest
-import shapefile
 from flaky import flaky
 from modflow_devtools.markers import excludes_platform, requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
@@ -2132,6 +2131,8 @@ def test_to_shapefile_raises_attributeerror():
 @pytest.mark.parametrize("use_pandas", [True])  # TODO: test non-pandas
 @pytest.mark.parametrize("sparse", [True, False])
 def test_mf6_chd_shapefile_export_structured(function_tmpdir, use_pandas, sparse):
+    import shapefile
+
     from flopy.mf6 import (
         MFSimulation,
         ModflowGwf,
@@ -2183,6 +2184,8 @@ def test_mf6_chd_shapefile_export_structured(function_tmpdir, use_pandas, sparse
 @pytest.mark.parametrize("sparse", [True])  # TODO: test non-sparse
 def test_mf6_chd_shapefile_export_unstructured(function_tmpdir, use_pandas, sparse):
     """Test CHD package shapefile export for DISU (unstructured) grids"""
+    import shapefile
+
     from flopy.mf6 import (
         MFSimulation,
         ModflowGwf,

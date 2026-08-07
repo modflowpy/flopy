@@ -12,7 +12,6 @@ from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
-from scipy.spatial import Delaunay
 
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
@@ -223,6 +222,7 @@ def test_structured_grid_get_cell_vertices():
     assert v2 == v5, "Named i,j should match"
 
 
+@requires_pkg("shapely")
 def test_vertex_grid_get_cell_vertices():
     """Test VertexGrid.get_cell_vertices() with various input forms"""
     disv_props = get_disv_kwargs(2, 10, 10, 10.0, 10.0, 100.0, [50.0, 0.0])
@@ -250,6 +250,7 @@ def test_vertex_grid_get_cell_vertices():
     assert v4 == v5, "Node and (layer, cell2d) should match"
 
 
+@requires_pkg("shapely")
 def test_unstructured_grid_get_cell_vertices():
     """Test UnstructuredGrid.get_cell_vertices() with various input forms"""
     disu_props = get_disu_kwargs(
@@ -548,8 +549,11 @@ def test_structured_grid_intersect_array(simple_structured_grid):
     assert np.isnan(rows_mixed[1])  # Second point out of bounds
 
 
+@requires_pkg("scipy")
 def test_vertex_grid_intersect_array():
     """Test VertexGrid.intersect() with array inputs."""
+    from scipy.spatial import Delaunay
+
     # Create a simple vertex grid using Delaunay triangulation
     np.random.seed(42)
     n_points = 50
@@ -589,8 +593,11 @@ def test_vertex_grid_intersect_array():
     assert np.isnan(results_mixed[1])  # Second point out of bounds
 
 
+@requires_pkg("scipy")
 def test_unstructured_grid_intersect_array():
     """Test UnstructuredGrid.intersect() with array inputs."""
+    from scipy.spatial import Delaunay
+
     # Create a simple unstructured grid using Delaunay triangulation
     np.random.seed(42)
     n_points = 50
@@ -1477,9 +1484,7 @@ def test_voronoi_vertex_grid(function_tmpdir):
         GridCases.voronoi_nested_circles,
         GridCases.voronoi_polygons,
         GridCases.voronoi_many_polygons,
-    ]
-    if (has_pkg("shapely", True) and has_pkg("scipy", True))
-    else [],
+    ],
     ids=[
         "voronoi_polygon",
         "voronoi_rectangle",
