@@ -12,11 +12,11 @@ maintainers = [
     {name = "Joseph D. Hughes", email = "jdhughes@usgs.gov"},
 ]
 keywords = ["MODFLOW", "groundwater", "hydrogeology"]
-license = {text = "CC0"}
+license = "CC0-1.0"
+license-files = ["LICENSE.md"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
