@@ -160,7 +160,7 @@ def unstructured_grid(example_data_path):
     )
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("pathlike", (True, False))
 def test_output_helper_shapefile_export(pathlike, function_tmpdir, example_data_path):
     ml = Modflow.load(
@@ -179,7 +179,7 @@ def test_output_helper_shapefile_export(pathlike, function_tmpdir, example_data_
     )
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 @pytest.mark.slow
 def test_freyberg_export(function_tmpdir, example_data_path):
     # steady state
@@ -323,7 +323,7 @@ def test_write_gridlines_shapefile(function_tmpdir):
         assert len(sf) == 22
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 def test_export_shapefile_polygon_closed(function_tmpdir):
     from shapefile import Reader
 
@@ -442,7 +442,7 @@ def test_netcdf_classmethods(function_tmpdir, example_data_path):
     new_f.nc.close()
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 def test_shapefile_ibound(function_tmpdir, example_data_path):
     from shapefile import Reader
 
@@ -465,7 +465,7 @@ def test_shapefile_ibound(function_tmpdir, example_data_path):
     shape.close()
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 @pytest.mark.slow
 @pytest.mark.parametrize("namfile", namfiles())
 def test_shapefile(function_tmpdir, namfile):
@@ -555,7 +555,7 @@ def test_export_netcdf(function_tmpdir, namfile):
     nc.close()
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 def test_export_array2(function_tmpdir):
     nrow = 7
     ncol = 11
@@ -586,7 +586,7 @@ def test_export_array2(function_tmpdir):
 
 
 @pytest.mark.mf6
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 def test_array3d_export_structured(function_tmpdir):
     from shapefile import Reader
 
@@ -2127,7 +2127,7 @@ def test_to_shapefile_raises_attributeerror():
 
 
 @pytest.mark.mf6
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "geopandas", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("use_pandas", [True])  # TODO: test non-pandas
 @pytest.mark.parametrize("sparse", [True, False])
 def test_mf6_chd_shapefile_export_structured(function_tmpdir, use_pandas, sparse):
