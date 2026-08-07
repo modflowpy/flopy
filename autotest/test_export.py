@@ -1417,7 +1417,6 @@ def test_vtk_cbc(function_tmpdir, example_data_path):
 
 
 @requires_pkg("vtk")
-@pytest.mark.slow
 def test_vtk_vector(function_tmpdir, example_data_path):
     # test mf 2005 freyberg
     mpth = example_data_path / "freyberg_multilayer_transient"
