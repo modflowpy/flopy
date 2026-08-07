@@ -1481,6 +1481,40 @@ def test_vtk_vector(function_tmpdir, example_data_path):
 
 
 @requires_pkg("vtk")
+@pytest.mark.parametrize("point_scalars", [False, True])
+@pytest.mark.parametrize("size", ["nnodes", "ncpl"])
+def test_vtk_add_vector_components(size, point_scalars):
+    """Cell i must get (x[i], y[i], z[i]) for either input size"""
+    from vtk.util import numpy_support
+
+    nlay, nrow, ncol = 2, 3, 4
+    grid = StructuredGrid(
+        delr=np.full(ncol, 10.0),
+        delc=np.full(nrow, 10.0),
+        top=np.full((nrow, ncol), 10.0),
+        botm=np.array([np.full((nrow, ncol), 0.0), np.full((nrow, ncol), -10.0)]),
+        nlay=nlay,
+    )
+    n = nlay * nrow * ncol if size == "nnodes" else nrow * ncol
+
+    # a constant field is used because inverse distance weighting of a
+    # constant returns the constant, so the point and the cell case have the
+    # same expected value
+    vector = np.array([np.full(n, 1.0), np.full(n, 2.0), np.full(n, 3.0)])
+    vtk = Vtk(modelgrid=grid, point_scalars=point_scalars)
+    vtk.add_vector(vector, "v")
+
+    data = vtk.vtk_grid.GetPointData() if point_scalars else vtk.vtk_grid.GetCellData()
+    arr = numpy_support.vtk_to_numpy(data.GetVectors())
+    assert arr.shape[1] == 3
+
+    # cells that the ncpl sized vector does not reach are filled with nan
+    finite = arr[np.isfinite(arr).all(axis=1)]
+    assert len(finite) > 0
+    assert np.allclose(finite, [1.0, 2.0, 3.0])
+
+
+@requires_pkg("vtk")
 def test_vtk_unstructured(function_tmpdir, unstructured_grid):
     from vtkmodules.util.numpy_support import vtk_to_numpy
     from vtkmodules.vtkIOLegacy import vtkUnstructuredGridReader
