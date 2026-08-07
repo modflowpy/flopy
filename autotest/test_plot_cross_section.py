@@ -298,6 +298,9 @@ def hfb_xc_model(request):
     from flopy.utils.gridutil import get_disu_kwargs, get_disv_kwargs
 
     grid_type = request.param
+    if grid_type != "dis":
+        # the vertex and unstructured grids are built with shapely
+        pytest.importorskip("shapely")
 
     # Create simulation
     sim = flopy.mf6.MFSimulation(sim_name=f"test_hfb_xc_{grid_type}")
@@ -414,6 +417,9 @@ def vertical_hfb_xc_model(request):
     from flopy.utils.gridutil import get_disv_kwargs
 
     grid_type = request.param
+    if grid_type != "dis":
+        # the vertex and unstructured grids are built with shapely
+        pytest.importorskip("shapely")
 
     # Create simulation
     sim = flopy.mf6.MFSimulation(sim_name=f"test_vhfb_xc_{grid_type}")

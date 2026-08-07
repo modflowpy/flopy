@@ -833,7 +833,7 @@ class Mf6Splitter:
 
             new_array[new_nodes] = array[old_nodes]
 
-        new_array.shape = shape
+        new_array = new_array.reshape(shape)
         return new_array
 
     def reconstruct_recarray(self, recarrays):

@@ -10,7 +10,7 @@ import pandas as pd
 import pytest
 from matplotlib import pyplot as plt
 from matplotlib.axes import Axes
-from modflow_devtools.markers import requires_exe
+from modflow_devtools.markers import requires_exe, requires_pkg
 
 import flopy
 from flopy.utils import (
@@ -679,6 +679,7 @@ def dis_sim(function_tmpdir):
 
 
 @pytest.mark.requires_exe("mf6")
+@requires_pkg("shapely")
 def test_headfile_get_ts_disv_grid(dis_sim, function_tmpdir):
     """Test HeadFile.get_ts() with DISV grid using both new and old index formats."""
     from flopy.mf6 import ModflowGwfchd, ModflowGwfdisv
@@ -744,6 +745,7 @@ def test_headfile_get_ts_disv_grid(dis_sim, function_tmpdir):
 
 
 @pytest.mark.requires_exe("mf6")
+@requires_pkg("shapely")
 def test_headfile_get_ts_disu_grid(dis_sim, function_tmpdir):
     """Test HeadFile.get_ts() with DISU grid using both new and old index formats."""
     from flopy.mf6 import ModflowGwfchd, ModflowGwfdisu

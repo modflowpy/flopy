@@ -897,7 +897,7 @@ class Vtk:
             else:
                 raise AssertionError("Size of vector must be 3 * nnodes or 3 * ncpl")
         else:
-            vector = np.reshape(vector, (3, self.nnodes)).T
+            vector = np.reshape(vector, (3, self.nnodes))
 
         if self.point_scalars:
             tmp = []
@@ -907,8 +907,11 @@ class Vtk:
 
         vector = self._mask_values(vector, masked_values)
 
+        # a row per component is built above, but numpy_to_vtk flattens in
+        # row-major order and vtk reads each row as one tuple, so the array
+        # is transposed to give a row per cell or point
         vtk_arr = numpy_support.numpy_to_vtk(
-            num_array=vector, array_type=self.__vtk.VTK_FLOAT
+            num_array=vector.T, array_type=self.__vtk.VTK_FLOAT
         )
         vtk_arr.SetName(name)
         vtk_arr.SetNumberOfComponents(3)

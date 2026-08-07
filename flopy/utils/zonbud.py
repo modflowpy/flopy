@@ -2677,7 +2677,7 @@ def _read_zb_csv2(fname, add_prefix=True, aliases=None):
         array = np.genfromtxt(foo, delimiter=",").T
         if len(array) != len(dtype):
             array = array[:-1]
-        array.shape = (len(dtype), -1)
+        array = array.reshape((len(dtype), -1))
         data = {name[0]: list(array[ix]) for ix, name in enumerate(dtype)}
         data["KPER"] = list(np.array(data["KPER"]) - 1)
         data["KSTP"] = list(np.array(data["KSTP"]) - 1)
