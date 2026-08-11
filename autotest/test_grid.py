@@ -2101,7 +2101,8 @@ def test_unstructured_mf6_gridprops2():
                 np.testing.assert_allclose(
                     v0[col],
                     v1[col],
-                    err_msg=f"{attr} column: {col} not consistent with valid array data",
+                    err_msg=f"{attr} column: {col} not "
+                    f"consistent with valid array data",
                 )
         else:
             np.testing.assert_allclose(
