@@ -468,8 +468,6 @@ def test_binaryfile_read_context(freyberg_model_path):
 
 
 @pytest.fixture
-@pytest.mark.mf6
-@requires_exe("mf6")
 def mf6_gwf_2sp_st_tr(function_tmpdir):
     """
     A basic flow model with 2 stress periods,
@@ -543,6 +541,8 @@ def mf6_gwf_2sp_st_tr(function_tmpdir):
     return sim
 
 
+@pytest.mark.mf6
+@requires_exe("mf6")
 def test_read_mf6_2sp(mf6_gwf_2sp_st_tr):
     sim = mf6_gwf_2sp_st_tr
     gwf = sim.get_model()
