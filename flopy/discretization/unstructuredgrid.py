@@ -628,11 +628,12 @@ class UnstructuredGrid(Grid):
             dis_props["angrot"] = self.angrot
 
             if self.is_valid:
-                dis_props["vertices"] = self._vertices
+                dis_props["vertices"] = [[int(i) for i in v] for v in self._vertices]
                 cell2d = []
                 for ix, iv in enumerate(self._iverts):
                     c2d = tuple(
-                        [ix + 1, self._xc[ix], self._yc[ix], len(iv)] + list(iv)
+                        [ix, self._xc[ix], self._yc[ix], len(iv)]
+                        + [int(i) for i in list(iv)]
                     )
                     cell2d.append(c2d)
                 dis_props["cell2d"] = cell2d

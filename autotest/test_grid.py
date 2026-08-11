@@ -2014,6 +2014,101 @@ def test_unstructured_mf6_gridprops(example_data_path):
         )
 
 
+def test_unstructured_mf6_gridprops2():
+    nnodes = 2
+    top = np.ones((nnodes,))
+    botm = np.zeros((nnodes,))
+    area = np.full((nnodes,), 10)
+    idomain = np.ones((nnodes,), dtype=int)
+    iac = [2, 2]
+    ja = [1, 2, 2, 1]
+    ihc = [0, 1, 0, 1]
+    cl12 = [
+        0,
+        10,
+        0,
+        10,
+    ]
+    hwva = [
+        0,
+        100,
+        0,
+        100,
+    ]
+
+    vertices = [
+        [0, 0, 0],
+        [1, 0, 10],
+        [2, 10, 10],
+        [3, 10, 0],
+        [4, 10, 20],
+        [5, 20, 20],
+    ]
+
+    cell2d = [[0, 5, 5, 5, 0, 1, 2, 3, 0], [1, 15, 5, 5, 3, 2, 4, 5, 3]]
+    xoff = 100
+    yoff = 100
+    angrot = 10
+
+    sim = MFSimulation()
+    gwf = ModflowGwf(sim, modelname="usg_test2")
+    disu = ModflowGwfdisu(
+        gwf,
+        xorigin=xoff,
+        yorigin=yoff,
+        angrot=angrot,
+        nodes=nnodes,
+        nja=len(ja),
+        nvert=len(vertices),
+        top=top,
+        bot=botm,
+        area=area,
+        idomain=idomain,
+        iac=iac,
+        ja=ja,
+        ihc=ihc,
+        cl12=cl12,
+        hwva=hwva,
+        vertices=vertices,
+        cell2d=cell2d,
+    )
+    modelgrid = gwf.modelgrid
+
+    sim2 = MFSimulation()
+    gwf2 = ModflowGwf(sim2)
+    disu2 = ModflowGwfdisu(gwf2, cl12=cl12, hwva=hwva, **modelgrid.disu_properties())
+
+    attrs = (
+        "top",
+        "bot",
+        "iac",
+        "ja",
+        "nodes",
+        "cl12",
+        "hwva",
+        "ihc",
+        "cell2d",
+        "vertices",
+        "xorigin",
+        "yorigin",
+        "angrot",
+    )
+    for attr in attrs:
+        v0 = getattr(disu, attr).array
+        v1 = getattr(disu2, attr).array
+        if attr in ("cell2d", "vertices"):
+            for col in v0.dtype.names:
+                np.testing.assert_allclose(
+                    v0[col],
+                    v1[col],
+                    err_msg=f"{attr} column: {col} not consistent with valid array data",
+                )
+        else:
+            np.testing.assert_allclose(
+                v0, v1, err_msg=f"{attr} not consistent with valid array data"
+            )
+
+
 def test_area():
     import random
 
