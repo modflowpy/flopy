@@ -1927,6 +1927,27 @@ def test_structured_mf6_gridprops(example_data_path):
         )
 
 
+def test_structured_mf2005_gridprops(example_data_path):
+    mf = Modflow.load("freyberg.nam", model_ws=example_data_path / "freyberg")
+    dis = mf.dis
+    modelgrid = mf.modelgrid
+    modelgrid.set_coord_info(0, 0, 0)
+
+    new_model = Modflow()
+    new_dis = ModflowDis(new_model, **modelgrid.dis_properties(mf2005=True))
+    attrs = ("delc", "delr", "top", "botm", "nlay", "nrow", "ncol")
+    for attr in attrs:
+        v0 = getattr(dis, attr)
+        v1 = getattr(new_dis, attr)
+        if hasattr(v0, "array"):
+            v0 = v0.array
+            v1 = v1.array
+
+        np.testing.assert_allclose(
+            v0, v1, err_msg=f"{attr} not consistent with valid array data"
+        )
+
+
 @pytest.mark.mf6
 def test_vertex_mf6_gridprops(example_data_path):
     sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwftri_disv")
