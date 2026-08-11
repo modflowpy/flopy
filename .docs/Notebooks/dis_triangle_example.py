@@ -204,8 +204,8 @@ ims = flopy.mf6.ModflowIms(
     sim,
     print_option="SUMMARY",
     complexity="complex",
-    outer_hclose=1.0e-8,
-    inner_hclose=1.0e-8,
+    outer_dvclose=1.0e-8,
+    inner_dvclose=1.0e-8,
 )
 cell2d = tri.get_cell2d()
 vertices = tri.get_vertices()
