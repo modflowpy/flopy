@@ -196,7 +196,6 @@ Contents:
    ./source/flopy.mf6.utils.mfobservation.rst
    ./source/flopy.mf6.utils.output_util.rst
    ./source/flopy.mf6.utils.postprocessing.rst
-   ./source/flopy.mf6.utils.reference.rst
    ./source/flopy.mf6.utils.lakpak_utils.rst
    ./source/flopy.mf6.utils.model_splitter.rst
 
