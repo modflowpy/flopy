@@ -744,7 +744,7 @@ class MFModel(ModelInterface):
 
         Returns
         -------
-        inner_hclose, rclose : float, float
+        inner_dvclose, rclose : float, float
 
         """
         ims = self.get_ims_package()
@@ -752,7 +752,7 @@ class MFModel(ModelInterface):
             rclose = ims.rcloserecord.get_data()
             if rclose is not None:
                 rclose = rclose[0][0]
-            return ims.inner_hclose.get_data(), rclose
+            return ims.inner_dvclose.get_data(), rclose
         return None
 
     @property
