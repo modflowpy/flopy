@@ -1991,3 +1991,54 @@ def test_unstructured_mf6_gridprops(example_data_path):
         np.testing.assert_allclose(
             v0, v1, err_msg=f"{attr} not consistent with valid array data"
         )
+
+
+def test_area():
+    import random
+
+    nlay = 1
+    nrow = 1
+    ncol = 1
+    dy = random.random() * 10
+    dx = random.random() * 10
+    valid_area = dx * dy
+    delc = np.full((nrow,), dy)
+    delr = np.full((ncol,), dx)
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol), dtype=int)
+    sgrid = StructuredGrid(delc=delc, delr=delr, nlay=1, top=top, botm=botm)
+    cell_area = sgrid.area
+    np.testing.assert_allclose(
+        [
+            valid_area,
+        ],
+        cell_area,
+        err_msg="shoelace algorithm not returning valid area within tolerance",
+    )
+
+    # triangle test
+    x1 = random.random() * 10
+    x2 = x1 / 2
+    y2 = random.random() * 10
+    verts = np.array([[0, 0, 0], [1, x1, 0], [2, x2, y2]])
+    # a = 0.5 * b * h
+    valid_area = 0.5 * x1 * y2
+
+    xc = np.mean(verts.T[1])
+    yc = np.mean(verts.T[2])
+    cell2d = [
+        (0, xc, yc, 4, 0, 1, 2, 0),
+    ]
+    nlay = 1
+    top = np.ones((len(cell2d),))
+    botm = np.zeros((nlay, len(cell2d)))
+
+    vgrid = VertexGrid(vertices=verts, cell2d=cell2d, nlay=nlay, top=top, botm=botm)
+    cell_area = vgrid.area
+    np.testing.assert_allclose(
+        [
+            valid_area,
+        ],
+        cell_area,
+        err_msg="shoelace algorithm not returning valid area within tolerance",
+    )
