@@ -385,7 +385,7 @@ class VoronoiGrid:
         gridprops["cl12"] = cl12
         gridprops["hwva"] = hwva
         gridprops["angldegx"] = angldegx
-        gridprops["area"] = ugrid.cell_area
+        gridprops["area"] = ugrid.area
         gridprops["nodes"] = len(iac)
         gridprops["nja"] = len(ja)
         gridprops["nvert"] = len(gridprops["vertices"])

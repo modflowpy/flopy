@@ -412,29 +412,6 @@ class Grid:
             return self._laycbd
 
     @property
-    def cell_area(self):
-        """
-        Use shoelace algorithm for non-self-intersecting polygons to
-        calculate area.
-
-        Returns
-        -------
-            area : np.ndarray
-                numpy array of cell areas in L^2
-        """
-        from ..plot.plotutil import UnstructuredPlotUtilities
-
-        xverts, yverts = self.cross_section_vertices
-        xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(xverts, yverts)
-        area_x2 = np.zeros((1, len(xverts)))
-        for i in range(xverts.shape[-1]):
-            # calculate the determinant of each line in polygon
-            area_x2 += xverts[:, i - 1] * yverts[:, i] - yverts[:, i - 1] * xverts[:, i]
-
-        area = np.abs(area_x2 / 2.0)
-        return np.ravel(area)
-
-    @property
     def cell_thickness(self):
         """
         Get the cell thickness for a structured, vertex, or unstructured grid.
@@ -557,6 +534,26 @@ class Grid:
             np.min(self.xyzvertices[2]),
             np.max(self.xyzvertices[2]),
         )
+
+    @property
+    def area(self):
+        """
+        Returns a numpy array of cell areas calculated using the shoelace algorithm
+
+        """
+        # irregular_shape_patch
+        from ..plot.plotutil import UnstructuredPlotUtilities
+
+        # when looping through to create determinants, need to start at -1
+        xverts, yverts = self.cross_section_vertices
+        xverts, yverts = UnstructuredPlotUtilities.irregular_shape_patch(xverts, yverts)
+        area_x2 = np.zeros((1, len(xverts)))
+        for i in range(xverts.shape[-1]):
+            # calculate the determinant of each line in polygon
+            area_x2 += xverts[:, i - 1] * yverts[:, i] - yverts[:, i - 1] * xverts[:, i]
+
+        area = np.abs(area_x2 / 2.0)
+        return np.ravel(area)
 
     @property
     def grid_lines(self):
