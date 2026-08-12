@@ -11,6 +11,7 @@ See https://developer.github.com/v3/repos/releases/ for GitHub Releases API.
 import json
 import os
 import shutil
+import ssl
 import sys
 import tempfile
 import urllib
@@ -94,6 +95,30 @@ def get_request(url, params={}):
     return urllib.request.Request(url, headers=headers)
 
 
+def urlopen(request, timeout=10, quiet=False):
+    """Open a URL, working around a broken/incomplete local CA trust store.
+
+    Some Python installs (e.g. a freshly provisioned Homebrew Python) resolve
+    ``ssl.create_default_context()`` to a CA bundle that isn't populated,
+    causing HTTPS requests to fail verification even though the certificate
+    is fine. If that happens and certifi is already installed, retry once
+    using certifi's CA bundle.
+    """
+    try:
+        return urllib.request.urlopen(request, timeout=timeout)
+    except urllib.error.URLError as err:
+        if not isinstance(err.reason, ssl.SSLCertVerificationError):
+            raise
+        try:
+            import certifi
+        except ImportError:
+            raise
+        if not quiet:
+            print("certificate verification failed, retrying with certifi")
+        context = ssl.create_default_context(cafile=certifi.where())
+        return urllib.request.urlopen(request, timeout=timeout, context=context)
+
+
 def get_releases(owner=None, repo=None, quiet=False, per_page=None) -> List[str]:
     """Get list of available releases."""
     owner = default_owner if owner is None else owner
@@ -111,7 +136,7 @@ def get_releases(owner=None, repo=None, quiet=False, per_page=None) -> List[str]
     while True:
         num_tries += 1
         try:
-            with urllib.request.urlopen(request, timeout=10) as resp:
+            with urlopen(request, timeout=10, quiet=quiet) as resp:
                 result = resp.read()
                 break
         except urllib.error.HTTPError as err:
@@ -153,7 +178,7 @@ def get_release(owner=None, repo=None, tag="latest", quiet=False) -> dict:
     while True:
         num_tries += 1
         try:
-            with urllib.request.urlopen(request, timeout=10) as resp:
+            with urlopen(request, timeout=10, quiet=quiet) as resp:
                 result = resp.read()
                 remaining = resp.headers.get("x-ratelimit-remaining", None)
                 if remaining and int(remaining) <= 10:
