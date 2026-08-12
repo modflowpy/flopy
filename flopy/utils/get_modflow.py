@@ -464,7 +464,11 @@ def run_main(
     else:
         if not quiet:
             print(f"downloading '{download_url}' to '{download_pth}'")
-        urllib.request.urlretrieve(download_url, download_pth)
+        with urlopen(
+            urllib.request.Request(download_url), timeout=120, quiet=quiet
+        ) as resp:
+            with open(download_pth, "wb") as f:
+                shutil.copyfileobj(resp, f)
 
     if subset:
         if isinstance(subset, str):
