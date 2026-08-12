@@ -23,6 +23,8 @@ def _get_vars(d: dict, developmode: bool = True) -> dict[str, dict]:
         if (
             isinstance(v, dict)
             and "type" in v
+            # skip vars removed as of the DFN's MF6 version
+            and not v.get("removed", False)
             # support 'prerelease' for now but it's been deprecated for 'developmode'
             and (developmode or not v.get("developmode", v.get("prerelease", False)))
         ):
