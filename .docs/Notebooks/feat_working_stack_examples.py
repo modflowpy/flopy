@@ -131,7 +131,7 @@ df_flux, df_vol = mfl.get_dataframes(start_datetime="10-21-2015")
 df_flux
 
 # +
-groups = df_flux.groupby(lambda x: x.split("_")[-1], axis=1).groups
+groups = df_flux.T.groupby(lambda x: x.split("_")[-1]).groups
 df_flux_in = df_flux.loc[:, groups["IN"]]
 df_flux_in.columns = df_flux_in.columns.map(lambda x: x.split("_")[0])
 
