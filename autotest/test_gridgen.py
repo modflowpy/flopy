@@ -59,7 +59,7 @@ def get_structured_grid():
 
 
 @requires_exe("gridgen")
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
 def test_add_active_domain(function_tmpdir, grid_type):
     bgrid = get_structured_grid()
@@ -95,7 +95,7 @@ def test_add_active_domain(function_tmpdir, grid_type):
 
 
 @requires_exe("gridgen")
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
 def test_add_refinement_feature(function_tmpdir, grid_type):
     bgrid = get_structured_grid()

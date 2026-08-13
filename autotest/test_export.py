@@ -241,7 +241,7 @@ def test_freyberg_export(function_tmpdir, example_data_path):
     assert m.drn.stress_period_data.mg.angrot == m.modelgrid.angrot
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("missing_arrays", [True, False])
 @pytest.mark.slow
 def test_disu_export(function_tmpdir, missing_arrays):
@@ -623,7 +623,7 @@ def test_array3d_export_structured(function_tmpdir):
         ]
 
 
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_array3d_export_unstructured(function_tmpdir):
     from shapefile import Reader
 
