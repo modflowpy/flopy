@@ -3,7 +3,6 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
-
 from modflow_devtools.markers import requires_pkg
 
 import flopy
