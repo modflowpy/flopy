@@ -1031,7 +1031,7 @@ def test_unstructured_complex_disu(function_tmpdir):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymetis", "scipy")
+@requires_pkg("pymetis", "scipy", "shapely")
 def test_multi_model(function_tmpdir):
     from scipy.spatial import KDTree
 
