@@ -62,21 +62,39 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 This project has historically aimed to support a wide range of [Python versions](https://devguide.python.org/versions/). In current and future development this window may narrow to follow [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) instead.
 
-Install Python >=3.10 via [standalone download](https://www.python.org/downloads/) or a distribution like [Anaconda](https://www.anaconda.com/products/individual) or [miniconda](https://docs.conda.io/en/latest/miniconda.html).
+Install Python >=3.10 via [standalone download](https://www.python.org/downloads/), [uv](https://docs.astral.sh/uv/), or a conda-like distribution like [Anaconda](https://www.anaconda.com/products/individual), [miniconda](https://docs.conda.io/en/latest/miniconda.html) or [miniforge](https://github.com/conda-forge/miniforge) .
 
-Then install FloPy and core dependencies from the project root:
-
-```sh
-pip install .
-```
-
-The FloPy package has a number of [optional dependencies](.docs/optional_dependencies.md), as well as extra dependencies required for linting, testing, and building documentation. Extra dependencies are listed in the `test`, `lint`, `optional`, and `doc` groups under the `[project.optional-dependencies]` section in `pyproject.toml`. Core, linting, testing and optional dependencies are included in the Conda environment in `etc/environment.yml`. Only core dependencies are included in the PyPI package &mdash; to install extra dependency groups with pip, use `pip install ".[<group>]"`. For instance, to install all development dependencies:
+Then install FloPy and core dependencies from the project root path:
 
 ```sh
-pip install ".[dev]"
+pip install -e .
 ```
 
-Alternatively, with Anaconda or Miniconda:
+The `-e` option installs FloPy as an "editable" package to implement and test changes iteratively, and is recommended for developers.
+
+FloPy has a number of user-facing [optional dependencies](.docs/md/optional_dependencies.md) and developer-facing dependencies needed for linting and testing. These are handled differently, depending on the Python developer environment.
+
+#### Pip-like
+
+Pip and related tools (pipenv, uv) declare their optional dependencies under the `[project.optional-dependencies]` section in `pyproject.toml`, and can be installed with:
+
+```sh
+pip install -e ".[optional]"
+```
+
+Developer-facing dependencies used for internal development, and are grouped by the following group labels: `test`, `lint` and `docs`. A `dev` group combines `test` and `lint` with the `optional` and `codegen` extras, and is recommended for developers. These dependencies are listed under the `[dependency-groups]` section in `pyproject.toml`
+
+Dependency groups can be installed with `uv` or `pip` version 25.1 (2025-04-26), which support the `--group <group>` option:
+
+```sh
+pip install --group dev
+```
+
+Note that `uv sync` includes the `dev` group by default.
+
+#### Conda-like
+
+Conda environments can be created using a file `etc/environment.yml`, which includes optional dependencies, and dependencies for development. This development environment can be installed and activated with:
 
 ```sh
 conda env create -f etc/environment.yml
@@ -180,10 +198,10 @@ To convert a Python example script to an `.ipynb` notebook, run:
 jupytext --from py --to ipynb path/to/script.py
 ```
 
-To work with `.ipynb` notebooks from a browser interface, you will need `jupyter` installed (`jupyter` is included with the `test` optional dependency group in `pyproject.toml`). Some of the notebooks use testing dependencies and [optional dependencies](.docs/optional_dependencies.md) as well. The conda environment provided in `etc/environment.yml` already includes all dependencies needed to run the examples. To install all development dependencies at once using `pip`:
+To work with `.ipynb` notebooks from a browser interface, you will need `jupyter` installed (`jupyter` is included with the `test` dependency group in `pyproject.toml`). Some of the notebooks use testing dependencies and [optional dependencies](.docs/md/optional_dependencies.md) as well. The conda environment provided in `etc/environment.yml` already includes all dependencies needed to run the examples. To install all development dependencies at once using `pip`:
 
 ```sh
-pip install ".[dev]"
+pip install --group dev
 ```
 
 To start a local Jupyter notebook server, run:
@@ -242,7 +260,7 @@ Each example should create and (attempt to) dispose of its own isolated temporar
 
 ## Tests
 
-To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). Test dependencies are specified in the `test` extras group in `pyproject.toml` (with pip, use `pip install ".[test]"`). Test dependencies are included in the Conda environment `etc/environment`.
+To run the tests you will need `pytest` and a few plugins, including [`pytest-xdist`](https://pytest-xdist.readthedocs.io/en/latest/), [`pytest-dotenv`](https://github.com/quiqua/pytest-dotenv), and [`pytest-benchmark`](https://pytest-benchmark.readthedocs.io/en/latest/index.html). See details installing test dependencies for [pip-like](#pip-like) or [Conda-like](#conda-like) environments.
 
 **Note:** tests require the [`modflow-devtools`](https://github.com/MODFLOW-ORG/modflow-devtools) package, which is a grab bag of utilities and `pytest` fixtures shared by FloPy, MODFLOW 6, and other related projects. If you see testing errors that don't seem related to the contents of the tests, updating to the latest `modflow-devtools` is recommended as a first troubleshooting step.
 
