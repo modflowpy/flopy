@@ -32,8 +32,8 @@ jobs:
         with:
           cache-dependency-glob: "**/pyproject.toml"
 
-      - name: Install FloPy
-        run: uv sync --extra test
+      - name: Install FloPy without optional dependencies
+        run: uv sync --only-group test
 
       - name: Install other dependencies
         run: |
@@ -41,14 +41,14 @@ jobs:
           # If matrix.optdeps is "some" remove 3 optional dependencies
           # selected randomly using the current date as the seed.
           if [[ ! "${{ matrix.optdeps }}" == *"no"* ]]; then
-            uv pip install ".[optional]"
+            uv sync --extra optional
           fi
           if [[ "${{ matrix.optdeps }}" == *"some"* ]]; then
             deps=$(sed '/optional =/,/]/!d' pyproject.toml | sed -e '1d;$d' -e 's/\"//g' -e 's/,//g' | tr -d ' ' | cut -f 1 -d ';')
             rmvd=$(echo $deps | tr ' ' '\n' | shuf --random-source <(yes date +%d.%m.%y) | head -n 3)
             echo "Removing optional dependencies: $rmvd" >> removed_dependencies.txt
             cat removed_dependencies.txt
-            uv pip uninstall --yes $rmvd
+            uv pip uninstall $rmvd
           fi
 
       - name: Upload removed dependencies log

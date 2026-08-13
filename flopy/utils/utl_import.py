@@ -45,7 +45,7 @@ import warnings
 
 from .parse_version import Version
 
-# Update .docs/optional_dependencies.md when updating versions!
+# Update .docs/md/optional_dependencies.md when updating versions!
 
 VERSIONS = {
     "shapefile": "2.0.0",
