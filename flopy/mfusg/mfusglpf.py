@@ -335,7 +335,7 @@ class MfUsgLpf(ModflowLpf):
                 model, (njag,), np.float32, ksat, "ksat", locat=self.unit_number[0]
             )
 
-        if self.laytyp == 5:
+        if (self.laytyp.array == 5).any():
             self.richards = True
             bas = model.get_package("BAS6")
             if not hasattr(bas, "richards") or not bas.richards:
