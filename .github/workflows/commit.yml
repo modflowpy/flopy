@@ -71,7 +71,7 @@ jobs:
         shell: bash
     timeout-minutes: 10
     env:
-      PYTHON_VERSION: '3.10'
+      PYTHON_VERSION: '3.11'
 
     steps:
       - name: Checkout repo
@@ -115,7 +115,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10", "3.11", "3.12" ]
+        python-version: [ "3.11", "3.12", "3.13", "3.14" ]
     defaults:
       run:
         shell: bash -l {0}
