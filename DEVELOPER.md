@@ -62,7 +62,7 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 This project has historically aimed to support a wide range of [Python versions](https://devguide.python.org/versions/). In current and future development this window may narrow to follow [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) instead.
 
-Install Python >=3.10 via [standalone download](https://www.python.org/downloads/), [uv](https://docs.astral.sh/uv/), or a conda-like distribution like [Anaconda](https://www.anaconda.com/products/individual), [miniconda](https://docs.conda.io/en/latest/miniconda.html) or [miniforge](https://github.com/conda-forge/miniforge) .
+Install Python >=3.11 via [standalone download](https://www.python.org/downloads/), [uv](https://docs.astral.sh/uv/), or a conda-like distribution like [Anaconda](https://www.anaconda.com/products/individual), [miniconda](https://docs.conda.io/en/latest/miniconda.html) or [miniforge](https://github.com/conda-forge/miniforge) .
 
 Then install FloPy and core dependencies from the project root path:
 

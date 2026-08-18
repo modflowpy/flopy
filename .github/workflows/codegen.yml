@@ -13,7 +13,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10", "3.11", "3.12" ]
+        python-version: [ "3.11", "3.11", "3.12", "3.13", "3.14" ]
         ref: ["develop", "master", "6.4.1", "6.4.0"]
     defaults:
       run:
