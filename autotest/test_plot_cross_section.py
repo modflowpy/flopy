@@ -195,6 +195,56 @@ def test_cross_section_invalid_line_representations_fail(line):
         flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
 
 
+@requires_pkg("shapely")
+@pytest.mark.parametrize("view", ["bogus", "diagonal", "X", "Y"])
+def test_cross_section_invalid_view_raises_error(view):
+    grid = structured_square_grid(side=10)
+    if view in ("X", "Y"):
+        # view is case-insensitive, these should not raise
+        flopy.plot.PlotCrossSection(
+            modelgrid=grid, line={"line": [(0, 0), (10, 10)]}, view=view
+        )
+        return
+    with pytest.raises(ValueError):
+        flopy.plot.PlotCrossSection(
+            modelgrid=grid, line={"line": [(0, 0), (10, 10)]}, view=view
+        )
+
+
+@requires_pkg("shapely")
+@pytest.mark.parametrize(
+    "line, expected_auto_direction",
+    [
+        # horizontal: x-span > y-span
+        ([(0, 5.5), (10, 5.5)], "x"),
+        # vertical: y-span > x-span
+        ([(5.5, 0), (5.5, 10)], "y"),
+        # diagonal, equal spans: falls to the "else" (y) branch since the
+        # comparison is a strict ">"
+        ([(0, 0), (10, 10)], "y"),
+    ],
+)
+def test_cross_section_view_forces_direction(line, expected_auto_direction):
+    grid = structured_square_grid(side=10)
+
+    auto_xc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line})
+    assert auto_xc.direction == expected_auto_direction
+
+    x_xc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line}, view="x")
+    assert x_xc.direction == "x"
+
+    y_xc = flopy.plot.PlotCrossSection(modelgrid=grid, line={"line": line}, view="y")
+    assert y_xc.direction == "y"
+
+
+@pytest.mark.parametrize("onkey, expected_direction", [("row", "x"), ("column", "y")])
+@pytest.mark.parametrize("view", ["auto", "x", "y"])
+def test_cross_section_view_ignored_for_row_column(onkey, expected_direction, view):
+    grid = structured_square_grid(side=10)
+    xc = flopy.plot.PlotCrossSection(modelgrid=grid, line={onkey: 4}, view=view)
+    assert xc.direction == expected_direction
+
+
 def test_plot_limits():
     xymin, xymax = 0, 1000
     cellsize = 50
