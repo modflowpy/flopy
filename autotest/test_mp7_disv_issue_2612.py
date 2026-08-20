@@ -1,30 +1,5 @@
 """
 Tests for issue #2612: MODPATH 7 izone/zones handling on DISV grids.
-
-The issue as reported: passing a 2D (nlay, ncpl) zones array to
-Modpath7Sim for a DISV-grid model raised
-``ValueError: Util3d: expected 3 dimensions, found shape (nlay, ncpl)``.
-The maintainer suspected this had already been fixed by #1415 (which
-taught Util3d.build_2d_instances to tile a (nlay, ncpl)-shaped value
-across layers the same way it already handled a genuine 3D array), but
-the reporter never confirmed either way.
-
-These tests exercise both the 2D (nlay, ncpl) and 3D (nlay, 1, ncpl)
-zones array forms against a small DISV grid with real flow, so that a
-regression wouldn't just raise on construction but would also be
-caught if it silently produced the wrong zone values. They also build
-an MF6 PRT model against the same grid and flow field: PRT's izone
-(MIP package) is a native 2D (nlay, ncpl) griddata array for DISV --
-no 3D workaround is needed -- so it's used here as a second reference
-implementation that the MP7 zone semantics can be checked against.
-
-Grid: GridCases.vertex_small() is a 3-layer, 5-cell-per-layer DISV
-grid. Cell adjacency within a layer (from shared vertices): 0-1, 0-2,
-1-3, 2-3, 2-4. Cell 2 is a cut vertex -- cell 4 is only reachable
-through cell 2 -- so marking cell 2 as a stopzone guarantees that a
-particle released at cell 1 and flowing toward a sink at cell 4 must
-be intercepted at cell 2, regardless of which side of the small
-"diamond" (0 or 3) the flow solver routes it through.
 """
 
 import numpy as np
@@ -86,9 +61,7 @@ def build_gwf_sim(name, ws):
         botm=grid.botm,
     )
     # k33 near zero decouples the layers vertically, so flow (and the
-    # tracked particle) stay in layer 0 where the zones are defined --
-    # otherwise vertical leakage could carry the particle into a layer
-    # with no stopzone and the test would be checking the wrong thing.
+    # tracked particle) stay in layer 0 where the zones are defined
     ModflowGwfnpf(
         gwf,
         k=1.0,
@@ -115,10 +88,6 @@ def build_gwf_sim(name, ws):
 
 
 def make_zones(grid, shape):
-    """Zones array marking the junction cell (layer 0) with STOPZONE and
-    everything else zone 1, in either 2D (nlay, ncpl) or 3D (nlay, 1, ncpl)
-    form -- the two shapes issue #2612 says should be, but weren't always,
-    accepted interchangeably."""
     zones2d = np.ones((grid.nlay, grid.ncpl), dtype=np.int32)
     zones2d[0, JUNCTION_CELL] = STOPZONE
     if shape == "2d":
@@ -142,10 +111,6 @@ def make_particle_data():
 
 @pytest.mark.parametrize("shape", ["2d", "3d"])
 def test_mp7_disv_zones(function_tmpdir, shape):
-    """A DISV zones array, given as either 2D (nlay, ncpl) or 3D
-    (nlay, 1, ncpl), is accepted by Modpath7Sim and actually honored:
-    a particle released upstream of the stopzone cell is intercepted
-    there rather than continuing on to the CHD sink."""
     gwf_name = "gwf"
     sim, grid = build_gwf_sim(gwf_name, function_tmpdir / "mf6")
     sim.write_simulation()
@@ -172,17 +137,12 @@ def test_mp7_disv_zones(function_tmpdir, shape):
 
     ep = EndpointFile(mp7_ws / "mp7.mpend").get_data()
     assert len(ep) == 1
-    # the particle must stop at the junction cell -- i.e. because it
-    # entered the stopzone -- not travel on to the CHD sink cell
     assert ep["k"][0] == 0
     assert ep["node"][0] == JUNCTION_CELL
     assert ep["zone"][0] == STOPZONE
 
 
 def test_mp7_disv_zones_2d_3d_equivalent(function_tmpdir):
-    """The 2D (nlay, ncpl) and 3D (nlay, 1, ncpl) zones arrays are two
-    spellings of the same data and Util3d must interpret them
-    identically -- this equivalence is the actual substance of #2612."""
     sim, grid = build_gwf_sim("gwf", function_tmpdir / "mf6")
     gwf = sim.get_model()
 
@@ -207,9 +167,6 @@ def test_mp7_disv_zones_2d_3d_equivalent(function_tmpdir):
 
 
 def test_prt_disv_zones(function_tmpdir):
-    """MF6 PRT takes izone as a native 2D (nlay, ncpl) griddata array for
-    DISV grids -- no Util3d workaround needed -- and produces the same
-    stopzone behavior as MODPATH 7 against the same flow field."""
     gwf_name = "gwf"
     mf6_ws = function_tmpdir / "mf6"
     gwf_sim, grid = build_gwf_sim(gwf_name, mf6_ws)
@@ -245,8 +202,6 @@ def test_prt_disv_zones(function_tmpdir):
         packagedata=releasepts,
         perioddata={0: ["FIRST"]},
         istopzone=STOPZONE,
-        # the default ("eager") writes COORDINATE_CHECK_METHOD, which is
-        # gated behind IDEVELOPMODE in some mf6 release builds
         coordinate_check_method=None,
     )
     ModflowPrtoc(
