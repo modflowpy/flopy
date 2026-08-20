@@ -532,8 +532,6 @@ class EndpointFile(ModpathFile):
         "particleid",
         "particlegroup",
         "particleidloc",
-        "zone0",
-        "zone",
     ]
 
     def __init__(self, filename: Union[str, PathLike], verbose: bool = False):
