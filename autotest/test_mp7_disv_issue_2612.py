@@ -177,7 +177,9 @@ def test_prt_disv_zones(function_tmpdir):
 
     prt_name = "prt"
     prt_ws = function_tmpdir / "prt"
-    prt_sim = MFSimulation(sim_name=prt_name, version="mf6", exe_name="mf6", sim_ws=prt_ws)
+    prt_sim = MFSimulation(
+        sim_name=prt_name, version="mf6", exe_name="mf6", sim_ws=prt_ws
+    )
     ModflowTdis(prt_sim, time_units="DAYS", nper=1, perioddata=[(1.0, 1, 1.0)])
     prt = ModflowPrt(prt_sim, modelname=prt_name)
     ModflowPrtdisv(
