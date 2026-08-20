@@ -176,13 +176,7 @@ def test_mp7_disv_zones(function_tmpdir, shape):
     # entered the stopzone -- not travel on to the CHD sink cell
     assert ep["k"][0] == 0
     assert ep["node"][0] == JUNCTION_CELL
-    # EndpointFile.kijnames treats "zone"/"zone0" as 1-based indices and
-    # decrements them like it does k/i/j/node, but zone numbers are user
-    # labels, not positions -- MP7 itself writes them unshifted (verified
-    # against the raw .mpend record). So the value read back here is
-    # STOPZONE - 1, not STOPZONE. This looks like a distinct, pre-existing
-    # flopy bug turned up while writing this test, not part of #2612.
-    assert ep["zone"][0] == STOPZONE - 1
+    assert ep["zone"][0] == STOPZONE
 
 
 def test_mp7_disv_zones_2d_3d_equivalent(function_tmpdir):
