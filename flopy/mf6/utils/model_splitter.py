@@ -1175,7 +1175,6 @@ class Mf6Splitter:
         vertex information has been supplied
 
         """
-        conn = {}
         uconn = {}
         iac = self._modelgrid.iac
         ja = self._modelgrid.ja
@@ -1188,8 +1187,6 @@ class Mf6Splitter:
         idx0 = 0
         for ia in iac:
             idx1 = idx0 + ia
-            # cn = ja[idx0 + 1 : idx1]
-            # conn[ja[idx0]] = list(cn)
             uconn[ja[idx0]] = {
                 "cl12": list(cl12[idx0:idx1]),
                 "ihc": list(ihc[idx0:idx1]),
