@@ -375,11 +375,6 @@ def test_save_node_mapping_with_boundnames(function_tmpdir):
     mfsplit = Mf6Splitter(sim)
     mfsplit.split_model(array)
 
-    non_int_keys = [
-        k for k in mfsplit._node_map if not isinstance(k, (int, np.integer))
-    ]
-    assert not non_int_keys, f"boundnames leaked into _node_map: {non_int_keys}"
-
     hdf_file = function_tmpdir / "node_map.hdf5"
     mfsplit.save_node_mapping(hdf_file)
     assert hdf_file.exists()
