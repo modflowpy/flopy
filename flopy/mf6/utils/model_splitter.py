@@ -156,10 +156,9 @@ class Mf6Splitter:
             self._ncpl = self._modelgrid.nnodes
         self._shape = self._modelgrid.shape
         self._grid_type = self._modelgrid.grid_type
-        self._no_remap_key = -9
+        self._no_remap_key = int(no_remap_key)
         self._node_map_arr = None
         self._model_map_arr = None
-        self._node_map_r = {}
         self._new_connections = None
         self._new_ncpl = None
         self._grid_info = None
@@ -228,8 +227,8 @@ class Mf6Splitter:
 
         if remap_nodes:
             self._modelgrid = self._model.modelgrid
-            self._node_map = {}
-            self._node_map_r = {}
+            self._node_map_arr = None
+            self._model_map_arr = None
             self._new_connections = None
             self._new_ncpl = None
             self._grid_info = None
@@ -2519,6 +2518,7 @@ class Mf6Splitter:
         -------
             dict : obs_map
         """
+        # todo: may need to patch changes for boundnames in obs_map["cellid"]
         if "boundname" in recarray.dtype.names:
             for bname in recarray.boundname:
                 for variable in variables:
@@ -3462,7 +3462,7 @@ class Mf6Splitter:
                     pass
 
             if hasattr(package, "obs"):
-                obs_map = {"cellid": None}
+                obs_map = {"cellid": {}}
                 for mkey, mdict in mapped_data.items():
                     if "stress_period_data" in mdict:
                         for _, ra in mdict["stress_period_data"].items():
