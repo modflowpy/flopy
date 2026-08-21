@@ -337,7 +337,12 @@ class MFScalar(mfdata.MFData):
                 == data_item.default_value.lower().strip()
             )
         elif data_item.type == DatumType.keyword:
-            return data_item.default_value.lower().strip() == "true"
+            # unreachable today (no optional keyword item has a default in
+            # any DFN), kept defensive in case one is ever added
+            return (
+                current is True
+                and data_item.default_value.lower().strip() == "true"
+            )
         return False
 
     def get_file_entry(
