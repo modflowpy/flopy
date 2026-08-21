@@ -1,6 +1,7 @@
 import inspect
 
 import numpy as np
+from networkx.classes import neighbors
 
 from ...mf6 import modflow
 from ...plot import plotutil
@@ -977,9 +978,15 @@ class Mf6Splitter:
         if self._modelgrid.grid_type == "unstructured":
             self._map_iac_ja_connections()
         else:
-            self._connection = self._modelgrid.neighbors(
+            neighbors = self._modelgrid.neighbors(
                 reset=True, method="rook", fast=self._fast_neighbors
             )
+            iac, ja = [], []
+            for k in list(neighbors.keys()):
+                rec = [k,] + neighbors.pop(k)
+                ja.extend(rec)
+                iac.append(len(rec))
+            self._connection = (np.array(iac, dtype=int), np.array(ja, dtype=int))
 
         grid_info = {}
         if self._modelgrid.grid_type == "structured":
@@ -1050,9 +1057,17 @@ class Mf6Splitter:
         exchange_meta = {i: {} for i in mkeys}
         usg_meta = {i: {} for i in mkeys}
         # todo: rework the conn stuff
-        for node, conn in self._connection.items():
+
+        iac, ja = self._connection
+        idx0 = 0
+        for ia in iac:
+            idx1 = idx0 + ia
+            node = ja[idx0]
+            conn = ja[idx0 + 1 : idx1]
             mdl = self._model_map_arr[node]
             nnode = self._node_map_arr[node]
+            # advance the ja indexing
+            idx0 = idx1
             if mdl == self._no_remap_key:
                 continue
             for ix, cnode in enumerate(conn):
@@ -1062,8 +1077,8 @@ class Mf6Splitter:
                     continue
                 if cmdl == mdl:
                     if nnode in new_connections[mdl]["internal"]:
-                        new_connections[mdl]["internal"][nnode].append(cnnode)
                         if self._uconnection is not None:
+                            new_connections[mdl]["internal"][nnode].append(cnnode)
                             usg_meta[mdl][nnode]["ihc"].append(
                                 int(self._uconnection[node]["ihc"][ix + 1])
                             )
@@ -1079,8 +1094,8 @@ class Mf6Splitter:
                                 )
 
                     else:
-                        new_connections[mdl]["internal"][nnode] = [cnnode]
                         if self._uconnection is not None:
+                            new_connections[mdl]["internal"][nnode] = [cnnode]
                             usg_meta[mdl][nnode] = {
                                 "ihc": [
                                     self._uconnection[node]["ihc"][0],
@@ -1173,8 +1188,8 @@ class Mf6Splitter:
         idx0 = 0
         for ia in iac:
             idx1 = idx0 + ia
-            cn = ja[idx0 + 1 : idx1]
-            conn[ja[idx0]] = list(cn)
+            # cn = ja[idx0 + 1 : idx1]
+            # conn[ja[idx0]] = list(cn)
             uconn[ja[idx0]] = {
                 "cl12": list(cl12[idx0:idx1]),
                 "ihc": list(ihc[idx0:idx1]),
@@ -1186,7 +1201,7 @@ class Mf6Splitter:
 
             idx0 = idx1
 
-        self._connection = conn
+        self._connection = (iac, ja)
         self._uconnection = uconn
 
     def _map_verts_iverts(self, array):
