@@ -846,7 +846,7 @@ class Mf6Splitter:
             else:
                 node = [i[0] for i in orec.cellid]
 
-            new_node = [remapper[i] for i in node if i in remapper]
+            new_node = [remapper[i] for i in node]
 
             if modelgrid.grid_type == "structured":
                 if self._modelgrid is None:
