@@ -1,7 +1,6 @@
 import inspect
 
 import numpy as np
-from networkx.classes import neighbors
 
 from ...mf6 import modflow
 from ...plot import plotutil
