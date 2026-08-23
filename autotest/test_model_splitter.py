@@ -485,6 +485,54 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
 
 @requires_exe("mf6")
+@pytest.mark.slow
+def test_structured_to_disv_with_lak_sfr_mvr(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    array[0:14, :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array, to_disv=True)
+
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    ml0 = new_sim.get_model("lakeex2a_0")
+    ml1 = new_sim.get_model("lakeex2a_1")
+    for ml in (ml0, ml1):
+        if ml.modelgrid.grid_type != "vertex":
+            raise AssertionError("Split model is not a DISV model")
+
+        # the advanced packages remap cellids through the new grid type
+        for pkgtype in ("lak", "sfr", "mvr", "evta", "rcha"):
+            if ml.get_package(pkgtype) is None:
+                raise AssertionError(f"{pkgtype} package was not split")
+
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array({0: heads0, 1: heads1})
+
+    idx = modelgrid.idomain != 0
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(
+        new_heads[idx], original_heads[idx], atol=1e-4, err_msg=err_msg
+    )
+
+
+@requires_exe("mf6")
 @requires_pkg("pymetis")
 @pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):
@@ -969,7 +1017,8 @@ def test_empty_ssm(function_tmpdir):
 
 
 @requires_exe("mf6")
-def test_transient_array(function_tmpdir):
+@pytest.mark.parametrize("to_disv", [False, True])
+def test_transient_array(function_tmpdir, to_disv):
     name = "tarr"
     new_sim_path = function_tmpdir / f"{name}_split_model"
     nper = 3
@@ -1047,7 +1096,7 @@ def test_transient_array(function_tmpdir):
     sarr = np.ones((nrow, ncol), dtype=int)
     sarr[:, int(ncol / 2) :] = 2
     mfsplit = Mf6Splitter(sim)
-    new_sim = mfsplit.split_model(sarr)
+    new_sim = mfsplit.split_model(sarr, to_disv=to_disv)
 
     for name in new_sim.model_names:
         g = new_sim.get_model(name)
