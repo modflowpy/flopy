@@ -226,8 +226,6 @@ class Mf6Splitter:
 
         if remap_nodes:
             self._modelgrid = self._model.modelgrid
-            self._grid_type = self._modelgrid.grid_type
-            self._new_grid_type = self._grid_type
             self._node_map = {}
             self._node_map_r = {}
             self._new_connections = None
@@ -896,7 +894,7 @@ class Mf6Splitter:
 
             new_node = [remapper[i] for i in node if i in remapper]
 
-            if self._grid_type == "structured":
+            if self._modelgrid.grid_type == "structured":
                 if self._modelgrid is None:
                     new_cellid = list(
                         zip(*np.unravel_index(new_node, self._shape))
@@ -906,7 +904,7 @@ class Mf6Splitter:
                 new_cellid = [
                     (layer[ix], i[1], i[2]) for ix, i in enumerate(new_cellid)
                 ]
-            elif self._grid_type == "vertex":
+            elif self._modelgrid.grid_type == "vertex":
                 new_cellid = [(layer[ix], i) for ix, i in enumerate(new_node)]
             else:
                 new_cellid = [(i,) for i in new_node]
@@ -1030,7 +1028,7 @@ class Mf6Splitter:
             )
 
         grid_info = {}
-        if self._grid_type == "structured" and not self._to_disv:
+        if self._modelgrid.grid_type == "structured" and not self._to_disv:
             a = array.reshape(self._modelgrid.nrow, self._modelgrid.ncol)
             for m in np.unique(a):
                 cells = np.asarray(a == m).nonzero()
@@ -1194,7 +1192,7 @@ class Mf6Splitter:
                                 ]
                             }
 
-        if self._grid_type in ("vertex", "unstructured"):
+        if self._modelgrid.grid_type in ("vertex", "unstructured"):
             self._map_verts_iverts(array)
 
         self._new_connections = new_connections
@@ -4000,15 +3998,16 @@ class Mf6Splitter:
             flag to write DISV models when splitting a structured model
 
         """
+        grid_type = self._modelgrid.grid_type
         self._to_disv = False
-        self._new_grid_type = self._grid_type
+        self._new_grid_type = grid_type
         if not to_disv:
             return
 
-        if self._grid_type == "unstructured":
+        if grid_type == "unstructured":
             raise ValueError("DISV models cannot be split from a DISU model")
 
-        if self._grid_type == "vertex":
+        if grid_type == "vertex":
             warnings.warn(
                 "the model is already a DISV model, to_disv is ignored",
                 UserWarning,

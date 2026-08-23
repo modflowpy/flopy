@@ -304,6 +304,39 @@ def test_structured_to_disv_reconstruct_recarray():
             )
 
 
+def test_vertex_reconstruct_recarray():
+    sim_path = get_example_data_path() / "mf6" / "test003_gwftri_disv"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.ncpl,), dtype=int)
+    array[0:85] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    for pname in ("chd_left", "chd_right"):
+        original = gwf.get_package(pname).stress_period_data.get_data(0)
+        recarrays = {}
+        for mkey in (0, 1):
+            ml = new_sim.get_model(f"gwf_1_{mkey}")
+            pkg = ml.get_package(pname)
+            if pkg is not None:
+                recarrays[mkey] = pkg.stress_period_data.get_data(0)
+
+        new_recarray = mfsplit.reconstruct_recarray(recarrays)
+
+        # cellids are returned as the layer, node of the original model
+        onodes = sorted(cid[-1] for cid in original.cellid)
+        nnodes = sorted(cid[-1] for cid in new_recarray.cellid)
+
+        err_msg = f"Reconstructed {pname} recarray does not match the original"
+        if onodes != nnodes:
+            raise AssertionError(err_msg)
+
+
 def test_structured_to_disv_model_geometry():
     sim_path = get_example_data_path() / "mf6-freyberg"
 
