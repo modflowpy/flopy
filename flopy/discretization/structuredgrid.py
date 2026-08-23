@@ -2021,7 +2021,7 @@ class StructuredGrid(Grid):
         if nodes is None:
             nodes = np.arange(self.ncpl, dtype=int)
         else:
-            nodes = np.atleast_1d(nodes)
+            nodes = np.ravel(np.asarray(nodes, dtype=int))
 
         i, j = np.divmod(nodes, self.ncol)
         iverts = np.empty((4, nodes.size), dtype=int)

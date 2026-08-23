@@ -295,6 +295,10 @@ def test_get_cell_iverts():
 
     nodes = [0, 7, grid.ncpl - 1]
     assert np.array_equal(grid.get_cell_iverts(nodes), iverts[nodes])
+    assert np.array_equal(grid.get_cell_iverts(np.array(nodes)), iverts[nodes])
+    assert np.array_equal(
+        grid.get_cell_iverts(np.array(nodes).reshape((-1, 1))), iverts[nodes]
+    )
     assert np.array_equal(grid.get_cell_iverts(3), iverts[[3]])
 
     # vertices are ordered clockwise from the upper left corner of a cell
