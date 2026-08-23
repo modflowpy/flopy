@@ -175,6 +175,75 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
 
 @requires_exe("mf6")
+def test_hfb_model_splitter(function_tmpdir):
+    nlay, nrow, ncol = 1, 10, 10
+
+    sim = flopy.mf6.MFSimulation(sim_name="hfb", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(sim, complexity="simple")
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="hfb", save_flows=True)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=100.0,
+        delc=100.0,
+        top=10.0,
+        botm=[0.0],
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10.0)
+    chd = [[(0, i, 0), 10.0] for i in range(nrow)]
+    chd += [[(0, i, ncol - 1), 1.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd)
+
+    # a barrier on either side of the column the model is split on
+    hfb = [[(0, i, 2), (0, i, 3), 1e-5] for i in range(nrow)]
+    hfb += [[(0, i, 6), (0, i, 7), 1e-5] for i in range(nrow)]
+    flopy.mf6.ModflowGwfhfb(gwf, stress_period_data={0: hfb})
+    flopy.mf6.ModflowGwfoc(gwf, head_filerecord="hfb.hds", saverecord=[("HEAD", "ALL")])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, 5:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    heads = {}
+    for mkey in (0, 1):
+        ml = new_sim.get_model(f"hfb_{mkey}")
+        spd = ml.get_package("hfb").stress_period_data.get_data(0)
+        if len(spd) != nrow:
+            raise AssertionError(
+                f"Model {mkey} has {len(spd)} barriers, expected {nrow}"
+            )
+
+        heads[mkey] = ml.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array(heads)
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+    # a barrier cannot be split, both of its cells must be in one model
+    sim = MFSimulation.load(sim_ws=function_tmpdir)
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, 3:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    with pytest.raises(AssertionError, match="split along faults"):
+        mfsplit.split_model(array)
+
+
+@requires_exe("mf6")
 @requires_pkg("pymetis")
 @pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):
