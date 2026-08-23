@@ -192,6 +192,7 @@ def test_structured_to_disv_idomain(function_tmpdir):
     idomain[:, 0:2, 0:2] = 0  # inactive in every layer, excluded from the split
     idomain[0, 5:, 5:] = 0  # inactive in one layer, carried into the split
     idomain[2, 0:3, 7:] = 0
+    idomain[1, 3:7, 3:7] = -1  # vertical passthrough, carried into the split
 
     sim = flopy.mf6.MFSimulation(sim_name="ml", sim_ws=function_tmpdir, exe_name="mf6")
     flopy.mf6.ModflowTdis(sim)
@@ -243,10 +244,14 @@ def test_structured_to_disv_idomain(function_tmpdir):
         nodes = mfsplit._grid_info[mkey][-1]
         ncpl += grid.ncpl
 
-        # a stack that is inactive in one layer keeps its idomain
-        ninactive = np.count_nonzero(oidomain[:, nodes] == 0)
-        if np.count_nonzero(grid.idomain == 0) != ninactive:
-            raise AssertionError(f"Model {mkey} idomain was not remapped")
+        # a stack that is inactive or passes flow vertically in one layer
+        # keeps its idomain
+        for value in (0, -1):
+            nexpected = np.count_nonzero(oidomain[:, nodes] == value)
+            if np.count_nonzero(grid.idomain == value) != nexpected:
+                raise AssertionError(
+                    f"Model {mkey} idomain {value} cells were not remapped"
+                )
 
         heads[mkey] = ml.output.head().get_alldata()[-1]
 
@@ -257,7 +262,7 @@ def test_structured_to_disv_idomain(function_tmpdir):
 
     new_heads = mfsplit.reconstruct_array(heads)
 
-    idx = idomain != 0
+    idx = idomain > 0
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads[idx], original_heads[idx], err_msg=err_msg)
 
