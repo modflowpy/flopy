@@ -285,6 +285,24 @@ def test_unstructured_grid_get_cell_vertices():
     assert v1 == v4, "Positional and kwarg should match"
 
 
+def test_get_cell_iverts():
+    nrow, ncol = 4, 5
+    grid = StructuredGrid(delr=np.ones(ncol), delc=np.ones(nrow))
+
+    iverts = grid.get_cell_iverts()
+    assert iverts.shape == (grid.ncpl, 4)
+    assert np.array_equal(iverts.tolist(), grid.iverts)
+
+    nodes = [0, 7, grid.ncpl - 1]
+    assert np.array_equal(grid.get_cell_iverts(nodes), iverts[nodes])
+    assert np.array_equal(grid.get_cell_iverts(3), iverts[[3]])
+
+    # vertices are ordered clockwise from the upper left corner of a cell
+    for node, iv in enumerate(iverts):
+        i, j = divmod(node, ncol)
+        assert list(iv) == grid._build_structured_iverts(i, j)
+
+
 def test_get_lrc_get_node():
     nlay, nrow, ncol = 3, 4, 5
     nnodes = nlay * nrow * ncol

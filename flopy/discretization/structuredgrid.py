@@ -2001,21 +2001,43 @@ class StructuredGrid(Grid):
         assert plotarray.shape == required_shape, msg
         return plotarray
 
+    def get_cell_iverts(self, nodes=None):
+        """
+        Get the vertex numbers that define one or more model cells
+
+        Parameters
+        ----------
+        nodes : int, list, np.ndarray
+            optional two-dimensional node numbers. Vertex numbers are returned
+            for every cell in a layer when nodes is None.
+
+        Returns
+        -------
+        np.ndarray : array of vertex numbers with shape (nnodes, 4). The
+            vertices of a cell are ordered clockwise from its upper left
+            corner.
+
+        """
+        if nodes is None:
+            nodes = np.arange(self.ncpl, dtype=int)
+        else:
+            nodes = np.atleast_1d(nodes)
+
+        i, j = np.divmod(nodes, self.ncol)
+        iverts = np.empty((4, nodes.size), dtype=int)
+        iverts[0] = i * (self.ncol + 1) + j
+        iverts[1] = iverts[0] + 1
+        iverts[2] = iverts[1] + self.ncol + 1
+        iverts[3] = iverts[0] + self.ncol + 1
+        return iverts.T
+
     def _set_structured_iverts(self):
         """
         Build a list of the vertices that define each model cell and the x, y
         pair for each vertex
 
         """
-        rowarr = np.repeat(np.arange(self.nrow, dtype=int), self.ncol)
-        colarr = np.tile(np.arange(self.ncol, dtype=int), self.nrow)
-
-        iverts = np.empty((4, self.ncpl), dtype=int)
-        iverts[0] = rowarr * (self.ncol + 1) + colarr
-        iverts[1] = rowarr * (self.ncol + 1) + colarr + 1
-        iverts[2] = (rowarr + 1) * (self.ncol + 1) + colarr + 1
-        iverts[3] = (rowarr + 1) * (self.ncol + 1) + colarr
-        self._iverts = iverts.T.tolist()
+        self._iverts = self.get_cell_iverts().tolist()
         return
 
     def _build_structured_iverts(self, i, j):

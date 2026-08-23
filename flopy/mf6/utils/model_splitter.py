@@ -1,4 +1,5 @@
 import inspect
+import warnings
 
 import numpy as np
 
@@ -153,6 +154,8 @@ class Mf6Splitter:
             self._ncpl = self._modelgrid.nnodes
         self._shape = self._modelgrid.shape
         self._grid_type = self._modelgrid.grid_type
+        self._new_grid_type = self._grid_type
+        self._to_disv = False
         self._node_map = {}
         self._node_map_r = {}
         self._new_connections = None
@@ -223,6 +226,8 @@ class Mf6Splitter:
 
         if remap_nodes:
             self._modelgrid = self._model.modelgrid
+            self._grid_type = self._modelgrid.grid_type
+            self._new_grid_type = self._grid_type
             self._node_map = {}
             self._node_map_r = {}
             self._new_connections = None
@@ -283,10 +288,12 @@ class Mf6Splitter:
         }
 
         mgg = f.create_group("modelgrids")
-        grid_type = f["grid_type"][0].decode("utf8")
         mkeys = f["mkey"][:]
         mnames = [self._modelname] + list(f["new_modelnames"][:])
         grids = [self._modelgrid, ] + [self._model_dict[mk].modelgrid for mk in mkeys]
+        grid_types = [f["grid_type"][0].decode("utf8")] + [
+            f["new_grid_type"][0].decode("utf8")
+        ] * len(mkeys)
 
         for ix, name in enumerate(mnames):
             if hasattr(name, "decode"):
@@ -295,6 +302,7 @@ class Mf6Splitter:
             # name = name.decode("utf8")
             grd_grp = mgg.create_group(name)
             grid = grids[ix]
+            grid_type = grid_types[ix]
             if grid_type == "structured":
                 delc = grid.delc
                 dc = grd_grp.create_dataset("delc", (len(delc),), dtype=float, **kwargs)
@@ -410,6 +418,9 @@ class Mf6Splitter:
 
         gt_ds = f.create_dataset("grid_type", (1,), dtype=string_dt)
         gt_ds[:] = [self._grid_type,]
+
+        ngt_ds = f.create_dataset("new_grid_type", (1,), dtype=string_dt)
+        ngt_ds[:] = [self._new_grid_type,]
 
         mname_ds = f.create_dataset("modelname", (1,), dtype=string_dt)
         mname_ds[:] = [self._modelname,]
@@ -561,10 +572,15 @@ class Mf6Splitter:
         # construct representation of original model geometry
         modelname = f["modelname"][0].decode("utf8")
         grid_type = f["grid_type"][0].decode("utf8")
+        new_grid_type = grid_type
+        if "new_grid_type" in f:
+            new_grid_type = f["new_grid_type"][0].decode("utf8")
+
         grid = construct_modelgrid(f, modelname, grid_type)
         ml = FakeModel(modelname, grid)
         sim = FakeSim({modelname: ml})
         mfs = Mf6Splitter(sim)
+        mfs._new_grid_type = new_grid_type
         mfs._model_dict = {}
         mfs._new_ncpl = {}
 
@@ -573,10 +589,10 @@ class Mf6Splitter:
         modelnames = [i.decode("utf8") for i in f["new_modelnames"][:]]
         for ix, mname in enumerate(modelnames):
             mkey = mkeys[ix]
-            sgrid = construct_modelgrid(f, mname, grid_type)
+            sgrid = construct_modelgrid(f, mname, new_grid_type)
             sml = FakeModel(mname, sgrid)
             mfs._model_dict[mkey] = sml
-            if grid_type in ("structured", "vertex"):
+            if new_grid_type in ("structured", "vertex"):
                 mfs._new_ncpl[mkey] = sgrid.ncpl
             else:
                 mfs._new_ncpl[mkey] = sgrid.nnodes
@@ -584,8 +600,9 @@ class Mf6Splitter:
         f.close()
 
         # create additional splitting data efficient reconstruction
-        split_array = np.zeros((mfs._ncpl,), dtype=int)
-        model_array = np.zeros((mfs._ncpl,), dtype=int)
+        # cells that were not remapped keep a model number of -1
+        split_array = np.full((mfs._ncpl,), -1, dtype=int)
+        model_array = np.full((mfs._ncpl,), -1, dtype=int)
         for k, v in node_map.items():
             k = int(k)
             model_array[k] = v[0]
@@ -867,9 +884,9 @@ class Mf6Splitter:
             remapper = self.reversed_node_map[mkey]
             orec = recarray.copy()
             modelgrid = self._model_dict[mkey].modelgrid
-            if self._grid_type in ("structured", "vertex"):
+            if self._new_grid_type in ("structured", "vertex"):
                 layer = [i[0] for i in orec.cellid]
-                if self._grid_type == "structured":
+                if self._new_grid_type == "structured":
                     cellid = [(0, i[1], i[2]) for i in orec.cellid]
                     node = modelgrid.get_node(cellid)
                 else:
@@ -879,7 +896,7 @@ class Mf6Splitter:
 
             new_node = [remapper[i] for i in node if i in remapper]
 
-            if modelgrid.grid_type == "structured":
+            if self._grid_type == "structured":
                 if self._modelgrid is None:
                     new_cellid = list(
                         zip(*np.unravel_index(new_node, self._shape))
@@ -889,7 +906,7 @@ class Mf6Splitter:
                 new_cellid = [
                     (layer[ix], i[1], i[2]) for ix, i in enumerate(new_cellid)
                 ]
-            elif modelgrid.grid_type == "vertex":
+            elif self._grid_type == "vertex":
                 new_cellid = [(layer[ix], i) for ix, i in enumerate(new_node)]
             else:
                 new_cellid = [(i,) for i in new_node]
@@ -1013,7 +1030,7 @@ class Mf6Splitter:
             )
 
         grid_info = {}
-        if self._modelgrid.grid_type == "structured":
+        if self._grid_type == "structured" and not self._to_disv:
             a = array.reshape(self._modelgrid.nrow, self._modelgrid.ncol)
             for m in np.unique(a):
                 cells = np.asarray(a == m).nonzero()
@@ -1038,8 +1055,16 @@ class Mf6Splitter:
                     np.ravel(mapping),
                 ]
         else:
+            # a DISV model has no use for a stack of cells that is inactive
+            # in every layer, so those cells are not carried into it
+            mask = np.ones((self._ncpl,), dtype=bool)
+            if self._to_disv:
+                for arr in idomain:
+                    mask &= arr == 0
+                mask = ~mask
+
             for m in mkeys:
-                cells = np.asarray(array == m).nonzero()[0]
+                cells = np.asarray((array == m) & mask).nonzero()[0]
                 mapping = np.zeros((len(cells),), dtype=int)
                 mapping[:] = cells
                 grid_info[m] = [(len(cells),), None, None, mapping]
@@ -1075,8 +1100,14 @@ class Mf6Splitter:
         exchange_meta = {i: {} for i in mkeys}
         usg_meta = {i: {} for i in mkeys}
         for node, conn in self._connection.items():
+            if node not in self._node_map:
+                continue
+
             mdl, nnode = self._node_map[node]
             for ix, cnode in enumerate(conn):
+                if cnode not in self._node_map:
+                    continue
+
                 cmdl, cnnode = self._node_map[cnode]
                 if cmdl == mdl:
                     if nnode in new_connections[mdl]["internal"]:
@@ -1163,7 +1194,7 @@ class Mf6Splitter:
                                 ]
                             }
 
-        if self._modelgrid.grid_type in ("vertex", "unstructured"):
+        if self._grid_type in ("vertex", "unstructured"):
             self._map_verts_iverts(array)
 
         self._new_connections = new_connections
@@ -1324,6 +1355,58 @@ class Mf6Splitter:
                 recarray[f"icvert_{ix}"] = ivert_col
 
             mapped_data[mkey][item] = recarray
+
+        return mapped_data
+
+    def _structured_to_disv(self, mapped_data):
+        """
+        Method to create the DISV grid of models split from a structured model
+
+        Parameters
+        ----------
+        mapped_data : dict
+            dictionary of remapped package data
+
+        Returns
+        -------
+            dict
+        """
+        modelgrid = self._modelgrid
+        ncol = modelgrid.ncol
+        xedge, yedge = modelgrid.xyedges
+        xcenter, ycenter = modelgrid.xycenters
+        vert_dtype = np.dtype([("iv", int), ("xv", float), ("yv", float)])
+        cell_dtype = np.dtype(
+            [("icell2d", int), ("xc", float), ("yc", float), ("ncvert", int)]
+            + [(f"icvert_{iv}", int) for iv in range(4)]
+        )
+
+        for mkey in self._model_dict.keys():
+            nodes = self._grid_info[mkey][-1]
+            # corners shared by cells in the model collapse to one vertex
+            iverts = modelgrid.get_cell_iverts(nodes)
+            overts, iverts = np.unique(iverts, return_inverse=True)
+            iverts = iverts.reshape((nodes.size, 4))
+
+            i, j = np.divmod(overts, ncol + 1)
+            vertices = np.recarray((overts.size,), dtype=vert_dtype)
+            vertices["iv"] = np.arange(overts.size, dtype=int)
+            vertices["xv"] = xedge[j]
+            vertices["yv"] = yedge[i]
+
+            i, j = np.divmod(nodes, ncol)
+            cell2d = np.recarray((nodes.size,), dtype=cell_dtype)
+            cell2d["icell2d"] = np.arange(nodes.size, dtype=int)
+            cell2d["xc"] = xcenter[j]
+            cell2d["yc"] = ycenter[i]
+            cell2d["ncvert"] = 4
+            for iv in range(4):
+                cell2d[f"icvert_{iv}"] = iverts[:, iv]
+
+            mapped_data[mkey]["ncpl"] = self._new_ncpl[mkey]
+            mapped_data[mkey]["nvert"] = overts.size
+            mapped_data[mkey]["vertices"] = vertices
+            mapped_data[mkey]["cell2d"] = cell2d
 
         return mapped_data
 
@@ -3133,10 +3216,10 @@ class Mf6Splitter:
         """
 
         new_node = new_node[idx].astype(int)
-        if self._modelgrid.grid_type == "structured":
+        if self._new_grid_type == "structured":
             new_node += layers[idx] * model.modelgrid.ncpl
             new_cellids = model.modelgrid.get_lrc(new_node.astype(int))
-        elif self._modelgrid.grid_type == "vertex":
+        elif self._new_grid_type == "vertex":
             new_cellids = [tuple(cid) for cid in zip(layers[idx], new_node)]
 
         else:
@@ -3279,6 +3362,9 @@ class Mf6Splitter:
                     continue
 
                 if item in ("delr", "delc"):
+                    if self._to_disv:
+                        continue
+
                     for mkey, d in self._grid_info.items():
                         if item == "delr":
                             i0, i1 = d[2]
@@ -3288,6 +3374,9 @@ class Mf6Splitter:
                         mapped_data[mkey][item] = value.array[i0 : i1 + 1]
 
                 elif item in ("nrow", "ncol"):
+                    if self._to_disv:
+                        continue
+
                     for mkey, d in self._grid_info.items():
                         if item == "nrow":
                             i0, i1 = d[1]
@@ -3329,6 +3418,9 @@ class Mf6Splitter:
 
                 elif isinstance(value, mfdataarray.MFArray):
                     mapped_data = self._remap_array(item, value, mapped_data)
+
+            if self._to_disv:
+                mapped_data = self._structured_to_disv(mapped_data)
 
         elif isinstance(package, modflow.ModflowGwfhfb):
             mapped_data = self._remap_hfb(package, mapped_data)
@@ -3550,8 +3642,14 @@ class Mf6Splitter:
                         elif isinstance(value, mfdatalist.MFList):
                             mapped_data[mkey][item] = value.array
 
+        package_type = package.package_type
+        pname = package.name[0]
+        if self._to_disv and package_type == "dis":
+            package_type = "disv"
+            pname = None
+
         pak_cls = PackageContainer.package_factory(
-            package.package_type, self._model_type
+            package_type, self._model_type
         )
         paks = {}
         for mdl, data in mapped_data.items():
@@ -3570,7 +3668,7 @@ class Mf6Splitter:
                     self._new_sim.simulation_data.max_columns_of_data = max_cols
 
                 paks[mdl] = pak_cls(
-                    self._model_dict[mdl], pname=package.name[0], **data
+                    self._model_dict[mdl], pname=pname, **data
                 )
 
         if observations is not None:
@@ -3723,7 +3821,7 @@ class Mf6Splitter:
 
                             node1 = exg[1]
                             for layer in range(self._modelgrid.nlay):
-                                if self._modelgrid.grid_type == "structured":
+                                if self._new_grid_type == "structured":
                                     tmpnode0 = node0 + (ncpl0 * layer)
                                     tmpnode1 = node1 + (ncpl1 * layer)
                                     cellidm0 = modelgrid0.get_lrc([tmpnode0])[
@@ -3732,7 +3830,7 @@ class Mf6Splitter:
                                     cellidm1 = modelgrid1.get_lrc([tmpnode1])[
                                         0
                                     ]
-                                elif self._modelgrid.grid_type == "vertex":
+                                elif self._new_grid_type == "vertex":
                                     cellidm0 = (layer, node0)
                                     cellidm1 = (layer, node1)
                                 else:
@@ -3892,7 +3990,36 @@ class Mf6Splitter:
             filename=filename,
         )
 
-    def split_model(self, array, sim_ws=None):
+    def _set_new_grid_type(self, to_disv):
+        """
+        Method to set the grid type of the models created by splitting
+
+        Parameters
+        ----------
+        to_disv : bool
+            flag to write DISV models when splitting a structured model
+
+        """
+        self._to_disv = False
+        self._new_grid_type = self._grid_type
+        if not to_disv:
+            return
+
+        if self._grid_type == "unstructured":
+            raise ValueError("DISV models cannot be split from a DISU model")
+
+        if self._grid_type == "vertex":
+            warnings.warn(
+                "the model is already a DISV model, to_disv is ignored",
+                UserWarning,
+                stacklevel=3,
+            )
+            return
+
+        self._to_disv = True
+        self._new_grid_type = "vertex"
+
+    def split_model(self, array, sim_ws=None, to_disv=False):
         """
         User method to split a model based on an array
 
@@ -3906,6 +4033,11 @@ class Mf6Splitter:
             optional directory path for writing the new simulation to. This parameter
             is recommended when the model contains external files and the user would
             like to preserve external linkages while splitting.
+        to_disv : bool
+            optional flag to write DISV models when splitting a structured model.
+            A DISV model carries only the cells assigned to it, not the inactive
+            cells that pad a structured model to its bounding box. Stacks of cells
+            that are inactive in every layer are excluded. Default is False.
 
         Returns
         -------
@@ -3916,6 +4048,8 @@ class Mf6Splitter:
                 "Mf6Splitter cannot split a model that "
                 "is part of a split simulation"
             )
+
+        self._set_new_grid_type(to_disv)
 
         if sim_ws is None:
             self._keep_external = False
@@ -3970,7 +4104,7 @@ class Mf6Splitter:
 
         return self._new_sim
 
-    def split_multi_model(self, array, sim_ws=None):
+    def split_multi_model(self, array, sim_ws=None, to_disv=False):
         """
         Method to split integrated models such as GWF-GWT or GWF-GWE models.
         Note: this method will not work to split multiple connected GWF models
@@ -3985,6 +4119,11 @@ class Mf6Splitter:
             optional directory path for writing the new simulation to. This parameter
             is recommended when the model contains external files and the user would
             like to preserve external linkages while splitting.
+        to_disv : bool
+            optional flag to write DISV models when splitting a structured model.
+            A DISV model carries only the cells assigned to it, not the inactive
+            cells that pad a structured model to its bounding box. Stacks of cells
+            that are inactive in every layer are excluded. Default is False.
 
         Returns
         -------
@@ -4048,10 +4187,10 @@ class Mf6Splitter:
             int(i): f"{gwf_base}_{i}" for i in model_labels
         }
 
-        new_sim = self.split_model(array)
+        new_sim = self.split_model(array, to_disv=to_disv)
         for mname in model_names[1:]:
             self.switch_models(modelname=mname, remap_nodes=False)
-            new_sim = self.split_model(array, sim_ws=sim_ws)
+            new_sim = self.split_model(array, sim_ws=sim_ws, to_disv=to_disv)
 
         for mbase in model_names[1:]:
             for label in model_labels:
