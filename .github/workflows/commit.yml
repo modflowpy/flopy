@@ -159,7 +159,12 @@ jobs:
         working-directory: modflow6
         run: |
           pixi run install
-          pixi run pip install coverage pytest-cov netcdf4 h5py
+          pixi run pip install coverage pytest-cov netcdf4
+          # the h5py and netcdf4 wheels bundle different HDF5 libraries and
+          # Windows loads the wrong one, which breaks the h5py import
+          if [[ "${{ runner.os }}" != "Windows" ]]; then
+            pixi run pip install h5py
+          fi
 
       - name: Install FloPy
         working-directory: flopy
