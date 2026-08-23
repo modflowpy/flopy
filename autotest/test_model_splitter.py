@@ -485,6 +485,96 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
 
 @requires_exe("mf6")
+def test_structured_to_disv_multi_model(function_tmpdir):
+    nlay, nrow, ncol = 1, 10, 10
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+    idomain[:, 0:2, 0:2] = 0
+
+    sim = flopy.mf6.MFSimulation(sim_name="mm", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim, nper=1, perioddata=[(100.0, 10, 1.0)])
+    ims_gwf = flopy.mf6.ModflowIms(sim, complexity="simple", filename="gwf.ims")
+    ims_gwt = flopy.mf6.ModflowIms(
+        sim,
+        complexity="simple",
+        linear_acceleration="bicgstab",
+        filename="gwt.ims",
+    )
+
+    dis_kwargs = {
+        "nlay": nlay,
+        "nrow": nrow,
+        "ncol": ncol,
+        "delr": 100.0,
+        "delc": 100.0,
+        "top": 10.0,
+        "botm": [0.0],
+        "idomain": idomain,
+    }
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="gwf", save_flows=True)
+    flopy.mf6.ModflowGwfdis(gwf, **dis_kwargs)
+    flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10.0)
+    flopy.mf6.ModflowGwfsto(gwf, ss=1e-5, iconvert=0)
+    chd = [[(0, i, 2), 10.0, 1.0] for i in range(2, nrow)]
+    chd += [[(0, i, ncol - 1), 9.0, 0.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(
+        gwf, pname="chd-1", auxiliary=["conc"], stress_period_data=chd
+    )
+    flopy.mf6.ModflowGwfoc(
+        gwf,
+        head_filerecord="gwf.hds",
+        budget_filerecord="gwf.cbc",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    gwt = flopy.mf6.ModflowGwt(sim, modelname="gwt")
+    flopy.mf6.ModflowGwtdis(gwt, **dis_kwargs)
+    flopy.mf6.ModflowGwtic(gwt, strt=0.0)
+    flopy.mf6.ModflowGwtmst(gwt, porosity=0.2)
+    flopy.mf6.ModflowGwtadv(gwt, scheme="upstream")
+    flopy.mf6.ModflowGwtssm(gwt, sources=[["chd-1", "AUX", "conc"]])
+    flopy.mf6.ModflowGwtoc(
+        gwt,
+        concentration_filerecord="gwt.ucn",
+        saverecord=[("CONCENTRATION", "ALL")],
+    )
+    flopy.mf6.ModflowGwfgwt(sim, exgmnamea="gwf", exgmnameb="gwt")
+    sim.register_ims_package(ims_gwf, ["gwf"])
+    sim.register_ims_package(ims_gwt, ["gwt"])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_conc = gwt.output.concentration().get_alldata()[-1]
+
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, ncol // 2 :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_multi_model(array, to_disv=True)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    conc = {}
+    for mkey in (0, 1):
+        for mname in (f"gwf_{mkey}", f"gwt_{mkey}"):
+            if new_sim.get_model(mname).modelgrid.grid_type != "vertex":
+                raise AssertionError(f"Model {mname} is not a DISV model")
+
+        conc[mkey] = new_sim.get_model(f"gwt_{mkey}").output.concentration()
+        conc[mkey] = conc[mkey].get_alldata()[-1]
+
+    new_conc = mfsplit.reconstruct_array(conc)
+
+    idx = idomain != 0
+    err_msg = "Concentrations from original and split models do not match"
+    np.testing.assert_allclose(
+        new_conc[idx], original_conc[idx], atol=1e-6, err_msg=err_msg
+    )
+
+
+@requires_exe("mf6")
 @pytest.mark.slow
 def test_structured_to_disv_with_lak_sfr_mvr(function_tmpdir):
     sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
