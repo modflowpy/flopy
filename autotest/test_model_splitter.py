@@ -221,7 +221,7 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 @requires_exe("mf6")
 @requires_pkg("pymetis")
 @requires_pkg("h5py")
-@requires_pkg("sklearn")
+@requires_pkg("scikit-learn", name_map={"scikit-learn": "sklearn"})
 def test_save_load_node_mapping_structured(function_tmpdir):
     import pymetis
 
