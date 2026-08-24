@@ -158,6 +158,10 @@ jobs:
       - name: Install dependencies
         working-directory: modflow6
         run: |
+          # optional dependencies of FloPy come from conda so they are
+          # consistent with the libraries already in the environment. pymetis
+          # is held back until the metis tests pass on macOS
+          pixi add h5py scikit-learn
           pixi run install
           pixi run pip install coverage pytest-cov netcdf4
 
