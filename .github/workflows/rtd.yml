@@ -131,7 +131,7 @@ jobs:
           version: 13
 
       - name: Set up headless display
-        uses: pyvista/setup-headless-display-action@v4
+        uses: pyvista/setup-headless-display-action@v5
 
       - name: Build MODFLOW 6
         working-directory: modflow6
