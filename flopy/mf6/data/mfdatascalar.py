@@ -318,6 +318,33 @@ class MFScalar(mfdata.MFData):
                 self._simulation_data.debug,
             )
 
+    @staticmethod
+    def _matches_default(data_item, current):
+        # only compare scalar types. composite types are always written
+        if data_item.type == DatumType.integer:
+            try:
+                return int(float(current)) == int(float(data_item.default_value))
+            except (ValueError, TypeError):
+                return False
+        elif data_item.type == DatumType.double_precision:
+            try:
+                return float(current) == float(data_item.default_value)
+            except (ValueError, TypeError):
+                return False
+        elif data_item.type == DatumType.string:
+            return (
+                str(current).lower().strip()
+                == data_item.default_value.lower().strip()
+            )
+        elif data_item.type == DatumType.keyword:
+            # unreachable today (no optional keyword item has a default in
+            # any DFN), kept defensive in case one is ever added
+            return (
+                current is True
+                and data_item.default_value.lower().strip() == "true"
+            )
+        return False
+
     def get_file_entry(
         self,
         values_only=False,
@@ -361,6 +388,12 @@ class MFScalar(mfdata.MFData):
                 self._simulation_data.debug,
                 ex,
             )
+        if self.structure.optional and not self._simulation_data.write_defaults:
+            data_item = self.structure.data_item_structures[0]
+            if data_item.default_value is not None and self._matches_default(
+                data_item, storage.get_data()
+            ):
+                return ""
         if (
             self.structure.type == DatumType.keyword
             or self.structure.type == DatumType.record

@@ -259,6 +259,7 @@ class MFSimulationData:
         self._verbosity_level = VerbosityLevel.normal
         self._max_columns_set_by = None  # Can be None, 'user', or 'auto'
         self.use_pandas = True
+        self.write_defaults = True
 
         self._update_str_format()
 
@@ -1717,7 +1718,10 @@ class MFSimulationBase:
             package.set_all_data_internal(check_data)
 
     def write_simulation(
-        self, ext_file_action=ExtFileAction.copy_relative_paths, silent=False
+        self,
+        ext_file_action=ExtFileAction.copy_relative_paths,
+        silent=False,
+        write_defaults=None,
     ):
         """
         Write the simulation to files.
@@ -1730,9 +1734,22 @@ class MFSimulationBase:
                 by absolute paths fixed.
             silent : bool
                 Writes out the simulation in silent mode (verbosity_level = 0)
+            write_defaults : bool
+                Whether to write optional variables whose value equals the
+                MODFLOW 6 default for that variable. Defaults to None, which
+                defers to simulation_data.write_defaults (True unless changed
+                by the user). Set to False to omit such variables from the
+                input files, which can be useful when a MODFLOW 6 version
+                does not yet support an option flopy otherwise writes by
+                default.
 
         """
         self._auto_set_max_columns()
+
+        sim_data = self.simulation_data
+        if write_defaults is not None:
+            saved_write_defaults = sim_data.write_defaults
+            sim_data.write_defaults = write_defaults
 
         saved_verb_lvl = self.simulation_data.verbosity_level
         if silent:
@@ -1795,6 +1812,8 @@ class MFSimulationBase:
 
         if silent:
             self.simulation_data.verbosity_level = saved_verb_lvl
+        if write_defaults is not None:
+            sim_data.write_defaults = saved_write_defaults
 
     def set_sim_path(self, path: Union[str, PathLike]):
         """Return a list of output data keys.
