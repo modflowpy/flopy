@@ -127,6 +127,7 @@ class MfUsg(Modflow):
             "dpf": flopy.mfusg.MfUsgDpf,
             "dpt": flopy.mfusg.MfUsgDpt,
             "rch": flopy.mfusg.MfUsgRch,
+            "tib": flopy.mfusg.MfUsgTib,
             "oc": flopy.mfusg.MfUsgOc,
             "lak": flopy.mfusg.MfUsgLak,
             "evt": flopy.mfusg.MfUsgEvt,
