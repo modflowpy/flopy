@@ -258,7 +258,7 @@ class MfGrdFile(FlopyBinaryData):
                 )
                 delr, delc = self.delr, self.delc
 
-                top.reshape((nrow, ncol))
+                top = top.reshape((nrow, ncol))
                 botm = botm.reshape((nlay, nrow, ncol))
                 modelgrid = StructuredGrid(
                     delc,
