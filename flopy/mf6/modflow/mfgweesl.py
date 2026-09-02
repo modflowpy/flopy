@@ -106,7 +106,7 @@ class ModflowGweesl(MFPackage):
     _package_type = "esl"
     dfn_file_name = "gwe-esl.dfn"
     dfn = [
-        ["header", "multi-package"],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",

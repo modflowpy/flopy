@@ -87,6 +87,11 @@ class ModflowGwtmwt(MFPackage):
         obs package with variable names as keys and package data as values. Data for
         the observations variable is also acceptable. See obs package documentation for
         more information.
+    dev_nonexpanding_matrix : keyword
+        keyword that solves the feature concentration with a general mixing equation
+        and adds the result to the right-hand side of the gwt equations, instead of
+        adding a row to the solution matrix for each feature.  this development option
+        is not supported.
     packagedata : [(ifno, strt, aux, boundname)]
         * ifno : integer
                 integer value that defines the feature (well) number associated with the
@@ -182,7 +187,7 @@ class ModflowGwtmwt(MFPackage):
     _package_type = "mwt"
     dfn_file_name = "gwt-mwt.dfn"
     dfn = [
-        ["header", "multi-package"],
+        ["header", "multi-package", "package-type advanced-stress-package"],
         [
             "block options",
             "name flow_package_name",
@@ -418,6 +423,13 @@ class ModflowGwtmwt(MFPackage):
             "optional false",
         ],
         [
+            "block options",
+            "name dev_nonexpanding_matrix",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
             "block packagedata",
             "name packagedata",
             "type recarray ifno strt aux boundname",
@@ -586,6 +598,7 @@ class ModflowGwtmwt(MFPackage):
         budgetcsv_filerecord=None,
         timeseries=None,
         observations=None,
+        dev_nonexpanding_matrix=None,
         packagedata=None,
         mwtperioddata=None,
         filename=None,
@@ -632,6 +645,9 @@ class ModflowGwtmwt(MFPackage):
         self._obs_filerecord = self.build_mfdata("obs_filerecord", None)
         self._obs_package = self.build_child_package(
             "obs", observations, "continuous", self._obs_filerecord
+        )
+        self.dev_nonexpanding_matrix = self.build_mfdata(
+            "dev_nonexpanding_matrix", dev_nonexpanding_matrix
         )
         self.packagedata = self.build_mfdata("packagedata", packagedata)
         self.mwtperioddata = self.build_mfdata("mwtperioddata", mwtperioddata)

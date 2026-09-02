@@ -20,12 +20,26 @@ class ModflowUtlncf(MFPackage):
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     wkt : [string]
-        is the coordinate reference system (crs) well-known text (wkt) string. ignored
-        if latitude and longitude griddata arrays have been provided for
-        netcdf_structured export type.
+        is the coordinate reference system (crs) well-known text string in wkt1 format
+        (ogc 01-009). written as the 'wkt' attribute on the projection variable.
+        ignored when latitude and longitude griddata arrays have been provided. to also
+        embed the crs in the binary grid file, provide the same string as the 'crs'
+        option in the discretization input; the discretization 'crs' option
+        additionally accepts other pyproj-compatible identifiers such as an epsg code
+        (e.g. 'epsg:26918').
+    crs_wkt : [string]
+        is the coordinate reference system (crs) well-known text string in wkt2 format
+        (iso 19162:2019), as required by cf-1.11. written as the 'crs_wkt' attribute on
+        the projection variable. when omitted, the 'wkt' value is written to 'crs_wkt'
+        as a compatibility alias. ignored when latitude and longitude griddata arrays
+        have been provided. to also embed the crs in the binary grid file, provide the
+        same string as the 'crs' option in the discretization input; the discretization
+        'crs' option additionally accepts other pyproj-compatible identifiers such as
+        an epsg code (e.g. 'epsg:26918').
     deflate : integer
         is the variable deflate level (0=min, 9=max) in the netcdf file. defining this
-        parameter activates per-variable compression at the level specified.
+        parameter activates per-variable compression at the level specified. use with
+        the shuffle option to also enable the shuffle filter.
     shuffle : keyword
         is the keyword used to turn on the netcdf variable shuffle filter when the
         deflate option is also set. the shuffle filter has the effect of storing the
@@ -33,26 +47,26 @@ class ModflowUtlncf(MFPackage):
         all the second bytes, etc. this can be an optimization for compression with
         certain types of data.
     chunk_time : integer
-        is the keyword used to provide a data chunk size for the time dimension in a
-        netcdf_mesh2d or netcdf_structured output file. must be used in combination
-        with the the chunk_face parameter (netcdf_mesh2d) or the chunk_z, chunk_y, and
-        chunk_x parameter set (netcdf_structured) to have an effect.
+        is the chunk size for the time dimension in a netcdf_mesh2d or
+        netcdf_structured output file. must be used in combination with the chunk_face
+        parameter (netcdf_mesh2d) or the chunk_z, chunk_y, and chunk_x parameter set
+        (netcdf_structured) to have an effect.
     chunk_face : integer
         is the keyword used to provide a data chunk size for the face dimension in a
         netcdf_mesh2d output file. must be used in combination with the the chunk_time
         parameter to have an effect.
     chunk_z : integer
-        is the keyword used to provide a data chunk size for the z dimension in a
-        netcdf_structured output file. must be used in combination with the the
-        chunk_time, chunk_x and chunk_y parameter set to have an effect.
+        is the chunk size for the layer (vertical) dimension in a netcdf_structured
+        output file. must be used in combination with the chunk_time, chunk_x, and
+        chunk_y parameters to have an effect.
     chunk_y : integer
-        is the keyword used to provide a data chunk size for the y dimension in a
-        netcdf_structured output file. must be used in combination with the the
-        chunk_time, chunk_x and chunk_z parameter set to have an effect.
+        is the chunk size for the y dimension in a netcdf_structured output file. must
+        be used in combination with the chunk_time, chunk_x, and chunk_z parameters to
+        have an effect.
     chunk_x : integer
-        is the keyword used to provide a data chunk size for the x dimension in a
-        netcdf_structured output file. must be used in combination with the the
-        chunk_time, chunk_y and chunk_z parameter set to have an effect.
+        is the chunk size for the x dimension in a netcdf_structured output file. must
+        be used in combination with the chunk_time, chunk_y, and chunk_z parameters to
+        have an effect.
     modflow6_attr_off : keyword
         is the keyword used to turn off internal input tagging in the model netcdf
         file. tagging adds internal modflow 6 attribute(s) to variables which
@@ -60,9 +74,14 @@ class ModflowUtlncf(MFPackage):
     ncpl : integer
         is the number of cells in a projected plane layer.
     latitude : [double precision]
-        cell center latitude. only supported for netcdf_structured export type.
+        cell center latitude array. only supported for netcdf_structured export type.
+        providing latitude and longitude arrays enables geographic-coordinate output as
+        a special case for external tooling that requires it; the preferred approach is
+        to use the 'wkt' and 'crs_wkt' options instead. when latitude and longitude
+        arrays are provided, any 'wkt' or 'crs_wkt' option values are ignored.
     longitude : [double precision]
-        cell center longitude. only supported for netcdf_structured export type.
+        cell center longitude array. only supported for netcdf_structured export type.
+        see the latitude description for usage notes.
 
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
@@ -74,6 +93,7 @@ class ModflowUtlncf(MFPackage):
     """
 
     wkt = ArrayTemplateGenerator(("ncf", "options", "wkt"))
+    crs_wkt = ArrayTemplateGenerator(("ncf", "options", "crs_wkt"))
     latitude = ArrayTemplateGenerator(("ncf", "griddata", "latitude"))
     longitude = ArrayTemplateGenerator(("ncf", "griddata", "longitude"))
     package_abbr = "utlncf"
@@ -86,6 +106,16 @@ class ModflowUtlncf(MFPackage):
             "name wkt",
             "type string",
             "shape lenbigline",
+            "preserve_case true",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name crs_wkt",
+            "type string",
+            "shape lenbigline",
+            "preserve_case true",
             "reader urword",
             "optional true",
         ],
@@ -176,6 +206,7 @@ class ModflowUtlncf(MFPackage):
         parent_package,
         loading_package=False,
         wkt=None,
+        crs_wkt=None,
         deflate=None,
         shuffle=None,
         chunk_time=None,
@@ -202,6 +233,7 @@ class ModflowUtlncf(MFPackage):
         )
 
         self.wkt = self.build_mfdata("wkt", wkt)
+        self.crs_wkt = self.build_mfdata("crs_wkt", crs_wkt)
         self.deflate = self.build_mfdata("deflate", deflate)
         self.shuffle = self.build_mfdata("shuffle", shuffle)
         self.chunk_time = self.build_mfdata("chunk_time", chunk_time)
@@ -229,6 +261,7 @@ class UtlncfPackages(MFChildPackages):
     def initialize(
         self,
         wkt=None,
+        crs_wkt=None,
         deflate=None,
         shuffle=None,
         chunk_time=None,
@@ -252,6 +285,7 @@ class UtlncfPackages(MFChildPackages):
         new_package = ModflowUtlncf(
             self._cpparent,
             wkt=wkt,
+            crs_wkt=crs_wkt,
             deflate=deflate,
             shuffle=shuffle,
             chunk_time=chunk_time,
@@ -272,6 +306,7 @@ class UtlncfPackages(MFChildPackages):
     def append_package(
         self,
         wkt=None,
+        crs_wkt=None,
         deflate=None,
         shuffle=None,
         chunk_time=None,
@@ -294,6 +329,7 @@ class UtlncfPackages(MFChildPackages):
         new_package = ModflowUtlncf(
             self._cpparent,
             wkt=wkt,
+            crs_wkt=crs_wkt,
             deflate=deflate,
             shuffle=shuffle,
             chunk_time=chunk_time,

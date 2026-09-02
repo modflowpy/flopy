@@ -38,13 +38,13 @@ class ModflowUtltvk(MFPackage):
                 line of information that is parsed into a property name keyword and values.
                 property name keywords that can be used to start the tvksetting string include:
                 k, k22, and k33.
-                * k : double precision
+                * k : string
                             is the new value to be assigned as the cell's hydraulic conductivity from the
                             start of the specified stress period, as per k in the npf package.  if the
                             options block includes a ts6 entry (see the 'time-variable input' section),
                             values can be obtained from a time series by entering the time-series name in
                             place of a numeric value.
-                * k22 : double precision
+                * k22 : string
                             is the new value to be assigned as the cell's hydraulic conductivity of the
                             second ellipsoid axis (or the ratio of k22/k if the k22overk npf package option
                             is specified) from the start of the specified stress period, as per k22 in the
@@ -52,7 +52,7 @@ class ModflowUtltvk(MFPackage):
                             direction.  if the options block includes a ts6 entry (see the 'time-variable
                             input' section), values can be obtained from a time series by entering the
                             time-series name in place of a numeric value.
-                * k33 : double precision
+                * k33 : string
                             is the new value to be assigned as the cell's hydraulic conductivity of the
                             third ellipsoid axis (or the ratio of k33/k if the k33overk npf package option
                             is specified) from the start of the specified stress period, as per k33 in the
@@ -168,32 +168,35 @@ class ModflowUtltvk(MFPackage):
         [
             "block period",
             "name k",
-            "type double precision",
+            "type string",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal k_in",
         ],
         [
             "block period",
             "name k22",
-            "type double precision",
+            "type string",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal k22_in",
         ],
         [
             "block period",
             "name k33",
-            "type double precision",
+            "type string",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal k33_in",
         ],
     ]
 
