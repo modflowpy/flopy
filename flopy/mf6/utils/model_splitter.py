@@ -123,6 +123,11 @@ OBS_ID2_LUT = {
 }
 
 
+# cost of cutting a cell face that a horizontal flow barrier crosses,
+# relative to the cost of one for every other face
+HFB_EDGE_WEIGHT = 1000
+
+
 class Mf6Splitter:
     """
     A class for splitting a single model into a multi-model simulation
@@ -696,10 +701,43 @@ class Mf6Splitter:
         weights = [np.count_nonzero(idomain[:, nn]) + adv_pkg_weights[nn] for nn in neighbors.keys()]
         graph = [np.array(neigh, dtype=int) for neigh in neighbors.values()]
 
+        eweights = None
+        if hfbs:
+            if verbose:
+                print("Weighting horizontal flow barrier faces")
+            # metis cannot be told that a barrier must not be cut, but making
+            # the faces it crosses expensive to cut steers the partition around
+            # it. Barriers that are still cut are moved after the partition is
+            # built.
+            gnode = {node: ix for ix, node in enumerate(neighbors.keys())}
+            hfb_faces = set()
+            for hfb in hfbs:
+                for recarray in hfb.stress_period_data.data.values():
+                    _, nodes1 = self._cellid_to_layer_node(recarray.cellid1)
+                    _, nodes2 = self._cellid_to_layer_node(recarray.cellid2)
+                    for node1, node2 in zip(nodes1, nodes2):
+                        if node1 not in gnode or node2 not in gnode:
+                            continue
+
+                        hfb_faces.add((gnode[node1], gnode[node2]))
+                        hfb_faces.add((gnode[node2], gnode[node1]))
+
+            eweights = []
+            for node, conns in enumerate(graph):
+                for conn in conns:
+                    if (node, int(conn)) in hfb_faces:
+                        eweights.append(HFB_EDGE_WEIGHT)
+                    else:
+                        eweights.append(1)
+
         if verbose:
             print("Running Metis")
         n_cuts, membership = pymetis.part_graph(
-            nparts, adjacency=graph, vweights=weights, options=options
+            nparts,
+            adjacency=graph,
+            vweights=weights,
+            eweights=eweights,
+            options=options,
         )
         membership = np.array(membership, dtype=int)
 
@@ -726,6 +764,7 @@ class Mf6Splitter:
                     _, nodes1 = self._cellid_to_layer_node(cellids1)
                     _, nodes2 = self._cellid_to_layer_node(cellids2)
                     cnt = 0
+                    moved = 0
                     while cnt < len(nodes1):
                         mnums1 = membership[nodes1]
                         mnums2 = membership[nodes2]
@@ -736,12 +775,19 @@ class Mf6Splitter:
                         mnum_to = mnums1[idx]
                         adj_nodes = np.array(nodes2)[idx]
                         membership[adj_nodes] = mnum_to
+                        moved += len(adj_nodes)
                         cnt += 1
 
                     if cnt == len(nodes1):
                         raise AssertionError(
-                            "Cannot uniquely spilt around HFB boundaries, try another "
+                            "Cannot uniquely split around HFB boundaries, try another "
                             "value for nparts"
+                        )
+
+                    if verbose and moved:
+                        print(
+                            f"Moved {moved} cell(s) to keep horizontal flow "
+                            f"barriers within a model"
                         )
 
         return membership.reshape(shape)
