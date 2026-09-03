@@ -714,7 +714,7 @@ def test_save_load_node_mapping_structured(function_tmpdir):
         saved_node_map,
         err_msg="Node map read/write not returning proper values",
     )
-    
+
     array_dict = {}
     for model in range(nparts):
         ml = new_sim2.get_model(f"freyberg_{model}")
