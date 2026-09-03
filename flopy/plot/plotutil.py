@@ -1482,11 +1482,11 @@ class PlotUtilities:
             head = np.copy(head)
             nlay, nrow, ncol = head.shape
             ncpl = nrow * ncol
-            head.shape = (nlay, ncpl)
-            top.shape = (ncpl,)
-            botm.shape = (nlay, ncpl)
+            head = head.reshape((nlay, ncpl))
+            top = top.reshape((ncpl,))
+            botm = botm.reshape((nlay, ncpl))
             if laytyp.ndim == 3:
-                laytyp.shape = (nlay, ncpl)
+                laytyp = laytyp.reshape((nlay, ncpl))
 
         else:
             nrow, ncol = None, None
@@ -1531,7 +1531,7 @@ class PlotUtilities:
         sat_thk = np.where(laytyp != 0, sat_thk_unconf, sat_thk_conf)
 
         if nrow is not None and ncol is not None:
-            sat_thk.shape = (nlay, nrow, ncol)
+            sat_thk = sat_thk.reshape((nlay, nrow, ncol))
 
         return sat_thk
 
@@ -1684,6 +1684,15 @@ class UnstructuredPlotUtilities:
 
                     if t:
                         vdict[cell] = t
+
+        # check if line vertex 0 or -1 should be included in the crosssection
+        ptschk = [ptsin[0], ptsin[-1]]
+        for cell, vrts in vdict.items():
+            if len(vrts) == 1:
+                for pt in ptschk:
+                    if np.min(xgrid[cell]) < pt[0] < np.max(xgrid[cell]):
+                        if np.min(ygrid[cell]) < pt[1] < np.max(ygrid[cell]):
+                            vdict[cell] = [vrts[0], tuple(pt)]
 
         return vdict
 

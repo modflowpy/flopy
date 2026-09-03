@@ -98,18 +98,6 @@ class ModflowPrtprp(MFPackage):
         note that drape does not apply to attempted release into a cell for which
         idomain <= 0, which is considered not to exist in the simulation. attempted
         release into a such a cell results in an error.
-    release_timesrecord : (release_times, times)
-        * release_times : keyword
-                keyword indicating release times will follow
-        * times : [double precision]
-                times to release, relative to the beginning of the simulation.  RELEASE_TIMES
-                and RELEASE_TIMESFILE are mutually exclusive.
-
-    release_timesfilerecord : (timesfile)
-        * timesfile : string
-                name of the release times file.  RELEASE_TIMES and RELEASE_TIMESFILE are
-                mutually exclusive.
-
     dry_tracking_method : string
         is a string indicating how particles should behave in dry-but-active cells (as
         can occur with the newton formulation).  the value can be 'drop', 'stop', or
@@ -237,12 +225,6 @@ class ModflowPrtprp(MFPackage):
     )
     trackcsv_filerecord = ListTemplateGenerator(
         ("prt6", "prp", "options", "trackcsv_filerecord")
-    )
-    release_timesrecord = ListTemplateGenerator(
-        ("prt6", "prp", "options", "release_timesrecord")
-    )
-    release_timesfilerecord = ListTemplateGenerator(
-        ("prt6", "prp", "options", "release_timesfilerecord")
     )
     packagedata = ListTemplateGenerator(("prt6", "prp", "packagedata", "packagedata"))
     releasetimes = ListTemplateGenerator(
@@ -409,72 +391,6 @@ class ModflowPrtprp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-        ],
-        [
-            "block options",
-            "name release_timesrecord",
-            "type record release_times times",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal releasetr",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name release_times",
-            "type keyword",
-            "reader urword",
-            "in_record true",
-            "tagged true",
-            "shape",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name times",
-            "type double precision",
-            "shape (any1d)",
-            "reader urword",
-            "in_record true",
-            "tagged false",
-            "repeating true",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name release_timesfilerecord",
-            "type record release_timesfile timesfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal release_timesfr",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name release_timesfile",
-            "type keyword",
-            "reader urword",
-            "in_record true",
-            "tagged true",
-            "shape",
-            "mf6internal release_timesfn",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name timesfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-            "removed 6.6.0",
         ],
         [
             "block options",
@@ -691,17 +607,6 @@ class ModflowPrtprp(MFPackage):
             "in_record true",
             "reader urword",
         ],
-        [
-            "block period",
-            "name fraction",
-            "type double precision",
-            "shape (<nstp)",
-            "tagged true",
-            "in_record true",
-            "reader urword",
-            "optional true",
-            "removed 6.6.0",
-        ],
     ]
 
     def __init__(
@@ -721,8 +626,6 @@ class ModflowPrtprp(MFPackage):
         stop_at_weak_sink=None,
         istopzone=None,
         drape=None,
-        release_timesrecord=None,
-        release_timesfilerecord=None,
         dry_tracking_method=None,
         dev_forceternary=None,
         release_time_tolerance=None,
@@ -769,12 +672,6 @@ class ModflowPrtprp(MFPackage):
         )
         self.istopzone = self.build_mfdata("istopzone", istopzone)
         self.drape = self.build_mfdata("drape", drape)
-        self.release_timesrecord = self.build_mfdata(
-            "release_timesrecord", release_timesrecord
-        )
-        self.release_timesfilerecord = self.build_mfdata(
-            "release_timesfilerecord", release_timesfilerecord
-        )
         self.dry_tracking_method = self.build_mfdata(
             "dry_tracking_method", dry_tracking_method
         )

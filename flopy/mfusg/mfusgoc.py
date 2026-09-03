@@ -955,11 +955,11 @@ class MfUsgOc(Package):
                     if kwargs["atsa"]:
                         line = f.readline()
                         lnlst = line.strip().split()
-                        lines.append("DELTAT {float(lnlst[0]):11.4e}")
-                        lines.append("TMINAT {float(lnlst[1]):11.4e}")
-                        lines.append("TMAXAT {float(lnlst[2]):11.4e}")
-                        lines.append("TADJAT {float(lnlst[3]):11.4e}")
-                        lines.append("TCUTAT {float(lnlst[4]):11.4e}")
+                        lines.append(f"DELTAT {float(lnlst[0]):11.4e}")
+                        lines.append(f"TMINAT {float(lnlst[1]):11.4e}")
+                        lines.append(f"TMAXAT {float(lnlst[2]):11.4e}")
+                        lines.append(f"TADJAT {float(lnlst[3]):11.4e}")
+                        lines.append(f"TCUTAT {float(lnlst[4]):11.4e}")
 
                     line = f.readline()
                     lnlst = line.strip().split()

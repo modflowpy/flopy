@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 
@@ -8,8 +10,6 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     equal to (nrow, ncol) or (ncpl) then the lakes are on top of the model
     and are vertically connected to cells at the top of the model. Otherwise
     the lakes are embedded in the grid.
-
-    TODO: implement embedded lakes for VertexGrid
 
     TODO: add support for UnstructuredGrid
 
@@ -47,12 +47,15 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     connectiondata : list of lists
         connectiondata block for the lake package
 
+    Warns
+    -----
+    UserWarning
+        If an embedded lake has no connections to active model cells.
+
     """
 
     if modelgrid.grid_type in ("unstructured",):
-        raise ValueError(
-            "unstructured grids not supported in get_lak_connections()"
-        )
+        raise ValueError("unstructured grids not supported in get_lak_connections()")
 
     embedded = True
     shape3d = modelgrid.shape
@@ -62,9 +65,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     if isinstance(lake_map, (list, tuple)):
         lake_map = np.array(lake_map, dtype=np.int32)
     elif isinstance(lake_map, (int, float)):
-        raise TypeError(
-            "lake_map must be a Masked Array, ndarray, list, or tuple"
-        )
+        raise TypeError("lake_map must be a Masked Array, ndarray, list, or tuple")
 
     # evaluate lake_map shape
     shape_map = lake_map.shape
@@ -87,9 +88,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
     # check dimensions of idomain
     if idomain.shape != shape3d:
-        raise ValueError(
-            f"shape of idomain ({idomain.shape}) not equal to {shape3d}"
-        )
+        raise ValueError(f"shape of idomain ({idomain.shape}) not equal to {shape3d}")
 
     # convert bedleak to numpy array if necessary
     if bedleak is None:
@@ -102,9 +101,7 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
 
     # check the dimensions of the bedleak array
     if bedleak.shape != shape2d:
-        raise ValueError(
-            f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}"
-        )
+        raise ValueError(f"shape of bedleak ({bedleak.shape}) not equal to {shape2d}")
 
     # get the model grid elevations and reset lake_map using idomain
     # if lake is embedded and in an inactive cell
@@ -129,6 +126,8 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
     unique = unique[idx]
 
     dx, dy = None, None
+    vertices, cell_edges = None, None
+    xcenters, ycenters = None, None
 
     # embedded lakes
     for lake_number in unique:
@@ -154,8 +153,30 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
                         lake_map, idomain, cell_index, dx, dy, elevations
                     )
                 elif modelgrid.grid_type == "vertex":
-                    raise NotImplementedError(
-                        "embedded lakes have not been implemented"
+                    if vertices is None:
+                        vertices = modelgrid.verts
+                        cell_edges = tuple(
+                            __cell_edges(poly) for poly in modelgrid.iverts
+                        )
+                        xcenters = modelgrid.xcellcenters
+                        ycenters = modelgrid.ycellcenters
+                    (
+                        cellids,
+                        claktypes,
+                        belevs,
+                        televs,
+                        connlens,
+                        connwidths,
+                    ) = __vertex_lake_connections(
+                        lake_map,
+                        idomain,
+                        cell_index,
+                        modelgrid,
+                        elevations,
+                        vertices,
+                        cell_edges,
+                        xcenters,
+                        ycenters,
                     )
             else:
                 cellid = (0,) + cell_index
@@ -197,19 +218,23 @@ def get_lak_connections(modelgrid, lake_map, idomain=None, bedleak=None):
         # set number of connections for lake
         connection_dict[lake_number] = iconn
 
+        if embedded and iconn == 0:
+            warnings.warn(
+                f"embedded lake {lake_number} has no connections to active "
+                "model cells.",
+                UserWarning,
+                stacklevel=2,
+            )
+
         # reset idomain for lake
         if iconn > 0:
-            idx = np.asarray(
-                (lake_map == lake_number) & (idomain > 0)
-            ).nonzero()
+            idx = np.asarray((lake_map == lake_number) & (idomain > 0)).nonzero()
             idomain[idx] = 0
 
     return idomain, connection_dict, connectiondata
 
 
-def __structured_lake_connections(
-    lake_map, idomain, cell_index, dx, dy, elevations
-):
+def __structured_lake_connections(lake_map, idomain, cell_index, dx, dy, elevations):
     nlay, nrow, ncol = lake_map.shape
     cellids = []
     claktypes = []
@@ -281,3 +306,109 @@ def __structured_lake_connections(
                 connwidths.append(0.0)
 
     return cellids, claktypes, belevs, televs, connlens, connwidths
+
+
+def __vertex_lake_connections(
+    lake_map,
+    idomain,
+    cell_index,
+    modelgrid,
+    elevations,
+    vertices,
+    cell_edges,
+    xcenters,
+    ycenters,
+):
+    nlay, ncpl = lake_map.shape
+    cellids = []
+    claktypes = []
+    belevs = []
+    televs = []
+    connlens = []
+    connwidths = []
+
+    k, icpl = cell_index
+    if idomain[cell_index] > 0:
+        node = k * ncpl + icpl
+        neighbors = modelgrid.neighbors(node=node, method="rook")
+
+        for neighbor in neighbors:
+            # neighbors() returns 2D adjacency offset to the requested layer
+            nicpl = neighbor % ncpl
+            ci = (k, nicpl)
+
+            if not (np.ma.is_masked(lake_map[ci]) and idomain[ci] > 0):
+                continue
+
+            # A face can contain multiple edges when split by hanging vertices.
+            shared = cell_edges[icpl] & cell_edges[nicpl]
+            if not shared:
+                continue
+
+            centre = (xcenters[nicpl], ycenters[nicpl])
+            connwidth = 0.0
+            connlen = None
+            for v0, v1 in shared:
+                p0 = vertices[v0]
+                p1 = vertices[v1]
+                connwidth += np.linalg.norm(p1 - p0)
+                distance = __distance_to_segment(centre, p0, p1)
+                if connlen is None or distance < connlen:
+                    connlen = distance
+
+            cellids.append(ci)
+            claktypes.append("horizontal")
+            belevs.append(elevations[k + 1, nicpl])
+            televs.append(elevations[k, nicpl])
+            connlens.append(connlen)
+            connwidths.append(connwidth)
+
+        # vertical connection
+        if k < nlay - 1:
+            cell_below = (k + 1, icpl)
+
+            if np.ma.is_masked(lake_map[cell_below]) and idomain[cell_below] > 0:
+                cellids.append(cell_below)
+                claktypes.append("vertical")
+                belevs.append(0.0)
+                televs.append(0.0)
+                connlens.append(0.0)
+                connwidths.append(0.0)
+
+    return cellids, claktypes, belevs, televs, connlens, connwidths
+
+
+def __cell_edges(poly):
+    """Return normalized vertex pairs defining a cell's edges."""
+    if poly[0] == poly[-1]:
+        poly = poly[:-1]
+
+    return {tuple(sorted((poly[v - 1], poly[v]))) for v in range(len(poly))}
+
+
+def __distance_to_segment(cell_centre, p0, p1):
+    """
+    Shortest distance from a point to a line segment.
+
+    Projections beyond the segment are clamped to the nearest endpoint.
+    """
+
+    P = np.asarray(cell_centre, dtype=float)
+    A = np.asarray(p0, dtype=float)
+    B = np.asarray(p1, dtype=float)
+
+    AB = B - A
+    AP = P - A
+
+    denom = np.dot(AB, AB)
+
+    # clamp projections that fall outside the edge
+    if denom == 0:
+        return np.linalg.norm(P - A)
+
+    t = np.dot(AP, AB) / denom
+    t = np.clip(t, 0.0, 1.0)
+
+    C = A + t * AB
+
+    return np.linalg.norm(P - C)

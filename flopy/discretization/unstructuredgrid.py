@@ -591,6 +591,58 @@ class UnstructuredGrid(Grid):
 
         return copy.copy(self._polygons)
 
+    def disu_properties(self, mfusg=False):
+        """
+        Method that returns disu properties from the grid for constructing
+        DISU packages for MFUSG and MF6. Note: not all required information for
+        DISU construction is stored in the UnstructuredGrid class, CL12 and HWVA
+        is not available from the Grid. Please double-check the properties returned
+        on a case by case basis and fill in where necessary for individual applications
+
+        Parameters
+        ----------
+        mfusg : bool
+            boolean flag for specifying modflow USG DISU properties
+
+        Returns
+        -------
+        dict : dictionary of unstructured discretization properties
+        """
+
+        dis_props = {
+            "top": self._top,
+            "bot": self._botm,
+            "iac": self._iac,
+            "ja": self._ja,
+        }
+        if mfusg:
+            dis_props["nodelay"] = self.ncpl
+            dis_props["ivc"] = np.where(self._ihc < 1, 1, 0)
+
+        else:
+            dis_props["nodes"] = self.nnodes
+            dis_props["ihc"] = self._ihc
+            dis_props["idomain"] = self.idomain
+            dis_props["xorigin"] = self.xoffset
+            dis_props["yorigin"] = self.yoffset
+            dis_props["angrot"] = self.angrot
+
+            if self.is_valid:
+                dis_props["vertices"] = [[int(i) for i in v] for v in self._vertices]
+                cell2d = []
+                for ix, iv in enumerate(self._iverts):
+                    c2d = tuple(
+                        [ix, self._xc[ix], self._yc[ix], len(iv)]
+                        + [int(i) for i in list(iv)]
+                    )
+                    cell2d.append(c2d)
+                dis_props["cell2d"] = cell2d
+
+        if self.is_valid:
+            dis_props["area"] = self.area
+
+        return dis_props
+
     def to_geodataframe(self):
         """
         Returns a geopandas GeoDataFrame of the model grid

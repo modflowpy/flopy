@@ -120,7 +120,7 @@ class ModflowGwtsrc(MFPackage):
     _package_type = "src"
     dfn_file_name = "gwt-src.dfn"
     dfn = [
-        ["header", "multi-package"],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",

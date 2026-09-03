@@ -267,6 +267,11 @@ def volumetric_budget_bar_plot(values_in, values_out, labels, **kwargs):
     else:
         ax = plt.gca()
 
+    # the values are indexed by position below, and a series passed in is
+    # indexed by zone name, so the values are taken out of the series
+    values_in = np.asarray(values_in)
+    values_out = np.asarray(values_out)
+
     x_pos = np.arange(len(values_in))
     rects_in = ax.bar(x_pos, values_in, align="center", alpha=0.5)
 

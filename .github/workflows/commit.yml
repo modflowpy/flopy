@@ -18,7 +18,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
@@ -71,11 +71,11 @@ jobs:
         shell: bash
     timeout-minutes: 10
     env:
-      PYTHON_VERSION: '3.10'
+      PYTHON_VERSION: '3.11'
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
@@ -95,7 +95,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}
@@ -103,7 +103,7 @@ jobs:
 
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: autotest/coverage.xml
 
@@ -115,19 +115,19 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10", "3.11", "3.12" ]
+        python-version: [ "3.11", "3.12", "3.13", "3.14" ]
     defaults:
       run:
         shell: bash -l {0}
     timeout-minutes: 60
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           path: flopy
 
       - name: Checkout MODFLOW 6
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: MODFLOW-ORG/modflow6
           path: modflow6
@@ -150,14 +150,18 @@ jobs:
           version: 13
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.9.4
+        uses: prefix-dev/setup-pixi@v0.10.2
         with:
-          pixi-version: v0.41.4
+          pixi-version: v0.70.1
           manifest-path: modflow6/pixi.toml
 
       - name: Install dependencies
         working-directory: modflow6
         run: |
+          # optional dependencies of FloPy come from conda so they are
+          # consistent with the libraries already in the environment. pymetis
+          # is held back until the metis tests pass on macOS
+          pixi add h5py scikit-learn
           pixi run install
           pixi run pip install coverage pytest-cov netcdf4
 
@@ -186,7 +190,7 @@ jobs:
         run: pixi run --manifest-path=../../modflow6/pixi.toml coverage report
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: failed-${{ matrix.os }}-${{ matrix.python-version }}
@@ -194,6 +198,6 @@ jobs:
 
       - name: Upload coverage
         if: github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: flopy/autotest/coverage.xml

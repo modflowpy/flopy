@@ -300,6 +300,33 @@ class VertexGrid(Grid):
 
         return copy.copy(self._polygons)
 
+    def disv_properties(self):
+        """
+        Method to get DISV package properties
+
+        Returns
+        -------
+        dict : dictionary of properties that can be used to build a DISV package
+        """
+        dis_props = {
+            "nlay": self.nlay,
+            "ncpl": self.ncpl,
+            "vertices": self._vertices,
+            "top": self.top,
+            "botm": self.botm,
+            "idomain": self.idomain,
+            "xorigin": self.xoffset,
+            "yorigin": self.yoffset,
+            "angrot": self.angrot,
+        }
+
+        if self._cell2d is None and self._cell1d is not None:
+            dis_props["cell1d"] = self._cell1d
+        else:
+            dis_props["cell2d"] = self._cell2d
+
+        return dis_props
+
     def to_geodataframe(self):
         """
         Returns a geopandas GeoDataFrame of the model grid
@@ -847,7 +874,7 @@ class VertexGrid(Grid):
         nlay, ncpl = grb_obj.nlay, grb_obj.ncpl
         top = np.ravel(grb_obj.top)
         botm = grb_obj.bot
-        botm.shape = (nlay, ncpl)
+        botm = botm.reshape((nlay, ncpl))
         vertices, cell2d = grb_obj.cell2d
 
         return cls(

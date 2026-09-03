@@ -118,14 +118,14 @@ class MfUsgRch(ModflowRch):
         if selev is not None:
             selev_u2d_shape = get_pak_vals_shape(model, selev)
             self.selev = Transient2d(
-                model, selev_u2d_shape, np.float32, rech, name="rech_selev"
+                model, selev_u2d_shape, np.float32, selev, name="rech_selev"
             )
 
         self.iznrch = None
         if iznrch is not None:
             iznrch_u2d_shape = get_pak_vals_shape(model, iznrch)
             self.iznrch = Transient2d(
-                model, iznrch_u2d_shape, np.int32, rech, name="rech_izn"
+                model, iznrch_u2d_shape, np.int32, iznrch, name="rech_izn"
             )
 
         self.rchconc = None
@@ -173,7 +173,7 @@ class MfUsgRch(ModflowRch):
         if self.iconc:
             f_rch.write(" CONC")
         if self.mxrtzones:
-            f_rch.write(f" RTS {self.mxrtzones:4.0d}")
+            f_rch.write(f" RTS {self.mxrtzones:4d}")
         f_rch.write("\n")
 
         mcomp = self.parent.mcomp
@@ -219,7 +219,7 @@ class MfUsgRch(ModflowRch):
                 f_rch.write(" INSELEV 1")
             if self.rchconc is not None:
                 f_rch.write(" INCONC 1")
-            f_rch.write("# Stress period {kper + 1}\n")
+            f_rch.write(f" # Stress period {kper + 1}\n")
 
             if inrech >= 0:
                 f_rch.write(file_entry_rech)

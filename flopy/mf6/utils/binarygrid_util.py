@@ -14,6 +14,43 @@ from ...utils.utils_def import FlopyBinaryData
 warnings.simplefilter("always", DeprecationWarning)
 
 
+def _crs_to_string(crs):
+    """Convert a CRS value to a string suitable for writing to a GRB file.
+
+    Strings are returned unchanged (pass-through for DIS package / GRB
+    round-trip cases).  Integers are treated as EPSG codes.  Objects with
+    pyproj-compatible methods (``to_epsg``, ``to_authority``, ``to_wkt``) are
+    converted in that priority order so the shortest interoperable form is
+    preferred.
+
+    Parameters
+    ----------
+    crs : str, int, or pyproj.CRS
+        CRS value to convert.
+
+    Returns
+    -------
+    str
+        CRS as a string ready for writing to the GRB CRS field.
+    """
+    if isinstance(crs, str):
+        return crs
+    if isinstance(crs, int):
+        return f"EPSG:{crs}"
+    # Duck-type pyproj.CRS or any compatible object — no hard dependency.
+    if hasattr(crs, "to_epsg"):
+        epsg = crs.to_epsg()
+        if epsg is not None:
+            return f"EPSG:{epsg}"
+    if hasattr(crs, "to_authority"):
+        authority = crs.to_authority()
+        if authority is not None:
+            return ":".join(authority)
+    if hasattr(crs, "to_wkt"):
+        return crs.to_wkt()
+    return str(crs)
+
+
 class MfGrdFile(FlopyBinaryData):
     """
     The MfGrdFile class.
@@ -81,7 +118,7 @@ class MfGrdFile(FlopyBinaryData):
         # version
         line = self.read_text(self._initial_len).strip()
         t = line.split()
-        self._version = t[1]
+        self._version = int(t[1])
 
         # ntxt
         line = self.read_text(self._initial_len).strip()
@@ -146,13 +183,13 @@ class MfGrdFile(FlopyBinaryData):
                 if dt == np.int32:
                     v = self.read_integer()
                 elif dt == np.float32:
-                    v = self.read_real()
+                    v = self._read_values(dt, 1)[0]
                 elif dt == np.float64:
-                    v = self.read_real()
+                    v = self._read_values(dt, 1)[0]
             self._datadict[key] = v
 
             if self.verbose:
-                if nd == 0:
+                if nd == 0 or dt == str:
                     print(f"  {key} = {v}")
                 else:
                     print(f"  {key}: min = {v.min()} max = {v.max()}")
@@ -201,7 +238,7 @@ class MfGrdFile(FlopyBinaryData):
                 nlay, ncpl = self.nlay, self.ncpl
                 vertices, cell2d = self.cell2d
                 top = np.ravel(top)
-                botm.shape = (nlay, ncpl)
+                botm = botm.reshape((nlay, ncpl))
                 modelgrid = VertexGrid(
                     vertices,
                     cell2d,
@@ -221,8 +258,8 @@ class MfGrdFile(FlopyBinaryData):
                 )
                 delr, delc = self.delr, self.delc
 
-                top.shape = (nrow, ncol)
-                botm.shape = (nlay, nrow, ncol)
+                top = top.reshape((nrow, ncol))
+                botm = botm.reshape((nlay, nrow, ncol))
                 modelgrid = StructuredGrid(
                     delc,
                     delr,
@@ -317,8 +354,7 @@ class MfGrdFile(FlopyBinaryData):
             if self._grid_type == "DISU":
                 # modify verts
                 verts = [
-                    [idx, verts[idx, 0], verts[idx, 1]]
-                    for idx in range(shpvert[0])
+                    [idx, verts[idx, 0], verts[idx, 1]] for idx in range(shpvert[0])
                 ]
             if self.verbose:
                 print(f"returning verts from {self.file.name}")
@@ -345,6 +381,17 @@ class MfGrdFile(FlopyBinaryData):
         return xycellcenters
 
     # properties
+    @property
+    def version(self):
+        """
+        MODFLOW 6 grid file version.
+
+        Returns
+        -------
+        version : int
+        """
+        return self._version
+
     @property
     def grid_type(self):
         """
@@ -747,3 +794,204 @@ class MfGrdFile(FlopyBinaryData):
         else:
             vertices, cell2d = None, None
         return vertices, cell2d
+
+    def export(
+        self,
+        filename,
+        *,
+        precision=None,
+        version=None,
+        crs=None,
+        verbose=False,
+    ):
+        """
+        Export the binary grid file to a new file.
+
+        Parameters
+        ----------
+        filename : str or PathLike
+            Path to output .grb file
+        precision : str, optional
+            'single' or 'double'. If None, uses the precision from the
+            original file (default None)
+        version : int, optional
+            Grid file version to write. If None (default), version 2 is
+            written when a CRS string is available, otherwise version 1.
+            Pass ``version=1`` to force version 1 even when a CRS is set.
+        crs : str, optional
+            CRS user input string to write (e.g. ``"EPSG:26916"`` or OGC
+            WKT). If None, uses the CRS from the source file if present.
+            Providing this argument with a version 1 source file upgrades
+            the output to version 2.
+        verbose : bool, optional
+            Print progress messages (default False)
+
+        All parameters except ``filename`` are keyword-only, so adding a
+        new parameter here in the future (e.g. a dedicated parameter and
+        property for a new GRB field, mirroring ``crs``/``.crs``) can
+        never silently change the meaning of an existing positional call.
+
+        Examples
+        --------
+        >>> from flopy.mf6.utils import MfGrdFile
+        >>> grb = MfGrdFile('model.dis.grb')
+        >>> grb.export('model_copy.dis.grb')
+        >>> # Round-trip a v2 file preserving CRS
+        >>> grb2 = MfGrdFile('model_v2.dis.grb')
+        >>> grb2.export('model_v2_copy.dis.grb')
+        >>> # Upgrade a v1 file to v2 with an explicit CRS
+        >>> grb.export('model_v2.dis.grb', crs='EPSG:26916')
+        """
+        if precision is None:
+            precision = self.precision
+
+        if isinstance(crs, str) and crs.strip() == "":
+            crs = None
+
+        raw_crs = crs if crs is not None else self.crs
+        effective_crs = _crs_to_string(raw_crs) if raw_crs is not None else None
+        if effective_crs is not None and effective_crs.strip() == "":
+            # A blank CRS carries no usable information. Treat it the
+            # same as no CRS rather than writing an empty crs string.
+            effective_crs = None
+        if version is None:
+            version = 2 if effective_crs is not None else 1
+
+        float_type = "SINGLE" if precision.lower() == "single" else "DOUBLE"
+
+        # Build var_list and data_dict from the parsed record structure so that
+        # array dimensions come directly from the source file rather than being
+        # recomputed.  This avoids shape mismatches and naturally handles any
+        # grid type.
+        var_list = []
+        data_dict = {}
+        for key in self._recordkeys:
+            if key == "CRS":
+                continue  # handled by the version check below
+            dt, nd, shp = self._recorddict[key]
+            if dt == np.int32:
+                dtype_str = "INTEGER"
+            elif dt in (np.float32, np.float64):
+                dtype_str = float_type
+            elif dt == str:
+                dtype_str = "CHARACTER"
+            else:
+                dtype_str = float_type
+            # shp is stored in reversed (numpy) order; the write loop reverses
+            # it back to Fortran (definition-line) order via dims[::-1].
+            dims = list(shp) if nd > 0 else []
+            var_list.append((key, dtype_str, nd, dims))
+            data_dict[key] = self._datadict[key]
+
+        if version >= 2:
+            if effective_crs is None:
+                raise ValueError(
+                    "version=2 requires a CRS string. Provide crs= or use a "
+                    "version 2 source file."
+                )
+            _MF6_CRS_MAXLEN = 5000
+            if len(effective_crs) > _MF6_CRS_MAXLEN:
+                raise ValueError(
+                    f"CRS string length {len(effective_crs)} exceeds the "
+                    f"MODFLOW 6 maximum of {_MF6_CRS_MAXLEN} characters."
+                )
+            var_list.append(("CRS", "CHARACTER", 1, [len(effective_crs)]))
+            data_dict["CRS"] = effective_crs
+
+        ntxt = len(var_list)
+        lentxt = 100
+
+        if verbose:
+            print(f"Writing binary grid file: {filename}")
+            print(f"  Grid type: {self.grid_type}")
+            print(f"  Version: {version}")
+            print(f"  Number of variables: {ntxt}")
+
+        # Create writer with appropriate precision
+        writer = FlopyBinaryData()
+        writer.precision = precision
+
+        with open(filename, "wb") as f:
+            writer.file = f
+
+            # Write text header lines and definition lines in MODFLOW 6 format:
+            # content left-aligned, space-padded to (nchar-1), then newline at
+            # position (nchar-1).  This matches what MF6 writes and is required
+            # for Fortran readers that parse these as fixed-length text records.
+            def write_line(text, nchar):
+                writer.file.write(text.encode("ascii").ljust(nchar - 1) + b"\n")
+
+            header_len = 50
+            write_line(f"GRID {self.grid_type}", header_len)
+            write_line(f"VERSION {version}", header_len)
+            write_line(f"NTXT {ntxt}", header_len)
+            write_line(f"LENTXT {lentxt}", header_len)
+
+            # Write variable definition lines (100 chars each)
+            for name, dtype_str, ndim, dims in var_list:
+                if ndim == 0:
+                    line = f"{name} {dtype_str} NDIM {ndim}"
+                else:
+                    dims_str = " ".join(
+                        str(d) for d in dims[::-1]
+                    )  # Reverse for Fortran order
+                    line = f"{name} {dtype_str} NDIM {ndim} {dims_str}"
+                write_line(line, lentxt)
+
+            # Write binary data for each variable
+            for name, dtype_str, ndim, dims in var_list:
+                if name not in data_dict:
+                    raise ValueError(
+                        f"Required variable '{name}' not found in grid file"
+                    )
+
+                value = data_dict[name]
+
+                if verbose:
+                    if ndim == 0:
+                        print(f"  Writing {name} = {value}")
+                    else:
+                        if hasattr(value, "min"):
+                            print(
+                                f"  Writing {name}: min = {value.min()} max = {value.max()}"
+                            )
+                        else:
+                            print(f"  Writing {name}")
+
+                # Write scalar or array data
+                if dtype_str == "CHARACTER":
+                    writer.write_text(value, len(value))
+                elif ndim == 0:
+                    # Scalar value
+                    if dtype_str == "INTEGER":
+                        writer.write_integer(int(value))
+                    elif dtype_str in ("DOUBLE", "SINGLE"):
+                        writer.write_real(float(value))
+                else:
+                    # Array data
+                    arr = np.asarray(value)
+                    if dtype_str == "INTEGER":
+                        arr = arr.astype(np.int32)
+                    elif dtype_str == "DOUBLE":
+                        arr = arr.astype(np.float64)
+                    elif dtype_str == "SINGLE":
+                        arr = arr.astype(np.float32)
+
+                    writer.write_record(np.ravel(arr, order="C"), dtype=arr.dtype)
+
+        if verbose:
+            print(f"Successfully wrote {filename}")
+
+    @property
+    def crs(self):
+        """
+        CRS user input string (version 2 GRB file only).
+
+        Returns
+        -------
+        crs : str or None
+        """
+        crs = None
+        if "CRS" in self._datadict:
+            crs = self._datadict["CRS"]
+        return crs

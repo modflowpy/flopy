@@ -1897,7 +1897,7 @@ def test004_create_tests_bcfss(function_tmpdir, example_data_path):
     ims_package = ModflowIms(
         sim,
         print_option="ALL",
-        csv_output_filerecord="bcf2ss.ims.csv",
+        csv_outer_output_filerecord="bcf2ss.ims.csv",
         complexity="SIMPLE",
         outer_dvclose=0.000001,
         outer_maximum=500,

@@ -181,6 +181,7 @@ class Mf6Splitter:
         self._allow_splitting = True
 
         self._fdigits = 1
+        self._keep_external = True
 
         # multi-model splitting attr
         self._multimodel_exchange_gwf_names = {}
@@ -678,12 +679,13 @@ class Mf6Splitter:
                 else:
                     cellids = package.packagedata.array.cellid
                 if self._modelgrid.grid_type == "structured":
-                    cellids = [(0, i[1], i[2]) for i in cellids]
+                    # skip disconnected cells in SFR package
+                    cellids = [(0, i[1], i[2]) for i in cellids if i != (-1, -1, -1)]
                     nodes = self._modelgrid.get_node(cellids)
                 elif self._modelgrid.grid_type == "vertex":
-                    nodes = [i[1] for i in cellids]
+                    nodes = [i[1] for i in cellids if i != (-1, -1)]
                 else:
-                    nodes = [i[0] for i in cellids]
+                    nodes = [i[0] for i in cellids if i != (-1,)]
 
                 if isinstance(package, (modflow.ModflowGwflak, modflow.ModflowGwtlkt, modflow.ModflowGwelke)):
                     lakenos = package.connectiondata.array.ifno + 1
@@ -758,15 +760,24 @@ class Mf6Splitter:
                     cellids2 = recarray.cellid2
                     _, nodes1 = self._cellid_to_layer_node(cellids1)
                     _, nodes2 = self._cellid_to_layer_node(cellids2)
-                    mnums1 = membership[nodes1]
-                    mnums2 = membership[nodes2]
-                    ev = np.equal(mnums1, mnums2)
-                    if np.all(ev):
-                        continue
-                    idx = np.asarray(~ev).nonzero()[0]
-                    mnum_to = mnums1[idx]
-                    adj_nodes = nodes2[idx]
-                    membership[adj_nodes] = mnum_to
+                    cnt = 0
+                    while cnt < len(nodes1):
+                        mnums1 = membership[nodes1]
+                        mnums2 = membership[nodes2]
+                        ev = np.equal(mnums1, mnums2)
+                        if np.all(ev):
+                            break
+                        idx = np.asarray(~ev).nonzero()[0]
+                        mnum_to = mnums1[idx]
+                        adj_nodes = np.array(nodes2)[idx]
+                        membership[adj_nodes] = mnum_to
+                        cnt += 1
+
+                    if cnt == len(nodes1):
+                        raise AssertionError(
+                            "Cannot uniquely spilt around HFB boundaries, try another "
+                            "value for nparts"
+                        )
 
         return membership.reshape(shape)
 
@@ -822,7 +833,7 @@ class Mf6Splitter:
 
             new_array[new_nodes] = array[old_nodes]
 
-        new_array.shape = shape
+        new_array = new_array.reshape(shape)
         return new_array
 
     def reconstruct_recarray(self, recarrays):
@@ -1012,6 +1023,7 @@ class Mf6Splitter:
                 self._offsets[m] = {
                     "xorigin": self._modelgrid.xvertices[rmax + 1, cmin],
                     "yorigin": self._modelgrid.yvertices[rmax + 1, cmin],
+                    "angrot": self._modelgrid.angrot
                 }
                 # get new nrow and ncol information
                 nrow = (rmax - rmin) + 1
@@ -1035,6 +1047,7 @@ class Mf6Splitter:
                 self._offsets[m] = {
                     "xorigin": self._modelgrid.xoffset,
                     "yorigin": self._modelgrid.yoffset,
+                    "angrot": self._modelgrid.angrot
                 }
 
         new_ncpl = {}
@@ -1466,6 +1479,7 @@ class Mf6Splitter:
         how = kwargs.pop("how", [])
         binary = kwargs.pop("binary", [])
         fnames = kwargs.pop("fnames", None)
+        layered = True
         if not hasattr(mfarray, "size"):
             if mfarray.array is None:
                 if item == "idomain":
@@ -1485,6 +1499,7 @@ class Mf6Splitter:
                 i.fname
                 for i in mfarray._data_storage.layer_storage.multi_dim_list
             ]
+            layered = mfarray._data_storage.layered
             mfarray = mfarray.array
 
         nlay = 1
@@ -1523,7 +1538,10 @@ class Mf6Splitter:
             if how and item != "idomain":
                 new_input = []
                 i0 = 0
-                i1 = new_ncpl
+                if layered:
+                    i1 = new_ncpl
+                else:
+                    i1 = new_ncpl * nlay
                 lay = 0
                 for h in how:
                     if h == 1:
@@ -1536,6 +1554,9 @@ class Mf6Splitter:
                         # external array
                         tmp = fnames[lay].split(".")
                         filename = f"{'.'.join(tmp[:-1])}.{mkey :0{self._fdigits}d}.{tmp[-1]}"
+                        folder_path = (self._new_sim.sim_path / filename).parent
+                        if not folder_path.exists():
+                            folder_path.mkdir(parents=True)
 
                         cr = {
                             "filename": filename,
@@ -1543,6 +1564,7 @@ class Mf6Splitter:
                             "iprn": 1,
                             "data": new_array[i0:i1],
                             "binary": binary[lay],
+                            "layered": layered
                         }
 
                         new_input.append(cr)
@@ -1621,6 +1643,9 @@ class Mf6Splitter:
                 if how == 3 and new_recarray is not None:
                     tmp = fname.split(".")
                     filename = f"{'.'.join(tmp[:-1])}.{mkey :0{self._fdigits}d}.{tmp[-1]}"
+                    folder_path = (self._new_sim.sim_path / filename).parent
+                    if not folder_path.exists():
+                        folder_path.mkdir(parents=True)
 
                     new_recarray = {
                         "data": new_recarray,
@@ -1652,10 +1677,23 @@ class Mf6Splitter:
         """
         flow_package_name = package.flow_package_name.array
         packagedata = package.packagedata.array
-        perioddata = package.perioddata.data
+        if isinstance(package, modflow.ModflowGwtsft):
+            key = "reachperioddata"
+            perioddata = package.reachperioddata.data
+        elif isinstance(package, modflow.ModflowGwtlkt):
+            key = "lakeperioddata"
+            perioddata = package.lakeperioddata.data
+        elif isinstance(package, modflow.ModflowGwtuzt):
+            key = "uztperioddata"
+            perioddata = package.uztperioddata.data
+        elif isinstance(package, modflow.ModflowGwtmwt):
+            key = "mwtperioddata"
+            perioddata = package.mwtperioddata.data
+        else:
+            key = "perioddata"
+            perioddata = package.perioddata.data
 
         for mkey in self._model_dict.keys():
-            flow_package_const = flow_package_name.split(".")
             new_packagedata = self._remap_adv_tag(
                 mkey, packagedata, item, pkg_remap
             )
@@ -1669,10 +1707,9 @@ class Mf6Splitter:
                 )
                 spd[per] = new_recarray
 
-            flow_package_const[-2] += f"_{mkey :0{self._fdigits}d}"
-            new_flow_package_name = ".".join(flow_package_const)
+            new_flow_package_name = flow_package_name
             mapped_data[mkey]["packagedata"] = new_packagedata
-            mapped_data[mkey]["perioddata"] = spd
+            mapped_data[mkey][key] = spd
             mapped_data[mkey]["flow_package_name"] = new_flow_package_name
         return mapped_data
 
@@ -2013,7 +2050,7 @@ class Mf6Splitter:
             connectiondata = package.connectiondata.array
             diversions = package.diversions.array
             perioddata = package.perioddata.data
-            name = package.filename
+            name = package.name[0]
             self._sfr_remaps[name] = {}
             sfr_remaps = {}
             div_mvr_conn = {}
@@ -2040,6 +2077,10 @@ class Mf6Splitter:
                 cellids[messy_idx] = rcids
 
             layers, nodes = self._cellid_to_layer_node(cellids)
+            # adjust the messy_idx layer number
+            if layers is not None and messy_idx:
+                layers[messy_idx] = 0
+
             new_model, new_node = self._get_new_model_new_node(nodes)
 
             for mkey, model in self._model_dict.items():
@@ -2648,8 +2689,6 @@ class Mf6Splitter:
 
                     if records:
                         mapped_data[mkey]["sources"] = records
-                    else:
-                        mapped_data[mkey]["sources"] = None
 
         return mapped_data
 
@@ -3445,7 +3484,7 @@ class Mf6Splitter:
                     pass
 
             if hasattr(package, "obs"):
-                obs_map = {"cellid": self._node_map}
+                obs_map = {"cellid": dict(self._node_map)}
                 for mkey, mdict in mapped_data.items():
                     if "stress_period_data" in mdict:
                         for _, ra in mdict["stress_period_data"].items():
@@ -3521,6 +3560,15 @@ class Mf6Splitter:
                 if "stress_period_data" in data:
                     if not data["stress_period_data"]:
                         continue
+
+                if self._keep_external:
+                    shape = self._grid_info[mdl][0]
+                    if len(shape) == 2:
+                        max_cols = shape[1]
+                    else:
+                        max_cols = shape[0]
+                    self._new_sim.simulation_data.max_columns_of_data = max_cols
+
                 paks[mdl] = pak_cls(
                     self._model_dict[mdl], pname=package.name[0], **data
                 )
@@ -3844,7 +3892,7 @@ class Mf6Splitter:
             filename=filename,
         )
 
-    def split_model(self, array):
+    def split_model(self, array, sim_ws=None):
         """
         User method to split a model based on an array
 
@@ -3854,6 +3902,10 @@ class Mf6Splitter:
             integer array of new model numbers. Array must either be of
             dimension (NROW, NCOL), (NCPL), or (NNODES for unstructured grid
             models).
+        sim_ws : PathLike or str
+            optional directory path for writing the new simulation to. This parameter
+            is recommended when the model contains external files and the user would
+            like to preserve external linkages while splitting.
 
         Returns
         -------
@@ -3865,6 +3917,10 @@ class Mf6Splitter:
                 "is part of a split simulation"
             )
 
+        if sim_ws is None:
+            self._keep_external = False
+            sim_ws = self._sim.sim_path
+
         # set number formatting string for file paths
         array = np.array(array).astype(int)
         s = str(np.max(array))
@@ -3874,7 +3930,7 @@ class Mf6Splitter:
 
         if self._new_sim is None:
             self._new_sim = modflow.MFSimulation(
-                version=self._sim.version, exe_name=self._sim.exe_name, sim_ws=self._sim.sim_path
+                version=self._sim.version, exe_name=self._sim.exe_name, sim_ws=sim_ws
             )
             self._create_sln_tdis()
 
@@ -3900,6 +3956,9 @@ class Mf6Splitter:
                 **nam_options[mkey],
             )
 
+        if not self._keep_external:
+            self._model.set_all_data_internal(check_data=True)
+
         for package in self._model.packagelist:
             paks = self._remap_package(package)
 
@@ -3911,7 +3970,7 @@ class Mf6Splitter:
 
         return self._new_sim
 
-    def split_multi_model(self, array):
+    def split_multi_model(self, array, sim_ws=None):
         """
         Method to split integrated models such as GWF-GWT or GWF-GWE models.
         Note: this method will not work to split multiple connected GWF models
@@ -3922,6 +3981,10 @@ class Mf6Splitter:
             integer array of new model numbers. Array must either be of
             dimension (NROW, NCOL), (NCPL), or (NNODES for unstructured grid
             models).
+        sim_ws : PathLike or str
+            optional directory path for writing the new simulation to. This parameter
+            is recommended when the model contains external files and the user would
+            like to preserve external linkages while splitting.
 
         Returns
         -------
@@ -3988,7 +4051,7 @@ class Mf6Splitter:
         new_sim = self.split_model(array)
         for mname in model_names[1:]:
             self.switch_models(modelname=mname, remap_nodes=False)
-            new_sim = self.split_model(array)
+            new_sim = self.split_model(array, sim_ws=sim_ws)
 
         for mbase in model_names[1:]:
             for label in model_labels:

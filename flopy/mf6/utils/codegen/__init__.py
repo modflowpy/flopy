@@ -135,6 +135,10 @@ def make_all(
     # parsed haphazardly throughout the mf6 module. TODO: when
     # the legacy DFN is no longer needed at runtime, remove.
     if version == 2:
+        # import here instead of module so we don't
+        # expect optional deps at module init time
+        from boltons.dictutils import OMD
+
         assert legacydir is not None, (
             "legacydir must be provided for version 2 DFNs"
         )
@@ -144,6 +148,12 @@ def make_all(
             for dfn_name, dfn in dfns.items():
                 with open(legacydir / f"{dfn_name}.dfn") as df:
                     legacy_dfn, legacy_meta = Dfn._load_v1_flat(df, common=common)
+                    # drop fields removed as of this DFN's MF6 version
+                    legacy_dfn = OMD(
+                        (k, v)
+                        for k, v in legacy_dfn.items(multi=True)
+                        if not v.get("removed", False)
+                    )
                     dfn["legacy_dfn"] = legacy_dfn
                     dfn["legacy_meta"] = legacy_meta
 

@@ -759,6 +759,44 @@ class StructuredGrid(Grid):
 
         return self._polygons
 
+    def dis_properties(self, mf2005=False):
+        """
+        Method to get DIS package properties
+
+        Parameters
+        ----------
+        mf2005 : bool
+            flag to get legacy mf2005/mfnwt discretization package properties
+            from the modelgrid object
+
+        Returns
+        -------
+        dict : dictionary of discretization properties that can be used to build a
+            DIS package
+        """
+        dis_props = {
+            "delc": self.__delc,
+            "delr": self.__delr,
+            "top": self.top,
+            "botm": self.botm,
+            "nlay": self.nlay,
+            "nrow": self.nrow,
+            "ncol": self.ncol,
+        }
+
+        if mf2005:
+            if self.is_valid:
+                dis_props["xul"] = self.xvertices[0, 0]
+                dis_props["yul"] = self.yvertices[0, 0]
+                dis_props["rotation"] = self.angrot
+        else:
+            dis_props["xorigin"] = self.xoffset
+            dis_props["yorigin"] = self.yoffset
+            dis_props["angrot"] = self.angrot
+            dis_props["idomain"] = self.idomain
+
+        return dis_props
+
     def to_geodataframe(self):
         """
         Returns a geopandas GeoDataFrame of the model grid
@@ -2057,8 +2095,8 @@ class StructuredGrid(Grid):
         nlay, nrow, ncol = (grb_obj.nlay, grb_obj.nrow, grb_obj.ncol)
         delr, delc = grb_obj.delr, grb_obj.delc
         top, botm = grb_obj.top, grb_obj.bot
-        top.shape = (nrow, ncol)
-        botm.shape = (nlay, nrow, ncol)
+        top = top.reshape((nrow, ncol))
+        botm = botm.reshape((nlay, nrow, ncol))
         return cls(
             delc,
             delr,

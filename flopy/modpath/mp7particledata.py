@@ -1421,18 +1421,19 @@ class NodeParticleData:
         """
 
         for sd in self.subdivisiondata:
-            for nd in self.nodedata:
-                for irpt, rpt in enumerate(
-                    get_release_points(
-                        sd, grid, nn=int(nd[0]), localz=localz, global_xy=global_xy
-                    )
-                ):
-                    row = [irpt]
-                    if grid.grid_type == "structured":
-                        k, i, j = grid.get_lrc([rpt[0]])[0]
-                        row.extend([k, i, j])
-                    else:
-                        k, j = grid.get_lni([rpt[0]])[0]
-                        row.extend([(k, j)])
-                    row.extend([rpt[1], rpt[2], rpt[3]])
-                    yield tuple(row)
+            for nds in self.nodedata:
+                for nd in nds:
+                    for irpt, rpt in enumerate(
+                        get_release_points(
+                            sd, grid, nn=int(nd), localz=localz, global_xy=global_xy
+                        )
+                    ):
+                        row = [irpt]
+                        if grid.grid_type == "structured":
+                            k, i, j = grid.get_lrc([rpt[0]])[0]
+                            row.extend([k, i, j])
+                        else:
+                            k, j = grid.get_lni([rpt[0]])[0]
+                            row.extend([(k, j)])
+                        row.extend([rpt[1], rpt[2], rpt[3]])
+                        yield tuple(row)

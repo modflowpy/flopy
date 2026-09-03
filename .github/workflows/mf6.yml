@@ -22,12 +22,12 @@ jobs:
     steps:
 
     - name: Checkout flopy repo
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: flopy
 
     - name: Checkout MODFLOW 6
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         repository: MODFLOW-ORG/modflow6
         path: modflow6
@@ -39,9 +39,9 @@ jobs:
         version: 13
 
     - name: Setup pixi
-      uses: prefix-dev/setup-pixi@v0.9.4
+      uses: prefix-dev/setup-pixi@v0.10.2
       with:
-        pixi-version: v0.41.4
+        pixi-version: v0.70.1
         manifest-path: modflow6/pixi.toml
 
     - name: Install dependencies
@@ -86,7 +86,7 @@ jobs:
     - name: Upload coverage to Codecov
       if:
         github.repository_owner == 'modflowpy' && (github.event_name == 'push' || github.event_name == 'pull_request')
-      uses: codecov/codecov-action@v5
+      uses: codecov/codecov-action@v7
       with:
         files: ./modflow6/autotest/coverage.xml
 
@@ -99,18 +99,18 @@ jobs:
     steps:
 
     - name: Checkout flopy repo
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         path: flopy
 
     - name: Checkout MODFLOW 6
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         repository: MODFLOW-ORG/modflow6
         path: modflow6
 
     - name: Checkout MF6 examples
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         repository: MODFLOW-ORG/modflow6-examples
         path: modflow6-examples
@@ -122,9 +122,9 @@ jobs:
         version: 13
 
     - name: Setup pixi
-      uses: prefix-dev/setup-pixi@v0.9.4
+      uses: prefix-dev/setup-pixi@v0.10.2
       with:
-        pixi-version: v0.41.4
+        pixi-version: v0.70.1
         manifest-path: modflow6/pixi.toml
 
     - name: Install dependencies

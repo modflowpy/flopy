@@ -3669,8 +3669,9 @@ class MFChildPackages:
 
     def init_package(self, package, fname, remove_packages=True):
         if remove_packages:
-            # clear out existing packages
+            # clear out existing packages and reset file record
             self._remove_packages()
+            self._filerecord.set_data(None)
         elif fname is not None:
             self._remove_packages(fname)
         if fname is None:

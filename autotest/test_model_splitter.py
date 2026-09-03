@@ -221,7 +221,7 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 @requires_exe("mf6")
 @requires_pkg("pymetis")
 @requires_pkg("h5py")
-# @requires_pkg("sklearn")
+@requires_pkg("scikit-learn", name_map={"scikit-learn": "sklearn"})
 def test_save_load_node_mapping_structured(function_tmpdir):
     import pymetis
 
@@ -352,6 +352,39 @@ def test_save_load_node_mapping_unstructured(function_tmpdir):
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
+@requires_pkg("h5py")
+def test_save_node_mapping_with_boundnames(function_tmpdir):
+    # regression test for https://github.com/modflowpy/flopy/issues/2735
+    # boundnames in stress packages were being inserted into _node_map,
+    # causing save_node_mapping to fail with ValueError on int() conversion
+    sim = flopy.mf6.MFSimulation(sim_name="test", sim_ws=str(function_tmpdir))
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="test")
+    flopy.mf6.ModflowGwfdis(gwf, nlay=1, nrow=10, ncol=10, top=10, botm=0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10)
+    flopy.mf6.ModflowGwfnpf(gwf)
+    flopy.mf6.ModflowGwfwel(
+        gwf,
+        stress_period_data={0: [((0, 2, 2), -1.0, "my_well")]},
+        boundnames=True,
+    )
+
+    array = np.zeros((10, 10), dtype=int)
+    array[:, 5:] = 1
+    mfsplit = Mf6Splitter(sim)
+    mfsplit.split_model(array)
+
+    non_int_keys = [
+        k for k in mfsplit._node_map if not isinstance(k, (int, np.integer))
+    ]
+    assert not non_int_keys, f"boundnames leaked into _node_map: {non_int_keys}"
+
+    hdf_file = function_tmpdir / "node_map.hdf5"
+    mfsplit.save_node_mapping(hdf_file)
+    assert hdf_file.exists()
+
+
 def test_control_records(function_tmpdir):
     nrow = 10
     ncol = 10
@@ -437,7 +470,7 @@ def test_control_records(function_tmpdir):
     split_ws.mkdir()
     with set_dir(split_ws):
         mfsplit = flopy.mf6.utils.Mf6Splitter(sim)
-        new_sim = mfsplit.split_model(arr)
+        new_sim = mfsplit.split_model(arr, split_ws)
 
     ml1 = new_sim.get_model("model_1")
 
@@ -576,6 +609,53 @@ def test_empty_packages(function_tmpdir):
     assert mvr_status0 and mvr_status1, (
         "Mover status being overwritten in options splitting"
     )
+
+
+def test_empty_ssm(function_tmpdir):
+    nlay, nrow, ncol = 1, 1, 10
+    gwfname = "gwf"
+    gwtname = "gwt"
+
+    sim = flopy.mf6.MFSimulation(sim_ws=function_tmpdir)
+    flopy.mf6.ModflowIms(sim)
+    flopy.mf6.ModflowTdis(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname=gwfname)
+    flopy.mf6.ModflowGwfdis(gwf, nlay=nlay, nrow=nrow, ncol=ncol)
+    flopy.mf6.ModflowGwfnpf(gwf)
+    flopy.mf6.ModflowGwfic(gwf, strt=1.0)
+    flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data=[((0, 0, 0), 1.0), ((0, 0, ncol - 1), 0.0)]
+    )
+    flopy.mf6.ModflowGwfwel(
+        gwf,
+        auxiliary=["CONCENTRATION"],
+        stress_period_data=[((0, 0, 2), -1.0, 0.0)],
+    )
+
+    gwt = flopy.mf6.ModflowGwt(sim, modelname=gwtname)
+    flopy.mf6.ModflowGwtdis(gwt, nlay=nlay, nrow=nrow, ncol=ncol)
+    flopy.mf6.ModflowGwtic(gwt, strt=0.0)
+    flopy.mf6.ModflowGwtmst(gwt, porosity=0.3)
+    flopy.mf6.ModflowGwtssm(gwt, sources=[("wel", "AUX", "CONCENTRATION")])
+
+    flopy.mf6.ModflowGwfgwt(
+        sim, exgtype="GWF6-GWT6", exgmnamea=gwfname, exgmnameb=gwtname
+    )
+
+    # Split: partition 0 = cols 0-4 (contains WEL at col 2)
+    #        partition 1 = cols 5-9 (no WEL)
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[0, 5:] = 1
+
+    mfs = Mf6Splitter(sim)
+    new_sim = mfs.split_multi_model(array)
+
+    gwt0 = new_sim.get_model(f"{gwtname}_0")
+    gwt1 = new_sim.get_model(f"{gwtname}_1")
+
+    assert gwt0.get_package("ssm") is not None
+    assert gwt1.get_package("ssm") is None
 
 
 @requires_exe("mf6")
@@ -951,7 +1031,7 @@ def test_unstructured_complex_disu(function_tmpdir):
 
 
 @requires_exe("mf6")
-@requires_pkg("pymetis", "scipy")
+@requires_pkg("pymetis", "scipy", "shapely")
 def test_multi_model(function_tmpdir):
     from scipy.spatial import KDTree
 

@@ -44,7 +44,7 @@ class ModflowUtltvs(MFPackage):
                 line of information that is parsed into a property name keyword and values.
                 property name keywords that can be used to start the tvssetting string include:
                 ss and sy.
-                * ss : double precision
+                * ss : string
                             is the new value to be assigned as the cell's specific storage (or storage
                             coefficient if the storagecoefficient sto package option is specified) from the
                             start of the specified stress period, as per ss in the sto package.  specific
@@ -52,7 +52,7 @@ class ModflowUtltvs(MFPackage):
                             includes a ts6 entry (see the 'time-variable input' section), values can be
                             obtained from a time series by entering the time-series name in place of a
                             numeric value.
-                * sy : double precision
+                * sy : string
                             is the new value to be assigned as the cell's specific yield from the start of
                             the specified stress period, as per sy in the sto package.  specific yield
                             values must be greater than or equal to 0.  if the options block includes a ts6
@@ -80,6 +80,7 @@ class ModflowUtltvs(MFPackage):
         [
             "block options",
             "name disable_storage_change_integration",
+            "mf6internal disable_sc_int",
             "type keyword",
             "reader urword",
             "optional true",
@@ -173,22 +174,24 @@ class ModflowUtltvs(MFPackage):
         [
             "block period",
             "name ss",
-            "type double precision",
+            "type string",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal ss_in",
         ],
         [
             "block period",
             "name sy",
-            "type double precision",
+            "type string",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal sy_in",
         ],
     ]
 

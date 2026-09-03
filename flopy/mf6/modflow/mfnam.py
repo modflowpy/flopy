@@ -60,7 +60,7 @@ class ModflowNam(MFPackage):
                 is the user-assigned name of the model.  The model name cannot exceed 16
                 characters and must not have blanks within the name.  The model name is case
                 insensitive; any lowercase letters are converted and stored as upper case
-                letters.
+                letters.  Model names must be unique.
 
     exchanges : [(exgtype, exgfile, exgmnamea, exgmnameb)]
         is the list of exchange types, exchange files, and model names.

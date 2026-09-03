@@ -39,7 +39,7 @@ jobs:
           echo "ref=$ref" >> $GITHUB_OUTPUT
 
       - name: Checkout flopy repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ steps.set_ref.outputs.ref }}
 
@@ -68,13 +68,13 @@ jobs:
 
     steps:
       - name: Checkout flopy repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ needs.set_options.outputs.ref }}
           path: flopy
 
       - name: Checkout MODFLOW 6
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: MODFLOW-ORG/modflow6
           path: modflow6
@@ -86,31 +86,25 @@ jobs:
           echo $GITHUB_REF
           echo $GITHUB_EVENT_NAME
 
-      - name: Setup Micromamba
-        uses: mamba-org/setup-micromamba@v1
+      - name: Setup pixi
+        uses: prefix-dev/setup-pixi@v0.10.2
         with:
-          environment-file: flopy/etc/environment.yml
-          cache-environment: true
-          cache-downloads: true
-          create-args: >-
-            python=3.12
-          init-shell: >-
-            bash
-            powershell
+          pixi-version: v0.70.1
+          manifest-path: modflow6/pixi.toml
 
       - name: Install Python dependencies
-        working-directory: flopy
+        working-directory: modflow6
         run: |
-          pip install --upgrade pip
-          pip install .
-          pip install meson ninja
+          pixi run -e rtd install
+          pixi run -e rtd pip install "../flopy[optional]"
 
       - name: Workaround OpenGL issue on Linux
         if: runner.os == 'Linux'
+        working-directory: modflow6
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          pip uninstall -y vtk
-          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+          pixi run -e rtd pip uninstall vtk
+          pixi run -e rtd pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
 
       - name: Install fonts on Linux
         if: runner.os == 'Linux'
@@ -137,19 +131,19 @@ jobs:
           version: 13
 
       - name: Set up headless display
-        uses: pyvista/setup-headless-display-action@v4
+        uses: pyvista/setup-headless-display-action@v5
 
       - name: Build MODFLOW 6
         working-directory: modflow6
         run: |
-          meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
-          meson install -C builddir
-          meson test --verbose --no-rebuild -C builddir
+          pixi run -e rtd meson setup builddir --buildtype=debugoptimized --prefix=$(pwd) --libdir=bin
+          pixi run -e rtd meson install -C builddir
+          pixi run -e rtd meson test --verbose --no-rebuild -C builddir
           echo "$(pwd)/bin" >> $GITHUB_PATH
 
       - name: Run tutorial and example notebooks
         working-directory: flopy/autotest
-        run: pytest -v -n auto test_example_notebooks.py
+        run: pixi run --manifest-path=../../modflow6/pixi.toml -e rtd pytest -v -n auto test_example_notebooks.py
 
       - name: Upload notebooks artifact for ReadtheDocs
         if: |
@@ -159,7 +153,7 @@ jobs:
             github.event_name == 'push' ||
             github.event_name == 'workflow_dispatch'
           )
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: notebooks-for-${{ needs.set_options.outputs.sha }}
           path: flopy/.docs/Notebooks/*.ipynb

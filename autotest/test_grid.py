@@ -2,6 +2,7 @@ import os
 import re
 import warnings
 from contextlib import nullcontext
+from platform import system
 from warnings import warn
 
 import matplotlib
@@ -11,12 +12,17 @@ from flaky import flaky
 from matplotlib import pyplot as plt
 from modflow_devtools.markers import requires_exe, requires_pkg
 from modflow_devtools.misc import has_pkg
-from scipy.spatial import Delaunay
 
 from autotest.test_dis_cases import case_dis, case_disv
 from autotest.test_grid_cases import GridCases
 from flopy.discretization import StructuredGrid, UnstructuredGrid, VertexGrid
-from flopy.mf6 import MFSimulation
+from flopy.mf6 import (
+    MFSimulation,
+    ModflowGwf,
+    ModflowGwfdis,
+    ModflowGwfdisu,
+    ModflowGwfdisv,
+)
 from flopy.modflow import Modflow, ModflowDis
 from flopy.utils import import_optional_dependency
 from flopy.utils.crs import get_authority_crs
@@ -222,6 +228,7 @@ def test_structured_grid_get_cell_vertices():
     assert v2 == v5, "Named i,j should match"
 
 
+@requires_pkg("shapely")
 def test_vertex_grid_get_cell_vertices():
     """Test VertexGrid.get_cell_vertices() with various input forms"""
     disv_props = get_disv_kwargs(2, 10, 10, 10.0, 10.0, 100.0, [50.0, 0.0])
@@ -249,6 +256,7 @@ def test_vertex_grid_get_cell_vertices():
     assert v4 == v5, "Node and (layer, cell2d) should match"
 
 
+@requires_pkg("shapely")
 def test_unstructured_grid_get_cell_vertices():
     """Test UnstructuredGrid.get_cell_vertices() with various input forms"""
     disu_props = get_disu_kwargs(
@@ -547,8 +555,11 @@ def test_structured_grid_intersect_array(simple_structured_grid):
     assert np.isnan(rows_mixed[1])  # Second point out of bounds
 
 
+@requires_pkg("scipy")
 def test_vertex_grid_intersect_array():
     """Test VertexGrid.intersect() with array inputs."""
+    from scipy.spatial import Delaunay
+
     # Create a simple vertex grid using Delaunay triangulation
     np.random.seed(42)
     n_points = 50
@@ -588,8 +599,11 @@ def test_vertex_grid_intersect_array():
     assert np.isnan(results_mixed[1])  # Second point out of bounds
 
 
+@requires_pkg("scipy")
 def test_unstructured_grid_intersect_array():
     """Test UnstructuredGrid.intersect() with array inputs."""
+    from scipy.spatial import Delaunay
+
     # Create a simple unstructured grid using Delaunay triangulation
     np.random.seed(42)
     n_points = 50
@@ -1476,9 +1490,7 @@ def test_voronoi_vertex_grid(function_tmpdir):
         GridCases.voronoi_nested_circles,
         GridCases.voronoi_polygons,
         GridCases.voronoi_many_polygons,
-    ]
-    if (has_pkg("shapely", True) and has_pkg("scipy", True))
-    else [],
+    ],
     ids=[
         "voronoi_polygon",
         "voronoi_rectangle",
@@ -1492,17 +1504,9 @@ def test_voronoi_grid(request, function_tmpdir, grid_case):
     name = request.node.name.replace("/", "_").replace("\\", "_").replace(":", "_")
     ncpl, vor, gridprops, grid = grid_case()
 
-    # TODO: debug off-by-3 issue
-    #  could be a rounding error as described here:
-    #  https://github.com/modflowpy/flopy/issues/1492#issuecomment-1210596349
-
-    # ensure proper number of cells
-    almost_right = ncpl == 538 and gridprops["ncpl"] == 535
-    if almost_right:
-        warn("off-by-3")
-
     # ensure that all cells have 3 or more points
     invalid_cells = [i for i, ivts in enumerate(vor.iverts) if len(ivts) < 3]
+    assert len(invalid_cells) == 0
 
     # make a plot including invalid cells
     fig = plt.figure(figsize=(10, 10))
@@ -1512,10 +1516,12 @@ def test_voronoi_grid(request, function_tmpdir, grid_case):
     ax.plot(grid.xcellcenters[invalid_cells], grid.ycellcenters[invalid_cells], "ro")
     plt.savefig(function_tmpdir / f"{name}.png")
 
-    assert ncpl == gridprops["ncpl"] or almost_right
-    assert len(invalid_cells) == 0, (
-        f"The following cells do not have 3 or more vertices.\n{invalid_cells}"
-    )
+    # ensure proper number of cells. the grid may be slightly different
+    # on different platforms depending which compiler triangle is built
+    # with, so allow small variations.
+    tol = 10
+    assert abs(ncpl - gridprops["ncpl"]) <= tol
+    assert len(invalid_cells) == 0
 
 
 @pytest.fixture
@@ -1903,3 +1909,258 @@ def test_unstructured_grid_get_node():
 
     with pytest.raises(IndexError, match=r"Node .* out of range"):
         ug.get_node(200)
+
+
+@pytest.mark.mf6
+def test_structured_mf6_gridprops(example_data_path):
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6-freyberg")
+    gwf = sim.get_model()
+    dis = gwf.dis
+    modelgrid = gwf.modelgrid
+
+    new_sim = MFSimulation()
+    new_gwf = ModflowGwf(new_sim)
+    new_dis = ModflowGwfdis(new_gwf, **modelgrid.dis_properties())
+    attrs = ("delc", "delr", "top", "botm", "idomain", "xorigin", "yorigin", "angrot")
+    for attr in attrs:
+        v0 = getattr(dis, attr).array
+        v1 = getattr(new_dis, attr).array
+        if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
+            v0 = 0
+        np.testing.assert_allclose(
+            v0, v1, err_msg=f"{attr} not consistent with valid array data"
+        )
+
+
+def test_structured_mf2005_gridprops(example_data_path):
+    mf = Modflow.load("freyberg.nam", model_ws=example_data_path / "freyberg")
+    dis = mf.dis
+    modelgrid = mf.modelgrid
+    modelgrid.set_coord_info(0, 0, 0)
+
+    new_model = Modflow()
+    new_dis = ModflowDis(new_model, **modelgrid.dis_properties(mf2005=True))
+    attrs = ("delc", "delr", "top", "botm", "nlay", "nrow", "ncol")
+    for attr in attrs:
+        v0 = getattr(dis, attr)
+        v1 = getattr(new_dis, attr)
+        if hasattr(v0, "array"):
+            v0 = v0.array
+            v1 = v1.array
+
+        np.testing.assert_allclose(
+            v0, v1, err_msg=f"{attr} not consistent with valid array data"
+        )
+
+
+@pytest.mark.mf6
+def test_vertex_mf6_gridprops(example_data_path):
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test003_gwftri_disv")
+    gwf = sim.get_model()
+    disv = gwf.disv
+    modelgrid = gwf.modelgrid
+
+    new_sim = MFSimulation()
+    new_gwf = ModflowGwf(new_sim)
+    new_disv = ModflowGwfdisv(new_gwf, **modelgrid.disv_properties())
+
+    attrs = (
+        "vertices",
+        "top",
+        "botm",
+        "idomain",
+        "xorigin",
+        "yorigin",
+        "angrot",
+        "cell2d",
+    )
+    for attr in attrs:
+        v0 = getattr(disv, attr).array
+        v1 = getattr(new_disv, attr).array
+        if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
+            v0 = 0
+
+        if attr in ("cell2d", "vertices"):
+            for col in v0.dtype.names:
+                np.testing.assert_allclose(
+                    v0[col],
+                    v1[col],
+                    err_msg=f"{attr} not consistent with valid array data",
+                )
+        else:
+            np.testing.assert_allclose(
+                v0, v1, err_msg=f"{attr} not consistent with valid array data"
+            )
+
+
+@pytest.mark.mf6
+def test_unstructured_mf6_gridprops(example_data_path):
+    sim = MFSimulation.load(sim_ws=example_data_path / "mf6" / "test006_gwf3")
+    gwf = sim.get_model()
+    disu = gwf.disu
+    modelgrid = gwf.modelgrid
+
+    new_sim = MFSimulation()
+    new_gwf = ModflowGwf(new_sim)
+    dis_props = modelgrid.disu_properties()
+    dis_props["area"] = disu.area.array
+    dis_props["cl12"] = disu.cl12.array
+    new_disu = ModflowGwfdisu(new_gwf, **dis_props)
+
+    attrs = ("top", "bot", "iac", "ja", "nodes", "ihc", "xorigin", "yorigin", "angrot")
+    for attr in attrs:
+        v0 = getattr(disu, attr).array
+        v1 = getattr(new_disu, attr).array
+        if attr in ("xorigin", "yorigin", "angrot") and v0 is None:
+            v0 = 0
+
+        np.testing.assert_allclose(
+            v0, v1, err_msg=f"{attr} not consistent with valid array data"
+        )
+
+
+def test_unstructured_mf6_gridprops2():
+    nnodes = 2
+    top = np.ones((nnodes,))
+    botm = np.zeros((nnodes,))
+    area = np.full((nnodes,), 10)
+    idomain = np.ones((nnodes,), dtype=int)
+    iac = [2, 2]
+    ja = [1, 2, 2, 1]
+    ihc = [0, 1, 0, 1]
+    cl12 = [
+        0,
+        10,
+        0,
+        10,
+    ]
+    hwva = [
+        0,
+        100,
+        0,
+        100,
+    ]
+
+    vertices = [
+        [0, 0, 0],
+        [1, 0, 10],
+        [2, 10, 10],
+        [3, 10, 0],
+        [4, 10, 20],
+        [5, 20, 20],
+    ]
+
+    cell2d = [[0, 5, 5, 5, 0, 1, 2, 3, 0], [1, 15, 5, 5, 3, 2, 4, 5, 3]]
+    xoff = 100
+    yoff = 100
+    angrot = 10
+
+    sim = MFSimulation()
+    gwf = ModflowGwf(sim, modelname="usg_test2")
+    disu = ModflowGwfdisu(
+        gwf,
+        xorigin=xoff,
+        yorigin=yoff,
+        angrot=angrot,
+        nodes=nnodes,
+        nja=len(ja),
+        nvert=len(vertices),
+        top=top,
+        bot=botm,
+        area=area,
+        idomain=idomain,
+        iac=iac,
+        ja=ja,
+        ihc=ihc,
+        cl12=cl12,
+        hwva=hwva,
+        vertices=vertices,
+        cell2d=cell2d,
+    )
+    modelgrid = gwf.modelgrid
+
+    sim2 = MFSimulation()
+    gwf2 = ModflowGwf(sim2)
+    disu2 = ModflowGwfdisu(gwf2, cl12=cl12, hwva=hwva, **modelgrid.disu_properties())
+
+    attrs = (
+        "top",
+        "bot",
+        "iac",
+        "ja",
+        "nodes",
+        "cl12",
+        "hwva",
+        "ihc",
+        "cell2d",
+        "vertices",
+        "xorigin",
+        "yorigin",
+        "angrot",
+    )
+    for attr in attrs:
+        v0 = getattr(disu, attr).array
+        v1 = getattr(disu2, attr).array
+        if attr in ("cell2d", "vertices"):
+            for col in v0.dtype.names:
+                np.testing.assert_allclose(
+                    v0[col],
+                    v1[col],
+                    err_msg=f"{attr} column: {col} not "
+                    f"consistent with valid array data",
+                )
+        else:
+            np.testing.assert_allclose(
+                v0, v1, err_msg=f"{attr} not consistent with valid array data"
+            )
+
+
+def test_area():
+    import random
+
+    nlay = 1
+    nrow = 1
+    ncol = 1
+    dy = random.random() * 10
+    dx = random.random() * 10
+    valid_area = dx * dy
+    delc = np.full((nrow,), dy)
+    delr = np.full((ncol,), dx)
+    top = np.ones((nrow, ncol))
+    botm = np.zeros((nlay, nrow, ncol), dtype=int)
+    sgrid = StructuredGrid(delc=delc, delr=delr, nlay=1, top=top, botm=botm)
+    cell_area = sgrid.area
+    np.testing.assert_allclose(
+        [
+            valid_area,
+        ],
+        cell_area,
+        err_msg="shoelace algorithm not returning valid area within tolerance",
+    )
+
+    # triangle test
+    x1 = random.random() * 10
+    x2 = x1 / 2
+    y2 = random.random() * 10
+    verts = np.array([[0, 0, 0], [1, x1, 0], [2, x2, y2]])
+    # a = 0.5 * b * h
+    valid_area = 0.5 * x1 * y2
+
+    xc = np.mean(verts.T[1])
+    yc = np.mean(verts.T[2])
+    cell2d = [
+        (0, xc, yc, 4, 0, 1, 2, 0),
+    ]
+    nlay = 1
+    top = np.ones((len(cell2d),))
+    botm = np.zeros((nlay, len(cell2d)))
+
+    vgrid = VertexGrid(vertices=verts, cell2d=cell2d, nlay=nlay, top=top, botm=botm)
+    cell_area = vgrid.area
+    np.testing.assert_allclose(
+        [
+            valid_area,
+        ],
+        cell_area,
+        err_msg="shoelace algorithm not returning valid area within tolerance",
+    )

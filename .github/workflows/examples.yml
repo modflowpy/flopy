@@ -12,38 +12,30 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.10", "3.11", "3.12" ]
+        python-version: [ "3.11", "3.12", "3.13", "3.14" ]
     defaults:
       run:
-        shell: bash -l {0}
+        shell: bash
     timeout-minutes: 90
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
-      - name: Setup Micromamba
-        uses: mamba-org/setup-micromamba@v2
+      - name: Setup Python ${{ matrix.python-version }}
+        uses: astral-sh/setup-uv@v7
         with:
-          environment-file: etc/environment.yml
-          cache-environment: true
-          cache-downloads: true
-          create-args: >-
-            python=${{ matrix.python-version }}
-          init-shell: >-
-            bash
-            powershell
+          python-version: ${{ matrix.python-version }}
+          cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install FloPy
-        run: |
-          pip install .
-          pip install ".[codegen]"
+        run: uv sync --all-extras
 
       - name: OpenGL workaround on Linux
         if: runner.os == 'Linux'
         run: |
           # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          pip uninstall -y vtk
-          pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+          uv pip uninstall vtk
+          uv pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
 
       - name: Install OpenGL on Windows
         if: runner.os == 'Windows'
@@ -71,16 +63,16 @@ jobs:
           subset: triangle
 
       - name: Update FloPy packages
-        run: python -m flopy.mf6.utils.generate_classes --ref develop
+        run: uv run python -m flopy.mf6.utils.generate_classes --ref develop
 
       - name: Run example tests
         working-directory: autotest
-        run: pytest -v test_example_notebooks.py -n=auto -s --durations=0 --keep-failed=.failed
+        run: uv run pytest -v test_example_notebooks.py -n=auto -s --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: failed-example-${{ matrix.os }}-${{ matrix.python-version }}

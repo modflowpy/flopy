@@ -54,6 +54,13 @@ class ModflowGwtdis(MFPackage):
         modflow 6 simulation input.  this option only has an effect when an output
         model netcdf file is configured and the simulation is run in validate mode,
         otherwise it is ignored.
+    crs : [string]
+        is a real-world coordinate reference system (crs) for the model, for example,
+        an epsg integer code (e.g. 26915), authority string (i.e. epsg:26915), or open
+        geospatial consortium well-known text (wkt) specification. limited to 5000
+        characters. the entry for crs does not affect the model simulation, but it is
+        written to the binary grid file so that postprocessors can locate the grid in
+        space.
     packagedata : record ncf6 filein ncf6_filename
         Contains data for the ncf package. Data can be passed as a dictionary to the
         ncf package with variable names as keys and package data as values. Data for
@@ -95,6 +102,7 @@ class ModflowGwtdis(MFPackage):
     """
 
     grb_filerecord = ListTemplateGenerator(("gwt6", "dis", "options", "grb_filerecord"))
+    crs = ArrayTemplateGenerator(("gwt6", "dis", "options", "crs"))
     ncf_filerecord = ListTemplateGenerator(("gwt6", "dis", "options", "ncf_filerecord"))
     delr = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "delr"))
     delc = ArrayTemplateGenerator(("gwt6", "dis", "griddata", "delc"))
@@ -202,7 +210,6 @@ class ModflowGwtdis(MFPackage):
             "preserve_case true",
             "reader urword",
             "optional true",
-            "developmode true",
         ],
         [
             "block options",
@@ -330,6 +337,7 @@ class ModflowGwtdis(MFPackage):
         angrot=None,
         export_array_ascii=None,
         export_array_netcdf=None,
+        crs=None,
         packagedata=None,
         nlay=1,
         nrow=2,
@@ -365,6 +373,7 @@ class ModflowGwtdis(MFPackage):
         self.export_array_netcdf = self.build_mfdata(
             "export_array_netcdf", export_array_netcdf
         )
+        self.crs = self.build_mfdata("crs", crs)
         self._ncf_filerecord = self.build_mfdata("ncf_filerecord", None)
         self._ncf_package = self.build_child_package(
             "ncf", packagedata, "packagedata", self._ncf_filerecord

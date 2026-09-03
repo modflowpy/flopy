@@ -350,6 +350,7 @@ class ModflowGwfnpf(MFPackage):
             "in_record true",
             "reader urword",
             "optional false",
+            "tagged true",
         ],
         [
             "block options",
@@ -358,6 +359,7 @@ class ModflowGwfnpf(MFPackage):
             "in_record true",
             "reader urword",
             "optional false",
+            "tagged true",
         ],
         [
             "block options",
@@ -366,6 +368,7 @@ class ModflowGwfnpf(MFPackage):
             "in_record true",
             "reader urword",
             "optional false",
+            "tagged true",
         ],
         [
             "block options",

@@ -89,7 +89,6 @@ modelpth = Path(tempdir.name)
 # ### Load and Run an Existing MODFLOW-2005 Model
 # A model called the "Freyberg Model" is located in the loadpth folder.  In the following code block, we load that model, then change into a new workspace (modelpth) where we recreate and run the model.  For this to work properly, the MODFLOW-2005 executable (mf2005) must be in the path.  We verify that it worked correctly by checking for the presence of freyberg.hds and freyberg.cbc.
 
-# +
 ml = flopy.modflow.Modflow.load(
     "freyberg.nam", model_ws=data_path / sim_name, exe_name=exe_name_2005, version=v2005
 )
@@ -495,7 +494,6 @@ for fname, fhash in file_names.items():
         known_hash=fhash,
     )
 
-# +
 # load the Freyberg model into mf6-flopy and run the simulation
 sim = flopy.mf6.MFSimulation.load(
     sim_name="mfsim.nam",
@@ -685,11 +683,11 @@ def run_vertex_grid_example(ws):
         pname="ims",
         print_option="SUMMARY",
         complexity="SIMPLE",
-        outer_hclose=1.0e-5,
+        outer_dvclose=1.0e-5,
         outer_maximum=100,
         under_relaxation="NONE",
         inner_maximum=100,
-        inner_hclose=1.0e-6,
+        inner_dvclose=1.0e-6,
         rcloserecord=0.1,
         linear_acceleration="BICGSTAB",
         scaling_method="NONE",

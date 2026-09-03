@@ -21,13 +21,16 @@ class ModflowPrtoc(MFPackage):
         processing purposes only.
     budget_filerecord : (budgetfile)
         * budgetfile : string
-                name of the output file to write budget information.
+                name of the output file to write budget information. Data are written to this
+                file only for time steps in which SAVE BUDGET is specified in a PERIOD block.
+                If SAVE BUDGET is specified in a PERIOD block and this file is not specified,
+                MODFLOW 6 will terminate with an error.
 
     budgetcsv_filerecord : (budgetcsvfile)
         * budgetcsvfile : string
                 name of the comma-separated value (CSV) output file to write budget summary
-                information.  A budget summary record will be written to this file for each
-                time step of the simulation.
+                information. If specified, a budget summary record will be written to this file
+                for every time step of the simulation.
 
     track_filerecord : (trackfile)
         * trackfile : string
@@ -64,18 +67,17 @@ class ModflowPrtoc(MFPackage):
     track_dropped : keyword
         keyword to indicate that particle tracking output is to be written when a
         particle is dropped to the water table via dry_tracking_method drop.
-    track_timesrecord : (track_times, times)
-        * track_times : keyword
-                keyword indicating tracking times will follow
-        * times : [double precision]
-                times to track, relative to the beginning of the simulation.
-
-    track_timesfilerecord : (timesfile)
-        * timesfile : string
-                name of the tracking times file
-
     dev_dump_event_trace : keyword
         print a verbose particle tracking event trace to standard output
+    scratch_buffer : keyword
+        keyword to stage track events in a temporary (scratch) file instead of an in-
+        memory buffer. particle tracking results calculated during a time step are
+        buffered, and output is deferred, until successful completion of the time step.
+        by default, results are buffered in memory. however, for simulations in which a
+        very large number of track events is generated during a time step, memory
+        limits can be exceeded. in such cases, the scratch_buffer option can be invoked
+        to buffer results in a scratch file until successful completion of the time
+        step. buffering in a scratch file is typically slower than buffering in memory.
     ntracktimes : integer
         is the number of user-specified particle tracking times in the tracktimes
         block.
@@ -121,12 +123,6 @@ class ModflowPrtoc(MFPackage):
     )
     trackcsv_filerecord = ListTemplateGenerator(
         ("prt6", "oc", "options", "trackcsv_filerecord")
-    )
-    track_timesrecord = ListTemplateGenerator(
-        ("prt6", "oc", "options", "track_timesrecord")
-    )
-    track_timesfilerecord = ListTemplateGenerator(
-        ("prt6", "oc", "options", "track_timesfilerecord")
     )
     tracktimes = ListTemplateGenerator(("prt6", "oc", "tracktimes", "tracktimes"))
     saverecord = ListTemplateGenerator(("prt6", "oc", "period", "saverecord"))
@@ -329,76 +325,18 @@ class ModflowPrtoc(MFPackage):
         ],
         [
             "block options",
-            "name track_timesrecord",
-            "type record track_times times",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal ttimesrec",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name track_times",
-            "type keyword",
-            "reader urword",
-            "in_record true",
-            "tagged true",
-            "shape",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name times",
-            "type double precision",
-            "shape (any1d)",
-            "reader urword",
-            "in_record true",
-            "tagged false",
-            "repeating true",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name track_timesfilerecord",
-            "type record track_timesfile timesfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "mf6internal ttimesfilerec",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name track_timesfile",
-            "type keyword",
-            "reader urword",
-            "in_record true",
-            "tagged true",
-            "shape",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
-            "name timesfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-            "removed 6.6.0",
-        ],
-        [
-            "block options",
             "name dev_dump_event_trace",
             "type keyword",
             "reader urword",
             "optional true",
             "mf6internal dev_dump_evtrace",
+        ],
+        [
+            "block options",
+            "name scratch_buffer",
+            "type keyword",
+            "reader urword",
+            "optional true",
         ],
         [
             "block dimensions",
@@ -554,9 +492,8 @@ class ModflowPrtoc(MFPackage):
         track_weaksink=None,
         track_usertime=None,
         track_dropped=None,
-        track_timesrecord=None,
-        track_timesfilerecord=None,
         dev_dump_event_trace=None,
+        scratch_buffer=None,
         ntracktimes=None,
         tracktimes=None,
         saverecord=None,
@@ -595,15 +532,10 @@ class ModflowPrtoc(MFPackage):
         self.track_weaksink = self.build_mfdata("track_weaksink", track_weaksink)
         self.track_usertime = self.build_mfdata("track_usertime", track_usertime)
         self.track_dropped = self.build_mfdata("track_dropped", track_dropped)
-        self.track_timesrecord = self.build_mfdata(
-            "track_timesrecord", track_timesrecord
-        )
-        self.track_timesfilerecord = self.build_mfdata(
-            "track_timesfilerecord", track_timesfilerecord
-        )
         self.dev_dump_event_trace = self.build_mfdata(
             "dev_dump_event_trace", dev_dump_event_trace
         )
+        self.scratch_buffer = self.build_mfdata("scratch_buffer", scratch_buffer)
         self.ntracktimes = self.build_mfdata("ntracktimes", ntracktimes)
         self.tracktimes = self.build_mfdata("tracktimes", tracktimes)
         self.saverecord = self.build_mfdata("saverecord", saverecord)

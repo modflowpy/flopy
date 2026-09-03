@@ -1597,6 +1597,26 @@ class MFSimulationBase:
         for model in self._models.values():
             model.rename_all_packages(name)
 
+    def _auto_set_max_columns(self, models=None):
+        """Set max_columns_of_data to ncol of the first structured DIS model found,
+        unless the value has already been explicitly set by the user.
+
+        Parameters
+        ----------
+        models : iterable, optional
+            Models to search. Defaults to all registered models. Pass an
+            explicit list when a model is not yet registered (e.g. mid-load).
+        """
+        sim_data = self.simulation_data
+        if sim_data._max_columns_set_by == "user":
+            return
+        for model in (models if models is not None else self._models.values()):
+            dis = model.get_package("dis", type_only=True)
+            if dis is not None and hasattr(dis, "ncol"):
+                sim_data._max_columns_of_data = dis.ncol.get_data()
+                sim_data._max_columns_set_by = "auto"
+                return
+
     def set_all_data_external(
         self,
         check_data=True,
@@ -1640,6 +1660,8 @@ class MFSimulationBase:
                 (e.g., max_columns_of_data). If False, existing external files
                 will not be rewritten. Default is False.
         """
+
+        self._auto_set_max_columns()
 
         # copy any files whose paths have changed
         self.simulation_data.mfpath.copy_files()
@@ -1710,14 +1732,7 @@ class MFSimulationBase:
                 Writes out the simulation in silent mode (verbosity_level = 0)
 
         """
-        sim_data = self.simulation_data
-        if sim_data._max_columns_set_by != 'user':
-            # search for dis packages
-            for model in self._models.values():
-                dis = model.get_package("dis", type_only=True)
-                if dis is not None and hasattr(dis, "ncol"):
-                    sim_data._max_columns_of_data = dis.ncol.get_data()
-                    sim_data._max_columns_set_by = 'auto'
+        self._auto_set_max_columns()
 
         saved_verb_lvl = self.simulation_data.verbosity_level
         if silent:

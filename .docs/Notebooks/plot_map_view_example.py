@@ -24,7 +24,6 @@
 #
 
 
-# +
 import os
 import sys
 from pathlib import Path
@@ -92,7 +91,6 @@ for fname, fhash in file_names.items():
         known_hash=fhash,
     )
 
-# +
 ml = flopy.modflow.Modflow.load(
     "freyberg.nam", model_ws=data_path / sim_name, exe_name=exe_name_2005, version=v2005
 )
@@ -114,7 +112,6 @@ for f in files:
 #
 # The MODFLOW-2005 model created in the previous code block will be used to create a endpoint capture zone and pathline analysis for the pumping wells in the model.
 
-# +
 mp = flopy.modpath.Modpath6(
     "freybergmp", exe_name=exe_mp, modflowmodel=ml, model_ws=modelpth
 )
@@ -863,11 +860,11 @@ def run_vertex_grid_example(ws):
         pname="ims",
         print_option="SUMMARY",
         complexity="SIMPLE",
-        outer_hclose=1.0e-5,
+        outer_dvclose=1.0e-5,
         outer_maximum=100,
         under_relaxation="NONE",
         inner_maximum=100,
-        inner_hclose=1.0e-6,
+        inner_dvclose=1.0e-6,
         rcloserecord=0.1,
         linear_acceleration="BICGSTAB",
         scaling_method="NONE",

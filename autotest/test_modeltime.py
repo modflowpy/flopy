@@ -3,6 +3,7 @@ import datetime
 import numpy as np
 import pandas as pd
 import pytest
+from modflow_devtools.markers import requires_pkg
 
 import flopy
 from flopy.discretization.modeltime import ModelTime
@@ -270,7 +271,7 @@ def test_mf2005_modeltime():
         raise AssertionError("start_datetime improperly stored")
 
     result = modeltime.intersect("3/06/2024 23:59:59")
-    if result != (2, 0):
+    if result != (2, 1):
         raise AssertionError("ModelTime intersect not working correctly")
 
 
@@ -317,7 +318,7 @@ def test_mf6_modeltime():
         raise AssertionError("start_datetime improperly stored")
 
     result = modeltime.intersect("3/06/2024 23:59:59")
-    if result != (2, 0):
+    if result != (2, 1):
         raise AssertionError("ModelTime intersect not working correctly")
 
 
@@ -360,6 +361,7 @@ def test_from_headers_test005_advgw_tidal(example_data_path):
     assert np.allclose(mt.tsmult, tdis.perioddata.get_data()["tsmult"])
 
 
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 def test_from_headers_disu(function_tmpdir):
     from autotest.test_export import disu_sim as _disu_sim
 

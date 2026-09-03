@@ -4,7 +4,7 @@ from math import sqrt
 import numpy as np
 
 from .cvfdutil import get_disv_gridprops
-from .geometry import point_in_polygon
+from .geometry import distance, point_in_polygon
 from .utl_import import import_optional_dependency
 
 
@@ -309,8 +309,92 @@ class VoronoiGrid:
         raise NotImplementedError(msg)
 
     def get_disu6_gridprops(self):
-        msg = "This method is not implemented yet."
-        raise NotImplementedError(msg)
+        """
+        Get a dictionary of arguments that can be passed in to the
+        flopy.mf6.ModflowGwfdisu class
+
+        Returns
+        -------
+        disu_gridprops : dict
+            Dictionary of arguments that can be unpacked into the
+            flopy.mf6.ModflowGwfdisu constructor
+
+        """
+        from ..discretization import UnstructuredGrid
+
+        gridprops = self.get_gridprops_unstructuredgrid()
+        ugrid = UnstructuredGrid(**gridprops)
+
+        xcenters = ugrid.xcellcenters
+        ycenters = ugrid.ycellcenters
+        xvertices = ugrid.xvertices
+        yvertices = ugrid.yvertices
+        iverts = ugrid.iverts
+        neighbors = ugrid.neighbors()
+        iac = []
+        ja = []
+        ihc = []
+        cl12 = []
+        hwva = []
+        angldegx = []
+        for node, nnodes in neighbors.items():
+            iac.append(len(nnodes) + 1)
+            ja.extend([node] + nnodes)
+            ihc.extend(
+                [
+                    1,
+                ]
+                * iac[-1]
+            )
+            # cell center to cell center distance...
+            cl12.append(0)
+            hwva.append(0)
+            angldegx.append(0)
+
+            xc = xcenters[node]
+            yc = ycenters[node]
+            nxc = xcenters[nnodes]
+            nyc = ycenters[nnodes]
+            dists = distance(nxc, nyc, xc, yc)
+            cl12.extend(dists)
+
+            angles = np.arctan2(nxc - xc, nyc - yc) * 180.0 / np.pi
+            angles = np.where(angles < 0, angles + 360, angles)
+            angldegx.extend(angles)
+
+            ivrts = iverts[node]
+            xverts = xvertices[node]
+            yverts = yvertices[node]
+            for n in nnodes:
+                nivrts = iverts[n]
+                common = set(ivrts) & set(nivrts)
+                idxs = [ivrts.index(i) for i in common]
+                hwv = distance(
+                    xverts[idxs[0]], yverts[idxs[0]], xverts[idxs[1]], yverts[idxs[1]]
+                )
+                hwva.append(hwv)
+
+        cell2d = []
+        for ix, ivrts in enumerate(iverts):
+            rec = [ix, xcenters[ix], ycenters[ix], len(ivrts)] + ivrts
+            cell2d.append(rec)
+
+        gridprops["iac"] = iac
+        gridprops["ja"] = ja
+        gridprops["ihc"] = ihc
+        gridprops["cl12"] = cl12
+        gridprops["hwva"] = hwva
+        gridprops["angldegx"] = angldegx
+        gridprops["area"] = ugrid.area
+        gridprops["nodes"] = len(iac)
+        gridprops["nja"] = len(ja)
+        gridprops["nvert"] = len(gridprops["vertices"])
+        gridprops["cell2d"] = cell2d
+        gridprops.pop("ncpl")
+        gridprops.pop("iverts")
+        gridprops.pop("xcenters")
+        gridprops.pop("ycenters")
+        return gridprops
 
     def get_gridprops_vertexgrid(self):
         """

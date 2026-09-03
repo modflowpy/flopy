@@ -106,6 +106,8 @@ class GridIntersect:
             self.geoms, self.cellids = self._rect_grid_to_geoms_cellids()
         elif self.mfgrid.grid_type == "vertex":
             self.geoms, self.cellids = self._vtx_grid_to_geoms_cellids()
+        elif self.mfgrid.grid_type == "unstructured":
+            self.geoms, self.cellids = self._usg_grid_to_geoms_cellids()
         else:
             raise NotImplementedError(
                 f"Grid type {self.mfgrid.grid_type} not supported"
@@ -375,7 +377,29 @@ class GridIntersect:
         cellids : array_like
             array of cellids
         """
-        raise NotImplementedError()
+        warnings.warn(
+            "UnstructuredGrid intersection is experimental", category=UserWarning
+        )
+        shapely = import_optional_dependency("shapely")
+        if self.local:
+            geoms = [
+                shapely.polygons(
+                    list(
+                        zip(
+                            *self.mfgrid.get_local_coords(
+                                *np.array(self.mfgrid.get_cell_vertices(node)).T
+                            )
+                        )
+                    )
+                )
+                for node in range(self.mfgrid.nnodes)
+            ]
+        else:
+            geoms = [
+                shapely.polygons(self.mfgrid.get_cell_vertices(node))
+                for node in range(self.mfgrid.nnodes)
+            ]
+        return np.array(geoms), np.arange(self.mfgrid.nnodes)
 
     def _vtx_grid_to_geoms_cellids(self):
         """internal method, return shapely polygons and cellids for vertex

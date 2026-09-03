@@ -14,7 +14,7 @@ import flopy
 from autotest.test_grid_cases import GridCases
 from flopy.discretization.unstructuredgrid import UnstructuredGrid
 from flopy.discretization.vertexgrid import VertexGrid
-from flopy.utils.gridgen import Gridgen
+from flopy.utils.gridgen import Gridgen, get_ia_from_iac
 
 
 @requires_exe("gridgen")
@@ -59,7 +59,7 @@ def get_structured_grid():
 
 
 @requires_exe("gridgen")
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
 def test_add_active_domain(function_tmpdir, grid_type):
     bgrid = get_structured_grid()
@@ -95,7 +95,7 @@ def test_add_active_domain(function_tmpdir, grid_type):
 
 
 @requires_exe("gridgen")
-@requires_pkg("pyshp", name_map={"pyshp": "shapefile"})
+@requires_pkg("pyshp", "shapely", name_map={"pyshp": "shapefile"})
 @pytest.mark.parametrize("grid_type", ["vertex", "unstructured"])
 def test_add_refinement_feature(function_tmpdir, grid_type):
     bgrid = get_structured_grid()
@@ -873,3 +873,290 @@ def test_flopy_issue_1492(function_tmpdir):
         pmv.contour_array(head, levels=[0.2, 0.4, 0.6, 0.8], linewidths=3.0)
         pmv.plot_vector(spdis["qx"], spdis["qy"], color="white")
         plt.show()
+
+
+def build_gnc_gridgen(ws, layers=None, nlay=3):
+    """Build a gridgen grid with a refined block in the middle"""
+    from shapely.geometry import Polygon
+
+    nrow = ncol = 10
+    top = 1.0
+    dz = top / nlay
+    botm = [top - k * dz for k in range(1, nlay + 1)]
+
+    sim = flopy.mf6.MFSimulation(sim_name="base", sim_ws=ws)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="base")
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=1.0,
+        delc=1.0,
+        top=top,
+        botm=botm,
+    )
+
+    g = Gridgen(gwf.modelgrid, model_ws=ws)
+    polys = [Polygon([(4, 4), (6, 4), (6, 6), (4, 6)])]
+    g.add_refinement_features(
+        polys, "polygon", 3, range(nlay) if layers is None else layers
+    )
+    g.build()
+    return g
+
+
+@pytest.mark.parametrize("nrec", [0, 1, 3])
+def test_read_qtg_gnc_dat(function_tmpdir, nrec):
+    lines = [
+        "89\t125\t88\t88\t0.125\t0.125",
+        "129\t128\t174\t175\t0.166667\t0.166667",
+        "163\t164\t124\t124\t0.125\t0.125",
+    ][:nrec]
+    (function_tmpdir / "qtg.gnc.dat").write_text("\n".join(lines))
+
+    gnc = Gridgen.read_qtg_gnc_dat(function_tmpdir)
+
+    assert gnc.dtype.names == ("n", "m", "j0", "j1", "alpha0", "alpha1")
+    assert len(gnc) == nrec
+
+    if nrec > 0:
+        # node numbers are converted to zero-based, alphas are not modified
+        assert gnc["n"][0] == 88
+        assert gnc["m"][0] == 124
+        assert gnc["j0"][0] == gnc["j1"][0] == 87
+        assert gnc["alpha0"][0] == gnc["alpha1"][0] == 0.125
+    if nrec > 1:
+        assert gnc["j0"][1] == 173
+        assert gnc["j1"][1] == 174
+        assert np.allclose(gnc["alpha1"][1], 0.166667)
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_gnc_data(function_tmpdir):
+    g = build_gnc_gridgen(function_tmpdir)
+    gnc = g.get_gnc()
+
+    # one record per line of the file gridgen wrote
+    nlines = len(
+        [
+            line
+            for line in (function_tmpdir / "qtg.gnc.dat").read_text().splitlines()
+            if line.strip()
+        ]
+    )
+    assert len(gnc) == nlines > 0
+
+    nodes = g.get_nodes()
+    for name in ("n", "m", "j0", "j1"):
+        assert gnc[name].min() >= 0
+        assert gnc[name].max() < nodes
+
+    # the ghost node is always in the coarser of the two cells
+    area = g.get_area()
+    assert np.all(area[gnc["n"]] > area[gnc["m"]])
+
+    # contributing factors must sum to less than one
+    assert np.all(gnc["alpha0"] + gnc["alpha1"] < 1.0)
+
+    # n must be connected to m, and each j must be connected to n
+    iac = g.get_iac()
+    ia = get_ia_from_iac(iac)
+    ja = g.get_ja(iac.sum())
+    for rec in gnc:
+        neighbors = ja[ia[rec["n"]] : ia[rec["n"] + 1]]
+        assert rec["m"] in neighbors
+        assert rec["j0"] in neighbors
+        assert rec["j1"] in neighbors
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_gridprops_gnc6_disv(function_tmpdir):
+    g = build_gnc_gridgen(function_tmpdir)
+    gnc = g.get_gnc()
+    gridprops = g.get_gridprops_gnc6(dis_type="disv")
+
+    assert gridprops["numalphaj"] == 2
+    assert gridprops["numgnc"] == len(gnc) == len(gridprops["gncdata"])
+
+    ncpl = g.get_gridprops_disv()["ncpl"]
+    nlay = g.get_nlay()
+    for rec, (cellidn, cellidm, j0, j1, alpha0, alpha1) in zip(
+        gnc, gridprops["gncdata"]
+    ):
+        for node, cellid in zip(
+            (rec["n"], rec["m"], rec["j0"], rec["j1"]), (cellidn, cellidm, j0, j1)
+        ):
+            assert cellid == (node // ncpl, node % ncpl)
+            assert 0 <= cellid[0] < nlay
+            assert 0 <= cellid[1] < ncpl
+        # gridgen only computes horizontal corrections
+        assert cellidn[0] == cellidm[0] == j0[0] == j1[0]
+        assert (alpha0, alpha1) == (rec["alpha0"], rec["alpha1"])
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_gridprops_gnc6_disu(function_tmpdir):
+    # refining a single layer gives a different number of nodes per layer
+    g = build_gnc_gridgen(function_tmpdir, layers=[0])
+    gnc = g.get_gnc()
+    gridprops = g.get_gridprops_gnc6(dis_type="disu")
+
+    assert gridprops["numalphaj"] == 2
+    assert gridprops["numgnc"] == len(gnc)
+    for rec, (cellidn, cellidm, j0, j1, _, _) in zip(gnc, gridprops["gncdata"]):
+        assert (cellidn, cellidm, j0, j1) == (
+            (rec["n"],),
+            (rec["m"],),
+            (rec["j0"],),
+            (rec["j1"],),
+        )
+
+    # disv cellids cannot be built when nodes per layer are not constant
+    nodelay = g.get_nodelay()
+    assert nodelay.min() != nodelay.max()
+    with pytest.raises(ValueError, match="not the same for all layers"):
+        g.get_gridprops_gnc6(dis_type="disv")
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_gridprops_gnc6_invalid(function_tmpdir):
+    g = build_gnc_gridgen(function_tmpdir, nlay=1)
+
+    with pytest.raises(ValueError, match="Unknown dis_type"):
+        g.get_gridprops_gnc6(dis_type="dis")
+
+    # n and m must be connected
+    (function_tmpdir / "qtg.gnc.dat").write_text("1\t400\t2\t2\t0.125\t0.125\n")
+    with pytest.raises(ValueError, match="is not connected to cell"):
+        g.get_gridprops_gnc6(dis_type="disv")
+    assert g.get_gridprops_gnc6(dis_type="disv", check=False)["numgnc"] == 1
+
+    # contributing factors must sum to less than one
+    (function_tmpdir / "qtg.gnc.dat").write_text("24\t34\t23\t23\t0.6\t0.6\n")
+    with pytest.raises(ValueError, match="must be less than one"):
+        g.get_gridprops_gnc6(dis_type="disv")
+
+
+@requires_exe("gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_gridprops_gnc5(function_tmpdir):
+    g = build_gnc_gridgen(function_tmpdir, nlay=1)
+    gnc = g.get_gnc()
+    gridprops = g.get_gridprops_gnc5()
+
+    assert gridprops["numalphaj"] == 2
+    assert gridprops["numgnc"] == len(gnc)
+    # gridgen writes contributing factors, not conductances
+    assert gridprops["iflalphan"] == 0
+    assert gridprops["i2kn"] == 0
+    assert gridprops["isymgncn"] == 0
+
+    gncdata = gridprops["gncdata"]
+    assert gncdata.dtype == flopy.mfusg.MfUsgGnc.get_default_dtype(2, 0)
+    assert np.array_equal(gncdata["NodeN"], gnc["n"])
+    assert np.array_equal(gncdata["NodeM"], gnc["m"])
+    assert np.array_equal(gncdata["Node0"], gnc["j0"])
+    assert np.array_equal(gncdata["Node1"], gnc["j1"])
+    assert np.allclose(gncdata["Alpha0"], gnc["alpha0"])
+    assert np.allclose(gncdata["Alpha1"], gnc["alpha1"])
+
+    gridprops = g.get_gridprops_gnc5(i2kn=1, isymgncn=1)
+    assert gridprops["i2kn"] == 1
+    assert gridprops["isymgncn"] == 1
+
+
+@pytest.mark.slow
+@requires_exe("mf6", "gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_mf6disv_gnc(function_tmpdir):
+    g = build_gnc_gridgen(function_tmpdir)
+    disv_gridprops = g.get_gridprops_disv()
+    gnc_gridprops = g.get_gridprops_gnc6(dis_type="disv")
+    assert gnc_gridprops["numgnc"] > 0
+
+    chdspd = []
+    for x, y, head in [(0, 10, 1.0), (10, 0, 0.0)]:
+        ra = g.intersect([(x, y)], "point", 0)
+        chdspd.append([(0, ra["nodenumber"][0]), head])
+
+    def run(tag, gnc=False, xt3d=False):
+        ws = function_tmpdir / tag
+        sim = flopy.mf6.MFSimulation(sim_name="m", sim_ws=ws, exe_name="mf6")
+        flopy.mf6.ModflowTdis(sim)
+        flopy.mf6.ModflowIms(
+            sim,
+            linear_acceleration="bicgstab",
+            inner_dvclose=1e-9,
+            outer_dvclose=1e-9,
+        )
+        gwf = flopy.mf6.ModflowGwf(sim, modelname="m", save_flows=True)
+        flopy.mf6.ModflowGwfdisv(gwf, **disv_gridprops)
+        flopy.mf6.ModflowGwfic(gwf)
+        flopy.mf6.ModflowGwfnpf(gwf, xt3doptions=xt3d)
+        flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chdspd)
+        flopy.mf6.ModflowGwfoc(
+            gwf, head_filerecord="m.hds", saverecord=[("HEAD", "ALL")]
+        )
+        if gnc:
+            flopy.mf6.ModflowGwfgnc(gwf, **gnc_gridprops)
+        sim.write_simulation()
+        success, buff = sim.run_simulation(silent=True)
+        assert success, "\n".join(buff[-25:])
+        return gwf.output.head().get_data().flatten()
+
+    head_none = run("none")
+    head_gnc = run("gnc", gnc=True)
+    head_xt3d = run("xt3d", xt3d=True)
+
+    # the correction must move the solution toward the xt3d solution
+    err_none = np.abs(head_none - head_xt3d).max()
+    err_gnc = np.abs(head_gnc - head_xt3d).max()
+    assert err_gnc < err_none / 5.0, f"gnc {err_gnc} vs uncorrected {err_none}"
+
+
+@pytest.mark.slow
+@requires_exe("mfusg", "gridgen")
+@requires_pkg("shapely", "geopandas")
+def test_mfusg_gnc(function_tmpdir):
+    g = build_gnc_gridgen(function_tmpdir, nlay=1)
+    disu_gridprops = g.get_gridprops_disu5()
+    gnc_gridprops = g.get_gridprops_gnc5()
+    assert gnc_gridprops["numgnc"] > 0
+
+    chdspd = []
+    for x, y, head in [(0, 10, 1.0), (10, 0, 0.0)]:
+        ra = g.intersect([(x, y)], "point", 0)
+        chdspd.append([ra["nodenumber"][0], head, head])
+
+    def run(tag, gnc=False):
+        ws = function_tmpdir / tag
+        m = flopy.mfusg.MfUsg(
+            modelname="m", model_ws=ws, exe_name="mfusg", structured=False
+        )
+        flopy.mfusg.MfUsgDisU(m, **disu_gridprops)
+        flopy.mfusg.MfUsgBas(m)
+        flopy.mfusg.MfUsgLpf(m)
+        flopy.modflow.ModflowChd(m, stress_period_data=chdspd)
+        flopy.mfusg.MfUsgSms(m, options="COMPLEX")
+        flopy.modflow.ModflowOc(m, stress_period_data={(0, 0): ["save head"]})
+        if gnc:
+            flopy.mfusg.MfUsgGnc(m, **gnc_gridprops)
+        m.write_input()
+        success, buff = m.run_model(silent=True)
+        assert success, "\n".join(buff[-25:])
+        return np.concatenate(flopy.utils.HeadUFile(ws / "m.hds").get_data())
+
+    head_none = run("none")
+    head_gnc = run("gnc", gnc=True)
+    assert np.abs(head_none - head_gnc).max() > 0.0
+
+    # the written package must round trip gridgen's one-based node numbers
+    written = np.genfromtxt(function_tmpdir / "gnc" / "m.gnc", skip_header=2)
+    expected = np.genfromtxt(function_tmpdir / "qtg.gnc.dat")
+    assert np.array_equal(written[:, :4], expected[:, :4])
+    assert np.allclose(written[:, 4:], expected[:, 4:], atol=1e-6)

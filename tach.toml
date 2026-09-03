@@ -396,10 +396,6 @@ depends_on = [
 ]
 
 [[modules]]
-path = "flopy.mf6.utils.reference"
-depends_on = []
-
-[[modules]]
 path = "flopy.mf6.utils.testutils"
 depends_on = [
     "flopy.utils.datautil",
@@ -614,10 +610,6 @@ depends_on = [
 
 [[modules]]
 path = "flopy.utils.recarray_utils"
-depends_on = []
-
-[[modules]]
-path = "flopy.utils.reference"
 depends_on = []
 
 [[modules]]

@@ -220,10 +220,15 @@ def model_attributes_to_shapefile(
     else:
         package_names = [pak.name[0] for pak in ml.packagelist]
 
-    gdf = ml.to_geodataframe(package_names=package_names, shorten_attr=True)
+    modelgrid = kwargs.pop("modelgrid", None)
+    init_gdf = modelgrid.to_geodataframe() if modelgrid is not None else None
+    gdf = ml.to_geodataframe(
+        gdf=init_gdf, package_names=package_names, shorten_attr=True
+    )
 
     if array_dict:
-        modelgrid = ml.modelgrid
+        if modelgrid is None:
+            modelgrid = ml.modelgrid
         for name, array in array_dict.items():
             if modelgrid.grid_type() == "unstructured":
                 gdf[name] = array.ravel()

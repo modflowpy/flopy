@@ -19,6 +19,14 @@ class ModflowGwfwelg(MFPackage):
     loading_package : bool, default False
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
+    readarraygrid : keyword
+        indicates that array-based grid input will be used for the well boundary
+        package.  this keyword must be specified to use array-based grid input.  when
+        readarraygrid is specified, values must be provided for every cell within a
+        model grid, even those cells that have an idomain value less than one.  values
+        assigned to cells with idomain values less than one are not used and have no
+        effect on simulation results. no data cells should contain the value dnodata
+        (3.0e+30).
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -94,9 +102,12 @@ class ModflowGwfwelg(MFPackage):
     aux : [double precision]
         is an array of values for auxiliary variable aux(iaux), where iaux is a value
         from 1 to naux, and aux(iaux) must be listed as part of the auxiliary
-        variables.  a separate array can be specified for each auxiliary variable. if
-        the value specified here for the auxiliary variable is the same as auxmultname,
-        then the well rate array will be multiplied by this array.
+        variables.  a separate array can be specified for each auxiliary variable.  if
+        an array is not specified for an auxiliary variable, then it will retain its
+        value from the most recently specified period block.  if an auxiliary variable
+        array has never been specified, its value is zero.  if the value specified here
+        for the auxiliary variable is the same as auxmultname, then the well rate array
+        will be multiplied by this array.
 
     filename : str or PathLike, optional
         Name or path of file where this package is stored.
@@ -127,7 +138,7 @@ class ModflowGwfwelg(MFPackage):
             "type keyword",
             "reader urword",
             "optional false",
-            "developmode true",
+            "developmode false",
             "default true",
         ],
         [
@@ -333,6 +344,7 @@ class ModflowGwfwelg(MFPackage):
         self,
         model,
         loading_package=False,
+        readarraygrid=True,
         auxiliary=None,
         auxmultname=None,
         print_input=None,
@@ -361,6 +373,7 @@ class ModflowGwfwelg(MFPackage):
             **kwargs,
         )
 
+        self.readarraygrid = self.build_mfdata("readarraygrid", readarraygrid)
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.auxmultname = self.build_mfdata("auxmultname", auxmultname)
         self.print_input = self.build_mfdata("print_input", print_input)

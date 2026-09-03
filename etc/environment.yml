@@ -6,7 +6,7 @@ dependencies:
   - pip
 
   # required
-  - python>=3.10
+  - python>=3.11
   - numpy>=1.20.3
   - matplotlib>=1.4.0
   - pandas>=2.0.0,<3
@@ -14,7 +14,7 @@ dependencies:
   # codegen
   - boltons>=1.0
   - Jinja2>=3.0
-  - modflow-devtools>=1.7.0
+  - modflow-devtools>=1.7.0,!=1.9.0,<2
   - tomli
   - tomli-w
 

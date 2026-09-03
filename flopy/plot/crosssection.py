@@ -51,6 +51,17 @@ class PlotCrossSection:
         minimum width of a grid cell polygon to be plotted. Cells with a
         cross-sectional width less than min_segment_length will be ignored
         and not included in the plot. Default is 1e-02.
+    view : str
+        view can be used to force the view of the cross section when an
+        arbitrary line (line["line"]) is provided. "auto" is default and
+        mimics the long term behavior of flopy, which decides on the view
+        by taking the maximum of the x and y direction of the cross
+        sectional line. "x" forces the view to be plotted from the x
+        direction (bottom of the unrotated grid) and "y" forces the view to
+        be plotted from the y-direction ("left" or "right" side of the
+        unrotated grid). view has no effect when the cross section is
+        specified with line["row"] or line["column"], since the view is
+        already unambiguous in that case.
     """
 
     def __init__(
@@ -62,7 +73,11 @@ class PlotCrossSection:
         extent=None,
         geographic_coords=False,
         min_segment_length=1e-02,
+        view="auto",
     ):
+        view = view.lower()
+        if view not in ("auto", "x", "y"):
+            raise ValueError(f"view must be 'auto', 'x', or 'y', got {view!r}")
         self.ax = ax
         self.geographic_coords = geographic_coords
         self.model = model
@@ -159,7 +174,8 @@ class PlotCrossSection:
                 yp.append(v2)
 
             xp, yp = self.mg.get_local_coords(xp, yp)
-            if np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp):
+            xspan_gt_yspan = np.max(xp) - np.min(xp) > np.max(yp) - np.min(yp)
+            if view == "x" or (view == "auto" and xspan_gt_yspan):
                 # this is x-projection and we should buffer x by small amount
                 idx0 = np.argmax(xp)
                 idx1 = np.argmin(xp)

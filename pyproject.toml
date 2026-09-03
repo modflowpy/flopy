@@ -12,56 +12,33 @@ maintainers = [
     {name = "Joseph D. Hughes", email = "jdhughes@usgs.gov"},
 ]
 keywords = ["MODFLOW", "groundwater", "hydrogeology"]
-license = {text = "CC0"}
+license = "CC0-1.0"
+license-files = ["LICENSE.md"]
 classifiers = [
     "Development Status :: 5 - Production/Stable",
     "Intended Audience :: Science/Research",
-    "License :: CC0 1.0 Universal (CC0 1.0) Public Domain Dedication",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: Hydrology",
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     "numpy>=1.20.3,<3.0",
     "matplotlib >=1.4.0",
-    "pandas >=2.0.0,<3.0",
+    "pandas >=2.0.0",
 ]
 dynamic = ["version", "readme"]
 
 [project.optional-dependencies]
-dev = ["flopy[codegen,lint,test,optional,doc]", "tach"]
 codegen = [
     "Jinja2>=3.0",
     "boltons",
-    "modflow-devtools>=1.7.0",
+    "modflow-devtools>=1.7.0,!=1.9.0,<2",
     "tomli",
     "tomli-w"
-]
-lint = ["cffconvert", "codespell[toml] >=2.2.2", "ruff"]
-test = [
-    "flopy[lint]",
-    "boltons",
-    "coverage !=7.6.5",
-    "flaky",
-    "filelock",
-    "jupyter",
-    "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
-    "jupytext",
-    "modflow-devtools>=1.7.0",
-    "pytest !=8.1.0",
-    "pytest-benchmark",
-    "pytest-cov",
-    "pytest-dotenv",
-    "pytest-xdist",
-    "pyzmq >=25.1.2",
-    "syrupy <5.0.0",
-    "tomli",
-    "tomli-w",
-    "virtualenv"
 ]
 optional = [
     "affine",
@@ -86,9 +63,38 @@ optional = [
     "h5py",
     "scikit-learn"
 ]
-doc = [
-    "flopy[optional]",
-    "ipython[kernel]",
+
+[dependency-groups]
+lint = [
+    "cffconvert",
+    "codespell[toml] >=2.2.2",
+    "ruff",
+]
+test = [
+    "boltons",
+    "coverage !=7.6.5",
+    "filelock",
+    "flaky",
+    "jupyter",
+    "jupyter_client >=8.4.0", # avoid datetime.utcnow() deprecation warning
+    "jupytext",
+    "modflow-devtools>=1.7.0,!=1.9.0,<2",
+    "pytest !=8.1.0",
+    "pytest-benchmark",
+    "pytest-cov",
+    "pytest-dotenv",
+    "pytest-xdist",
+    "pyzmq >=25.1.2",
+    "syrupy <5.0.0",
+    "tomli",
+    "tomli-w",
+    "virtualenv",
+    {include-group = "lint"},
+]
+docs = [
+    "flopy[optional]",  # self-reference from project.optional-dependencies
+    "ipython",
+    "ipykernel",
     "jupytext",
     "myst-parser",
     "nbconvert <7.14.0",
@@ -97,6 +103,13 @@ doc = [
     "rtds-action",
     "sphinx ==7.1.2",
     "sphinx-rtd-theme >=1",
+]
+dev = [
+    "flopy[codegen,optional]",  # self-reference from project.optional-dependencies
+    "tach",
+    {include-group = "lint"},
+    {include-group = "test"},
+    # {include-group = "docs"},
 ]
 
 [project.scripts]

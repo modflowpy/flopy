@@ -52,7 +52,7 @@ repo_options = {
         "triangle",
         "vs2dt",
         "zbud6",
-        "zonbud3",
+        "zonbud",
         "zonbudusg",
         "libmf6",
     ],
@@ -115,7 +115,7 @@ def test_get_release(repo):
     tag = "latest"
     release = get_release(repo=repo, tag=tag)
     assets = release["assets"]
-    expected_assets = ["linux.zip", "mac.zip", "macarm.zip", "win64.zip"]
+    expected_assets = ["linux.zip", "macarm.zip", "win64.zip"]
     expected_ostags = [a.replace(".zip", "") for a in expected_assets]
     actual_assets = [asset["name"] for asset in assets]
 

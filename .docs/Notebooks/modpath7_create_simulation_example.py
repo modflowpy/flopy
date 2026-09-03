@@ -100,8 +100,8 @@ ims = flopy.mf6.modflow.mfims.ModflowIms(
     sim,
     pname="ims",
     complexity="SIMPLE",
-    outer_hclose=1e-6,
-    inner_hclose=1e-6,
+    outer_dvclose=1e-6,
+    inner_dvclose=1e-6,
     rcloserecord=1e-6,
 )
 

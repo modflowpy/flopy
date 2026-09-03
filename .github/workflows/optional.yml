@@ -5,6 +5,7 @@ name: Optional dependency testing
 on:
   schedule:
     - cron: '0 8 * * *' # run at 8 AM UTC (12 am PST)
+  workflow_dispatch:
 jobs:
   test:
     name: Test
@@ -14,7 +15,7 @@ jobs:
         shell: bash
     timeout-minutes: 10
     env:
-      PYTHON_VERSION: '3.10'
+      PYTHON_VERSION: '3.11'
     strategy:
       fail-fast: false
       matrix:
@@ -25,15 +26,15 @@ jobs:
 
     steps:
       - name: Checkout repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
         with:
           cache-dependency-glob: "**/pyproject.toml"
 
-      - name: Install FloPy
-        run: uv sync --extra test
+      - name: Install FloPy without optional dependencies
+        run: uv sync --only-group test
 
       - name: Install other dependencies
         run: |
@@ -41,18 +42,18 @@ jobs:
           # If matrix.optdeps is "some" remove 3 optional dependencies
           # selected randomly using the current date as the seed.
           if [[ ! "${{ matrix.optdeps }}" == *"no"* ]]; then
-            uv pip install ".[optional]"
+            uv sync --extra optional
           fi
           if [[ "${{ matrix.optdeps }}" == *"some"* ]]; then
             deps=$(sed '/optional =/,/]/!d' pyproject.toml | sed -e '1d;$d' -e 's/\"//g' -e 's/,//g' | tr -d ' ' | cut -f 1 -d ';')
             rmvd=$(echo $deps | tr ' ' '\n' | shuf --random-source <(yes date +%d.%m.%y) | head -n 3)
             echo "Removing optional dependencies: $rmvd" >> removed_dependencies.txt
             cat removed_dependencies.txt
-            uv pip uninstall --yes $rmvd
+            uv pip uninstall $rmvd
           fi
 
       - name: Upload removed dependencies log
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         with:
           name: smoke-test-removed-dependencies
           path: ./removed_dependencies.txt
@@ -62,12 +63,12 @@ jobs:
 
       - name: Smoke test (${{ matrix.optdeps }})
         working-directory: autotest
-        run: uv run pytest -v -n=auto -m "not regression and not example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
+        run: uv run --no-sync pytest -v -n=auto -m "not regression and not example" --cov=flopy --cov-report=xml --durations=0 --keep-failed=.failed
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload failed test outputs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: failed-smoke-${{ runner.os }}-${{ env.PYTHON_VERSION }}

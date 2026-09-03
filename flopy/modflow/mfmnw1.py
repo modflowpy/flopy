@@ -37,6 +37,11 @@ class ModflowMnw1(Package):
         if None, these optional external filenames and unit numbers are not written out
     itmp : array
         number of wells to be simulated for each stress period (shape : (NPER))
+    add : bool, list of bool, or None
+        flag to indicate whether the number of wells specified in itmp should be
+        added to the number of wells from previous stress periods (True) or if
+        the number of wells specified in itmp is the total number of wells for
+        that stress period (False)
     lay_row_col_qdes_mn_multi : list of arrays
         lay, row, col, qdes, and MN or MULTI flag for all well nodes
         (length : NPER)
@@ -88,6 +93,7 @@ class ModflowMnw1(Package):
         kspref=1,
         wel1_bynode_qsum=None,
         losstype="skin",
+        add=None,
         stress_period_data=None,
         dtype=None,
         mnwname=None,
@@ -125,6 +131,13 @@ class ModflowMnw1(Package):
         # nested list containing file names, unit numbers, and ALLTIME flag for
         # auxiliary output, e.g. [['test.ByNode',92,'ALLTIME']]
         self.wel1_bynode_qsum = wel1_bynode_qsum
+        if add is None:
+            add = [False] * self.nper
+        elif isinstance(add, bool):
+            add = [add] * self.nper
+        elif isinstance(add, np.ndarray):
+            add = add.tolist()
+        self.add = add
         if dtype is not None:
             self.dtype = dtype
         else:
@@ -215,14 +228,16 @@ class ModflowMnw1(Package):
         qfrcmx_default = None
         qcut_default = ""
 
-        # not sure what 'add' means
-        add = True if "add" in line.lower() else False
-
+        add = []
         for per in range(nper):
             if per > 0:
                 line = skipcomments(next(f), f)
-            add = True if "add" in line.lower() else False
             itmp = int(line_parse(line)[0])
+            if itmp < 1:
+                tadd = False
+            else:
+                tadd = True if "add" in line.lower() else False
+            add.append(tadd)
             if itmp > 0:
                 # dataset 5
                 data, qfrcmn_default, qfrcmx_default, qcut_default = _parse_5(
@@ -235,6 +250,8 @@ class ModflowMnw1(Package):
                 for n in dtype.descr:
                     spd[n[0]] = tmp[n[0]]
                 stress_period_data[per] = spd
+            else:
+                stress_period_data[per] = ModflowMnw1.get_empty_stress_period_data(0)
 
         if openfile:
             f.close()
@@ -248,6 +265,7 @@ class ModflowMnw1(Package):
             kspref=kspref,
             wel1_bynode_qsum=wel1_bynode_qsum,
             losstype=losstype,
+            add=add,
             stress_period_data=stress_period_data,
         )
 
@@ -303,10 +321,18 @@ class ModflowMnw1(Package):
                             "FILE:%s QSUM:%-10i %s\n" % (each[0], int(each[1]), each[2])
                         )
 
+        # process additional data for Section 4 (itmp and ADD flag)
+        additional_data = []
+        for per in range(self.nper):
+            if self.add[per]:
+                additional_data.append("   ADD   ")
+            else:
+                additional_data.append("         ")
+
         spd = self.stress_period_data.drop("mnw_no")
         # force write_transient to keep the list arrays internal because MNW1
         # doesn't allow open/close
-        spd.write_transient(f, forceInternal=True)
+        spd.write_transient(f, forceInternal=True, additional_data=additional_data)
 
         # -Un-numbered section PREFIX:MNWNAME
         if self.mnwname:

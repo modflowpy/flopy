@@ -47,17 +47,6 @@ class ModflowIms(MFPackage):
         linear solver parameters assigned using a specified complexity can be modified
         in the nonlinear and linear blocks. if the complexity option is not specified,
         nonlinear and linear variables will be assigned the simple complexity values.
-    csv_output_filerecord : (csvfile)
-        * csvfile : string
-                name of the ascii comma separated values output file to write solver
-                convergence information. If PRINT_OPTION is NONE or SUMMARY, comma separated
-                values output includes maximum head change convergence information at the end
-                of each outer iteration for each time step. If PRINT_OPTION is ALL, comma
-                separated values output includes maximum head change and maximum residual
-                convergence information for the solution and each model (if the solution
-                includes more than one model) and linear acceleration information for each
-                inner iteration.
-
     csv_outer_output_filerecord : (outer_csvfile)
         * outer_csvfile : string
                 name of the ascii comma separated values output file to write maximum
@@ -107,14 +96,30 @@ class ModflowIms(MFPackage):
         allowable outer iterations minus the product of this value and the maximum
         allowable outer iterations, then the ats (if active) will decrease the time
         step length by a factor of 1 / dtadj.
-    outer_hclose : double precision
-        real value defining the head change criterion for convergence of the outer
-        (nonlinear) iterations, in units of length. when the maximum absolute value of
-        the head change at all nodes during an iteration is less than or equal to
-        outer_hclose, iteration stops. commonly, outer_hclose equals 0.01.  the
-        outer_hclose option has been deprecated in favor of the more general
-        outer_dvclose (for dependent variable), however either one can be specified in
-        order to maintain backward compatibility.
+    dev_ptc : keyword
+        keyword that activates pseudo-transient continuation (ptc).  ptc is active by
+        default, so this keyword has an effect only when it follows no_ptc in the
+        options block.  this development option is not supported.
+    dev_ptc_output_filerecord : (dev_ptcfile)
+        * dev_ptcfile : string
+                name of the ascii output file to write pseudo-transient continuation
+                information.
+
+    dev_ptc_option : keyword
+        keyword that uses the norm of the right-hand side and the l2 norm of the
+        residual to set the initial pseudo-transient continuation value, instead of the
+        default approach.  specifying the keyword also activates pseudo-transient
+        continuation.  this development option is not supported.
+    dev_ptc_exponent : double precision
+        real number value that defines the exponent used to reduce the pseudo-transient
+        continuation value between outer iterations.  the value must be greater than
+        zero and is 1 by default.  specifying the value also activates pseudo-transient
+        continuation.  this development option is not supported.
+    dev_ptc_del0 : double precision
+        real number value that defines the initial pseudo-transient continuation value,
+        which is equivalent to an initial time step length.  the value must be greater
+        than zero.  specifying the value also activates pseudo-transient continuation.
+        this development option is not supported.
     outer_dvclose : double precision
         real value defining the dependent-variable (for example, head) change criterion
         for convergence of the outer (nonlinear) iterations, in units of the dependent-
@@ -125,17 +130,6 @@ class ModflowIms(MFPackage):
         for backward compatibility with previous versions of modflow 6 but eventually
         outer_hclose will be deprecated and specification of outer_hclose will cause
         modflow 6 to terminate with an error.
-    outer_rclosebnd : double precision
-        real value defining the residual tolerance for convergence of model packages
-        that solve a separate equation not solved by the ims linear solver. this value
-        represents the maximum allowable residual between successive outer iterations
-        at any single model package element. an example of a model package that would
-        use outer_rclosebnd to evaluate convergence is the sfr package which solves a
-        continuity equation for each reach.  the outer_rclosebnd option is deprecated
-        and has no effect on simulation results as of version 6.1.1.  the keyword,
-        outer_rclosebnd can be still be specified for backward compatibility with
-        previous versions of modflow 6 but eventually specification of outer_rclosebnd
-        will cause modflow 6 to terminate with an error.
     outer_maximum : integer
         integer value defining the maximum number of outer (nonlinear) iterations --
         that is, calls to the solution routine. for a linear problem outer_maximum
@@ -232,16 +226,6 @@ class ModflowIms(MFPackage):
         number typically depends on the characteristics of the matrix solution scheme
         being used. for nonlinear problems, inner_maximum usually ranges from 60 to
         600; a value of 100 will be sufficient for most linear problems.
-    inner_hclose : double precision
-        real value defining the head change criterion for convergence of the inner
-        (linear) iterations, in units of length. when the maximum absolute value of the
-        head change at all nodes during an iteration is less than or equal to
-        inner_hclose, the matrix solver assumes convergence. commonly, inner_hclose is
-        set equal to or an order of magnitude less than the outer_hclose value
-        specified for the nonlinear block.  the inner_hclose keyword has been
-        deprecated in favor of the more general inner_dvclose (for dependent variable),
-        however either one can be specified in order to maintain backward
-        compatibility.
     inner_dvclose : double precision
         real value defining the dependent-variable (for example, head) change criterion
         for convergence of the inner (linear) iterations, in units of the dependent-
@@ -336,9 +320,6 @@ class ModflowIms(MFPackage):
 
     """
 
-    csv_output_filerecord = ListTemplateGenerator(
-        ("ims", "options", "csv_output_filerecord")
-    )
     csv_outer_output_filerecord = ListTemplateGenerator(
         ("ims", "options", "csv_outer_output_filerecord")
     )
@@ -346,6 +327,9 @@ class ModflowIms(MFPackage):
         ("ims", "options", "csv_inner_output_filerecord")
     )
     no_ptcrecord = ListTemplateGenerator(("ims", "options", "no_ptcrecord"))
+    dev_ptc_output_filerecord = ListTemplateGenerator(
+        ("ims", "options", "dev_ptc_output_filerecord")
+    )
     rcloserecord = ListTemplateGenerator(("ims", "linear", "rcloserecord"))
     package_abbr = "ims"
     _package_type = "ims"
@@ -365,39 +349,6 @@ class ModflowIms(MFPackage):
             "type string",
             "reader urword",
             "optional true",
-        ],
-        [
-            "block options",
-            "name csv_output_filerecord",
-            "type record csv_output fileout csvfile",
-            "shape",
-            "reader urword",
-            "tagged true",
-            "optional true",
-            "deprecated 6.1.1",
-        ],
-        [
-            "block options",
-            "name csv_output",
-            "type keyword",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged true",
-            "optional false",
-            "deprecated 6.1.1",
-        ],
-        [
-            "block options",
-            "name csvfile",
-            "type string",
-            "preserve_case true",
-            "shape",
-            "in_record true",
-            "reader urword",
-            "tagged false",
-            "optional false",
-            "deprecated 6.1.1",
         ],
         [
             "block options",
@@ -502,12 +453,62 @@ class ModflowIms(MFPackage):
             "optional true",
         ],
         [
-            "block nonlinear",
-            "name outer_hclose",
+            "block options",
+            "name dev_ptc",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_ptc_output_filerecord",
+            "type record dev_ptc_output fileout dev_ptcfile",
+            "shape",
+            "reader urword",
+            "tagged true",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_ptc_output",
+            "type keyword",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged true",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name dev_ptcfile",
+            "type string",
+            "preserve_case true",
+            "shape",
+            "in_record true",
+            "reader urword",
+            "tagged false",
+            "optional false",
+        ],
+        [
+            "block options",
+            "name dev_ptc_option",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_ptc_exponent",
             "type double precision",
             "reader urword",
             "optional true",
-            "deprecated 6.1.1",
+        ],
+        [
+            "block options",
+            "name dev_ptc_del0",
+            "type double precision",
+            "reader urword",
+            "optional true",
         ],
         [
             "block nonlinear",
@@ -515,14 +516,6 @@ class ModflowIms(MFPackage):
             "type double precision",
             "reader urword",
             "optional false",
-        ],
-        [
-            "block nonlinear",
-            "name outer_rclosebnd",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "deprecated 6.1.1",
         ],
         [
             "block nonlinear",
@@ -600,14 +593,6 @@ class ModflowIms(MFPackage):
             "type integer",
             "reader urword",
             "optional false",
-        ],
-        [
-            "block linear",
-            "name inner_hclose",
-            "type double precision",
-            "reader urword",
-            "optional true",
-            "deprecated 6.1.1",
         ],
         [
             "block linear",
@@ -698,14 +683,16 @@ class ModflowIms(MFPackage):
         loading_package=False,
         print_option=None,
         complexity=None,
-        csv_output_filerecord=None,
         csv_outer_output_filerecord=None,
         csv_inner_output_filerecord=None,
         no_ptcrecord=None,
         ats_outer_maximum_fraction=None,
-        outer_hclose=None,
+        dev_ptc=None,
+        dev_ptc_output_filerecord=None,
+        dev_ptc_option=None,
+        dev_ptc_exponent=None,
+        dev_ptc_del0=None,
         outer_dvclose=None,
-        outer_rclosebnd=None,
         outer_maximum=None,
         under_relaxation=None,
         under_relaxation_gamma=None,
@@ -717,7 +704,6 @@ class ModflowIms(MFPackage):
         backtracking_reduction_factor=None,
         backtracking_residual_limit=None,
         inner_maximum=None,
-        inner_hclose=None,
         inner_dvclose=None,
         rcloserecord=None,
         linear_acceleration=None,
@@ -743,9 +729,6 @@ class ModflowIms(MFPackage):
 
         self.print_option = self.build_mfdata("print_option", print_option)
         self.complexity = self.build_mfdata("complexity", complexity)
-        self.csv_output_filerecord = self.build_mfdata(
-            "csv_output_filerecord", csv_output_filerecord
-        )
         self.csv_outer_output_filerecord = self.build_mfdata(
             "csv_outer_output_filerecord", csv_outer_output_filerecord
         )
@@ -756,9 +739,14 @@ class ModflowIms(MFPackage):
         self.ats_outer_maximum_fraction = self.build_mfdata(
             "ats_outer_maximum_fraction", ats_outer_maximum_fraction
         )
-        self.outer_hclose = self.build_mfdata("outer_hclose", outer_hclose)
+        self.dev_ptc = self.build_mfdata("dev_ptc", dev_ptc)
+        self.dev_ptc_output_filerecord = self.build_mfdata(
+            "dev_ptc_output_filerecord", dev_ptc_output_filerecord
+        )
+        self.dev_ptc_option = self.build_mfdata("dev_ptc_option", dev_ptc_option)
+        self.dev_ptc_exponent = self.build_mfdata("dev_ptc_exponent", dev_ptc_exponent)
+        self.dev_ptc_del0 = self.build_mfdata("dev_ptc_del0", dev_ptc_del0)
         self.outer_dvclose = self.build_mfdata("outer_dvclose", outer_dvclose)
-        self.outer_rclosebnd = self.build_mfdata("outer_rclosebnd", outer_rclosebnd)
         self.outer_maximum = self.build_mfdata("outer_maximum", outer_maximum)
         self.under_relaxation = self.build_mfdata("under_relaxation", under_relaxation)
         self.under_relaxation_gamma = self.build_mfdata(
@@ -786,7 +774,6 @@ class ModflowIms(MFPackage):
             "backtracking_residual_limit", backtracking_residual_limit
         )
         self.inner_maximum = self.build_mfdata("inner_maximum", inner_maximum)
-        self.inner_hclose = self.build_mfdata("inner_hclose", inner_hclose)
         self.inner_dvclose = self.build_mfdata("inner_dvclose", inner_dvclose)
         self.rcloserecord = self.build_mfdata("rcloserecord", rcloserecord)
         self.linear_acceleration = self.build_mfdata(
