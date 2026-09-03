@@ -580,7 +580,6 @@ def test_structured_to_disv_multi_model(function_tmpdir):
     np.testing.assert_allclose(
         new_conc[idx], original_conc[idx], atol=1e-6, err_msg=err_msg
     )
-    
 
 
 def test_hfb_model_splitter(function_tmpdir):
@@ -636,7 +635,7 @@ def test_hfb_model_splitter(function_tmpdir):
     new_sim.set_sim_path(function_tmpdir / "split_model")
     new_sim.write_simulation()
     new_sim.run_simulation()
-    
+
     heads = {}
     nbarrier = 0
     for mkey in (0, 1):
