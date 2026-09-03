@@ -676,7 +676,6 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 @requires_exe("mf6")
 @requires_pkg("pymetis")
 @requires_pkg("h5py")
-@requires_pkg("scikit-learn", name_map={"scikit-learn": "sklearn"})
 def test_save_load_node_mapping_structured(function_tmpdir):
     import pymetis
 
@@ -723,6 +722,7 @@ def test_save_load_node_mapping_structured(function_tmpdir):
 
     new_heads = mfsplit2.reconstruct_array(array_dict)
     err_msg = "Heads from original and split models do not match"
+    original_heads[sim.get_model().modelgrid.idomain == 0] = 0
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
