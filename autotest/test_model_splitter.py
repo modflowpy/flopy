@@ -254,7 +254,9 @@ def test_save_load_node_mapping_structured(function_tmpdir):
     saved_node_map = mfsplit2._node_map_arr
 
     np.testing.assert_allclose(
-        original_node_map, saved_node_map, err_msg="Node map read/write not returning proper values"
+        original_node_map,
+        saved_node_map,
+        err_msg="Node map read/write not returning proper values",
     )
 
     array_dict = {}
