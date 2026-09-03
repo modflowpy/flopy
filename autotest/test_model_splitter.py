@@ -441,7 +441,7 @@ def test_save_load_node_mapping_structured_to_disv(function_tmpdir):
         mfsplit2._node_map_arr,
         err_msg="Node map read/write not returning proper values",
     )
-    
+
     array_dict = {}
     for mkey in (0, 1):
         ml = new_sim2.get_model(f"freyberg_{mkey}")
@@ -580,6 +580,98 @@ def test_structured_to_disv_multi_model(function_tmpdir):
     np.testing.assert_allclose(
         new_conc[idx], original_conc[idx], atol=1e-6, err_msg=err_msg
     )
+    
+
+
+def test_hfb_model_splitter(function_tmpdir):
+    nlay, nrow, ncol = 3, 10, 10
+
+    sim = flopy.mf6.MFSimulation(sim_name="hfb", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(
+        sim, complexity="simple", outer_dvclose=1e-9, inner_dvclose=1e-10
+    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="hfb", save_flows=True)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=100.0,
+        delc=100.0,
+        top=30.0,
+        botm=[20.0, 10.0, 0.0],
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=25.0)
+    chd = [[(0, i, 0), 25.0] for i in range(nrow)]
+    chd += [[(0, i, ncol - 1), 20.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd)
+
+    # four barriers forming a plus on the corner shared by the cells
+    # (4, 4), (4, 5), (5, 4), and (5, 5): two between east west neighbors
+    # and two between north south neighbors
+    hfb = [
+        [(0, 4, 4), (0, 4, 5), 1e-5],  # east west, north of the corner
+        [(0, 5, 4), (0, 5, 5), 1e-5],  # east west, south of the corner
+        [(0, 4, 4), (0, 5, 4), 1e-5],  # north south, west of the corner
+        [(0, 4, 5), (0, 5, 5), 1e-5],  # north south, east of the corner
+    ]
+    # a barrier on a vertical connection, which the splitter never divides
+    # because both of its cells are in the same stack
+    hfb += [[(0, i, j), (1, i, j), 1e-5] for i in range(3) for j in range(7, 10)]
+    flopy.mf6.ModflowGwfhfb(gwf, stress_period_data={0: hfb})
+    flopy.mf6.ModflowGwfoc(gwf, head_filerecord="hfb.hds", saverecord=[("HEAD", "ALL")])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    # split away from every barrier
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, 7:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+    
+    heads = {}
+    nbarrier = 0
+    for mkey in (0, 1):
+        ml = new_sim.get_model(f"hfb_{mkey}")
+        pkg = ml.get_package("hfb")
+        if pkg is None:
+            raise AssertionError(f"Model {mkey} has no HFB package")
+
+        nbarrier += len(pkg.stress_period_data.get_data(0))
+        heads[mkey] = ml.output.head().get_alldata()[-1]
+
+    if nbarrier != len(hfb):
+        raise AssertionError(
+            f"Split models have {nbarrier} barriers, expected {len(hfb)}"
+        )
+
+    new_heads = mfsplit.reconstruct_array(heads)
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, atol=1e-6, err_msg=err_msg)
+
+    # a barrier cannot be split, both of its cells must be in one model.
+    # splitting on the column the plus straddles cuts its east west barriers
+    # and splitting on the row cuts its north south barriers
+    for axis in (0, 1):
+        sim = MFSimulation.load(sim_ws=function_tmpdir)
+        array = np.zeros((nrow, ncol), dtype=int)
+        if axis == 0:
+            array[5:, :] = 1
+        else:
+            array[:, 5:] = 1
+
+        mfsplit = Mf6Splitter(sim)
+        with pytest.raises(AssertionError, match="split along faults"):
+            mfsplit.split_model(array)
 
 
 @requires_exe("mf6")
@@ -672,6 +764,74 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 
     err_msg = "Heads from original and split models do not match"
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
+
+
+@requires_exe("mf6")
+@requires_pkg("pymetis")
+def test_metis_splitting_with_hfb(function_tmpdir):
+    import pymetis
+
+    nlay, nrow, ncol = 1, 20, 20
+
+    sim = flopy.mf6.MFSimulation(sim_name="hfb", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(
+        sim, complexity="simple", outer_dvclose=1e-9, inner_dvclose=1e-10
+    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="hfb", save_flows=True)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=100.0,
+        delc=100.0,
+        top=10.0,
+        botm=[0.0],
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10.0)
+    chd = [[(0, i, 0), 10.0] for i in range(nrow)]
+    chd += [[(0, i, ncol - 1), 1.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd)
+
+    # two barriers that a partition would otherwise be free to cut
+    hfb = [[(0, i, 6), (0, i, 7), 1e-5] for i in range(nrow)]
+    hfb += [[(0, 9, j), (0, 10, j), 1e-5] for j in range(ncol)]
+    flopy.mf6.ModflowGwfhfb(gwf, stress_period_data={0: hfb})
+    flopy.mf6.ModflowGwfoc(gwf, head_filerecord="hfb.hds", saverecord=[("HEAD", "ALL")])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    mfsplit = Mf6Splitter(sim)
+    array = mfsplit.optimize_splitting_mask(
+        nparts=4, options=pymetis.Options(seed=42, contig=1)
+    )
+
+    # a barrier must lie within one model, not on a model boundary
+    membership = array.ravel()
+    for recarray in gwf.get_package("hfb").stress_period_data.data.values():
+        _, nodes1 = mfsplit._cellid_to_layer_node(recarray.cellid1)
+        _, nodes2 = mfsplit._cellid_to_layer_node(recarray.cellid2)
+        if not np.array_equal(membership[nodes1], membership[nodes2]):
+            raise AssertionError("A horizontal flow barrier was split")
+
+    new_sim = mfsplit.split_model(array)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    heads = {}
+    for mkey in np.unique(membership):
+        ml = new_sim.get_model(f"hfb_{mkey}")
+        heads[mkey] = ml.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array(heads)
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, atol=1e-6, err_msg=err_msg)
 
 
 @requires_exe("mf6")
