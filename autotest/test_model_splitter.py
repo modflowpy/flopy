@@ -429,16 +429,18 @@ def test_save_load_node_mapping_structured_to_disv(function_tmpdir):
     new_sim.set_sim_path(new_sim_path)
     new_sim.write_simulation()
     new_sim.run_simulation()
-    original_node_map = mfsplit._node_map
+    original_node_map = mfsplit._node_map_arr
 
     mfsplit.save_node_mapping(hdf_file)
 
     new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
     mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
 
-    if original_node_map != mfsplit2._node_map:
-        raise AssertionError("Node map read/write not returning proper values")
-
+    np.testing.assert_allclose(
+        original_node_map,
+        mfsplit2._node_map_arr,
+        err_msg="Node map read/write not returning proper values",
+    )
     array_dict = {}
     for mkey in (0, 1):
         ml = new_sim2.get_model(f"freyberg_{mkey}")
@@ -698,20 +700,21 @@ def test_save_load_node_mapping_structured(function_tmpdir):
     new_sim.set_sim_path(new_sim_path)
     new_sim.write_simulation()
     new_sim.run_simulation()
-    original_node_map = mfsplit._node_map
+    original_node_map = mfsplit._node_map_arr
 
     mfsplit.save_node_mapping(hdf_file)
 
     new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
 
     mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
-    saved_node_map = mfsplit2._node_map
+    saved_node_map = mfsplit2._node_map_arr
 
-    for k, v1 in original_node_map.items():
-        v2 = saved_node_map[k]
-        if not v1 == v2:
-            raise AssertionError("Node map read/write not returning proper values")
-
+    np.testing.assert_allclose(
+        original_node_map,
+        saved_node_map,
+        err_msg="Node map read/write not returning proper values",
+    )
+    
     array_dict = {}
     for model in range(nparts):
         ml = new_sim2.get_model(f"freyberg_{model}")
