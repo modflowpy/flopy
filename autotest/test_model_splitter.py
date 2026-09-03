@@ -375,11 +375,6 @@ def test_save_node_mapping_with_boundnames(function_tmpdir):
     mfsplit = Mf6Splitter(sim)
     mfsplit.split_model(array)
 
-    non_int_keys = [
-        k for k in mfsplit._node_map if not isinstance(k, (int, np.integer))
-    ]
-    assert not non_int_keys, f"boundnames leaked into _node_map: {non_int_keys}"
-
     hdf_file = function_tmpdir / "node_map.hdf5"
     mfsplit.save_node_mapping(hdf_file)
     assert hdf_file.exists()
@@ -1772,3 +1767,56 @@ def test_ats(function_tmpdir):
     new_sim.write_simulation()
     success, _ = new_sim.run_simulation()
     assert success
+
+
+@requires_exe("mf6")
+def test_reconstruct_recarray(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6-freyberg"
+    split_path = function_tmpdir / "split_model"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.ones((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    ncol = 1
+    for row in range(modelgrid.nrow):
+        if row != 0 and row % 2 == 0:
+            ncol += 1
+        array[row, ncol:] = 2
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(split_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    ml0 = new_sim.get_model("freyberg_1")
+    ml1 = new_sim.get_model("freyberg_2")
+
+    pkgs = ["wel", "riv", "chd"]
+    d = {}
+
+    for pkg in pkgs:
+        vpak = gwf.get_package(pkg)
+        vrecarray = vpak.stress_period_data.data[0]
+        vrecarray.sort(axis=0)
+        rarrays = {}
+        for ix, model in enumerate([ml0, ml1]):
+            pak = model.get_package(pkg)
+            try:
+                rarrays[ix + 1] = pak.stress_period_data.data[0]
+            except (TypeError, AttributeError):
+                pass
+        recarray = mfsplit.reconstruct_recarray(rarrays)
+        recarray.sort(axis=0)
+
+        for ix, rec in enumerate(recarray):
+            vrec = vrecarray[ix]
+            for name in recarray.dtype.names:
+                assert rec[name] == vrec[name], "Recarray reconstruction failed"

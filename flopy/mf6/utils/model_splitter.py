@@ -132,9 +132,12 @@ class Mf6Splitter:
     sim : flopy.mf6.MFSimulation
     modelname : str, None
         name of model to split
+    no_remap_key : int
+        integer value to tell model splitter not to remap cells. Useful for ignoring
+        inactive cells and applied when the `active_only=True` in `optimize_splitting_mask()`
     """
 
-    def __init__(self, sim, modelname=None):
+    def __init__(self, sim, modelname=None, no_remap_key=-9):
         self._sim = sim
         self._model = self._sim.get_model(modelname)
         if modelname is None:
@@ -153,8 +156,9 @@ class Mf6Splitter:
             self._ncpl = self._modelgrid.nnodes
         self._shape = self._modelgrid.shape
         self._grid_type = self._modelgrid.grid_type
-        self._node_map = {}
-        self._node_map_r = {}
+        self._no_remap_key = int(no_remap_key)
+        self._node_map_arr = None
+        self._model_map_arr = None
         self._new_connections = None
         self._new_ncpl = None
         self._grid_info = None
@@ -223,8 +227,8 @@ class Mf6Splitter:
 
         if remap_nodes:
             self._modelgrid = self._model.modelgrid
-            self._node_map = {}
-            self._node_map_r = {}
+            self._node_map_arr = None
+            self._model_map_arr = None
             self._new_connections = None
             self._new_ncpl = None
             self._grid_info = None
@@ -241,18 +245,6 @@ class Mf6Splitter:
             self._mover_remaps = {}
             self._sim_mover_data = {}
             self._offsets = {}
-
-    @property
-    def reversed_node_map(self):
-        """
-        Returns a lookup table of {model number : {model node: original node}}
-
-        """
-        if not self._node_map_r:
-            self._node_map_r = {mkey: {} for mkey in self._model_dict.keys()}
-            for onode, (mkey, nnode) in self._node_map.items():
-                self._node_map_r[mkey][nnode] = onode
-        return self._node_map_r
 
     @property
     def original_modelgrid(self):
@@ -398,10 +390,6 @@ class Mf6Splitter:
         -------
             None
         """
-        node_map = {
-            int(k): (int(v[0]), int(v[1])) for k, v in self._node_map.items()
-        }
-
         h5py = import_optional_dependency("h5py")
         # import h5py
         f = h5py.File(filename, "w")
@@ -432,11 +420,9 @@ class Mf6Splitter:
         # finally, think about the node_map arrangement.... onode: (model, nnode)
         # maybe put it in a group "node_map/original_node", etc...
         nm_grp = f.create_group("node_map")
-        onode, nmodel, nnode = [], [], []
-        for k, (m, n) in node_map.items():
-            onode.append(k)
-            nmodel.append(m)
-            nnode.append(n)
+        onode = list(range(self._node_map_arr.size))
+        nmodel = [int(i) for i in self._model_map_arr]
+        nnode = [int(i) for i in self._node_map_arr]
 
         onode_ds = nm_grp.create_dataset(
             "original_node", (len(onode),), dtype=int, compression="gzip"
@@ -551,12 +537,8 @@ class Mf6Splitter:
             )
 
         # construct the node map
-        node_map = {}
-        onode = f["node_map/original_node"][:]
-        mnum = f["node_map/new_model"][:]
-        nnode = f["node_map/new_node"][:]
-        for ix, node in enumerate(onode):
-            node_map[node] = (mnum[ix], nnode[ix])
+        model_map = f["node_map/new_model"][:]
+        node_map = f["node_map/new_node"][:]
 
         # construct representation of original model geometry
         modelname = f["modelname"][0].decode("utf8")
@@ -583,25 +565,18 @@ class Mf6Splitter:
 
         f.close()
 
-        # create additional splitting data efficient reconstruction
-        split_array = np.zeros((mfs._ncpl,), dtype=int)
-        model_array = np.zeros((mfs._ncpl,), dtype=int)
-        for k, v in node_map.items():
-            k = int(k)
-            model_array[k] = v[0]
-            split_array[k] = v[1]
-
         grid_info = {}
         for mkey in mkeys:
             ncpl = mfs._new_ncpl[mkey]
             array = np.full((ncpl,), -1, dtype=int)
-            onode = np.asarray(model_array == mkey).nonzero()[0]
-            nnode = split_array[onode]
+            onode = np.asarray(model_map == mkey).nonzero()[0]
+            nnode = node_map[onode]
             array[nnode] = onode
             grid_info[mkey] = (array,)
 
         mfs._grid_info = grid_info
-        mfs._node_map = node_map
+        mfs._node_map_arr = node_map
+        mfs._model_map_arr = model_map
         mfs._allow_splitting = False
         return mfs
 
@@ -617,10 +592,14 @@ class Mf6Splitter:
             number of parts to split the model in to
         active_only : bool
             only consider active cells when building adjacency graph. Default is False
+        no_remap_key : int
+            for use with active_only=True. Cells that are inactive are tagged with an int value that can be
+            passed to split model which reduces the number of cells remapped. Default is -9.
         options : None or pymetis.Options
             optional pymetis.Options class that gets passed through to the
             pymetis.part_graph() function. Example
             `options=pymetis.Options(seed=42, contig=1)`
+
         verbose : bool
             Default False. Prints progress statements if True
         Returns
@@ -729,22 +708,8 @@ class Mf6Splitter:
             if verbose:
                 print("Remapping inactive to model domains")
             if len(inactive) > 0:
-                xc = self._modelgrid.xcellcenters.ravel()
-                yc = self._modelgrid.ycellcenters.ravel()
-                axc = xc[list(node_map.keys())]
-                ayc = yc[list(node_map.keys())]
-                fit_points = np.array(list(zip(axc, ayc)))
-                ixc = xc[list(inactive.keys())]
-                iyc = yc[list(inactive.keys())]
-                pred_points = np.array(list(zip(ixc, iyc)))
-
-                nn = NearestNeighbors(n_neighbors=1, algorithm="auto")
-                nn.fit(fit_points)
-                ind = nn.kneighbors(pred_points, return_distance=False).ravel()
-                data = membership[ind]
-                member_array = np.full((ncpl,), -1)
+                member_array = np.full((ncpl,), self._no_remap_key)
                 member_array[list(node_map.keys())] = membership[list(node_map.values())]
-                member_array[list(inactive.keys())] = data
                 membership = member_array
 
         if laks:
@@ -864,7 +829,11 @@ class Mf6Splitter:
         new_recarray = np.recarray((rlen,), dtype=dtype)
         idx = 0
         for mkey, recarray in recarrays.items():
-            remapper = self.reversed_node_map[mkey]
+            onodes = np.where(self._model_map_arr == mkey)
+            nnodes = self._node_map_arr[onodes]
+            remapper = np.zeros((self._new_ncpl[mkey],), dtype=int)
+            remapper[nnodes] = onodes
+
             orec = recarray.copy()
             modelgrid = self._model_dict[mkey].modelgrid
             if self._grid_type in ("structured", "vertex"):
@@ -877,7 +846,7 @@ class Mf6Splitter:
             else:
                 node = [i[0] for i in orec.cellid]
 
-            new_node = [remapper[i] for i in node if i in remapper]
+            new_node = [remapper[i] for i in node]
 
             if modelgrid.grid_type == "structured":
                 if self._modelgrid is None:
@@ -989,7 +958,7 @@ class Mf6Splitter:
         array = np.ravel(array)
 
         idomain = self._modelgrid.idomain.reshape((-1, self._ncpl))
-        mkeys = [int(i) for i in np.unique(array)]
+        mkeys = [int(i) for i in np.unique(array) if i != self._no_remap_key]
         bad_keys = []
         for mkey in mkeys:
             count = 0
@@ -1008,14 +977,20 @@ class Mf6Splitter:
         if self._modelgrid.grid_type == "unstructured":
             self._map_iac_ja_connections()
         else:
-            self._connection = self._modelgrid.neighbors(
+            neighbors = self._modelgrid.neighbors(
                 reset=True, method="rook", fast=self._fast_neighbors
             )
+            iac, ja = [], []
+            for k in list(neighbors.keys()):
+                rec = [k,] + neighbors.pop(k)
+                ja.extend(rec)
+                iac.append(len(rec))
+            self._connection = (np.array(iac, dtype=int), np.array(ja, dtype=int))
 
         grid_info = {}
         if self._modelgrid.grid_type == "structured":
             a = array.reshape(self._modelgrid.nrow, self._modelgrid.ncol)
-            for m in np.unique(a):
+            for m in mkeys:
                 cells = np.asarray(a == m).nonzero()
                 rmin, rmax = np.min(cells[0]), np.max(cells[0])
                 cmin, cmax = np.min(cells[1]), np.max(cells[1])
@@ -1028,7 +1003,7 @@ class Mf6Splitter:
                 # get new nrow and ncol information
                 nrow = (rmax - rmin) + 1
                 ncol = (cmax - cmin) + 1
-                mapping = np.ones((nrow, ncol), dtype=int) * -1
+                mapping = np.full((nrow, ncol), -1, dtype=int)
                 nodes = self._modelgrid.get_node(cellids)
                 mapping[cells[0] - rmin, cells[1] - cmin] = nodes
                 grid_info[m] = [
@@ -1056,6 +1031,8 @@ class Mf6Splitter:
             for i in grid_info[m][0]:
                 new_ncpl[m] *= i
 
+        node_map = np.full((self._ncpl,), self._no_remap_key, dtype=int)
+        model_map = np.full((self._ncpl,), self._no_remap_key, dtype=int)
         for mdl in mkeys:
             mnodes = np.asarray(array == mdl).nonzero()[0]
             mg_info = grid_info[mdl]
@@ -1064,24 +1041,43 @@ class Mf6Splitter:
                 new_nodes = np.asarray(mapping != -1).nonzero()[0]
                 old_nodes = mapping[new_nodes]
                 for ix, nnode in enumerate(new_nodes):
-                    self._node_map[old_nodes[ix]] = (mdl, nnode)
+                    node_map[old_nodes[ix]] = nnode
+                    model_map[old_nodes[ix]] = mdl
             else:
                 for nnode, onode in enumerate(mnodes):
-                    self._node_map[onode] = (mdl, nnode)
+                    node_map[onode] = nnode
+                    model_map[onode] = mdl
 
+        self._node_map_arr = node_map
+        self._model_map_arr = model_map
         new_connections = {
             i: {"internal": {}, "external": {}} for i in mkeys
         }
         exchange_meta = {i: {} for i in mkeys}
         usg_meta = {i: {} for i in mkeys}
-        for node, conn in self._connection.items():
-            mdl, nnode = self._node_map[node]
+        # todo: rework the conn stuff
+
+        iac, ja = self._connection
+        idx0 = 0
+        for ia in iac:
+            idx1 = idx0 + ia
+            node = ja[idx0]
+            conn = ja[idx0 + 1 : idx1]
+            mdl = self._model_map_arr[node]
+            nnode = self._node_map_arr[node]
+            # advance the ja indexing
+            idx0 = idx1
+            if mdl == self._no_remap_key:
+                continue
             for ix, cnode in enumerate(conn):
-                cmdl, cnnode = self._node_map[cnode]
+                cmdl = self._model_map_arr[cnode]
+                cnnode = self._node_map_arr[cnode]
+                if cmdl == self._no_remap_key:
+                    continue
                 if cmdl == mdl:
                     if nnode in new_connections[mdl]["internal"]:
-                        new_connections[mdl]["internal"][nnode].append(cnnode)
                         if self._uconnection is not None:
+                            new_connections[mdl]["internal"][nnode].append(cnnode)
                             usg_meta[mdl][nnode]["ihc"].append(
                                 int(self._uconnection[node]["ihc"][ix + 1])
                             )
@@ -1097,8 +1093,8 @@ class Mf6Splitter:
                                 )
 
                     else:
-                        new_connections[mdl]["internal"][nnode] = [cnnode]
                         if self._uconnection is not None:
+                            new_connections[mdl]["internal"][nnode] = [cnnode]
                             usg_meta[mdl][nnode] = {
                                 "ihc": [
                                     self._uconnection[node]["ihc"][0],
@@ -1178,7 +1174,6 @@ class Mf6Splitter:
         vertex information has been supplied
 
         """
-        conn = {}
         uconn = {}
         iac = self._modelgrid.iac
         ja = self._modelgrid.ja
@@ -1191,8 +1186,6 @@ class Mf6Splitter:
         idx0 = 0
         for ia in iac:
             idx1 = idx0 + ia
-            cn = ja[idx0 + 1 : idx1]
-            conn[ja[idx0]] = list(cn)
             uconn[ja[idx0]] = {
                 "cl12": list(cl12[idx0:idx1]),
                 "ihc": list(ihc[idx0:idx1]),
@@ -1204,7 +1197,7 @@ class Mf6Splitter:
 
             idx0 = idx1
 
-        self._connection = conn
+        self._connection = (iac, ja)
         self._uconnection = uconn
 
     def _map_verts_iverts(self, array):
@@ -1231,8 +1224,10 @@ class Mf6Splitter:
             tmp_vert_dict = {}
             for node, ivert in enumerate(iverts):
                 tiverts = []
-                mk, nnode = self._node_map[node]
-                if mk == mkey:
+                mk = self._model_map_arr[node]
+                if mk == self._no_remap_key:
+                    continue
+                elif mk == mkey:
                     for iv in ivert:
                         vert = tuple(verts[iv].tolist())
                         if vert in tmp_vert_dict:
@@ -1311,7 +1306,7 @@ class Mf6Splitter:
 
         for mkey in self._model_dict.keys():
             idx = []
-            for node, (nmkey, nnode) in self._node_map.items():
+            for node, nmkey in enumerate(self._model_map_arr):
                 if nmkey == mkey:
                     idx.append(node)
 
@@ -1833,7 +1828,6 @@ class Mf6Splitter:
         -------
             dict
         """
-        # self._mvr_remaps = {}
         if isinstance(package, (modflow.ModflowGwtmvt, modflow.ModflowGwemve)):
             return mapped_data
 
@@ -2535,10 +2529,13 @@ class Mf6Splitter:
         -------
             dict : obs_map
         """
+        # todo: may need to patch changes for boundnames in obs_map["cellid"]
         if "boundname" in recarray.dtype.names:
             for bname in recarray.boundname:
                 for variable in variables:
-                    if bname in obs_map[variable]:
+                    if obs_map[variable] is None:
+                        continue
+                    elif bname in obs_map[variable]:
                         if not isinstance(obs_map[variable][bname], list):
                             obs_map[variable][bname] = [
                                 obs_map[variable][bname]
@@ -2724,13 +2721,8 @@ class Mf6Splitter:
             for ofile, recarray in continuous_data.items():
                 if pkg_type is None:
                     layers1, node1 = self._cellid_to_layer_node(recarray.id)
-                    new_node1 = np.array(
-                        [remapper[i][-1] for i in node1], dtype=int
-                    )
-                    new_model1 = np.array(
-                        [remapper[i][0] for i in node1], dtype=int
-                    )
-
+                    new_node1 = self._node_map_arr[node1]
+                    new_model1 = self._model_map_arr[node1]
                     new_cellid1 = np.full(
                         (
                             len(
@@ -2806,6 +2798,7 @@ class Mf6Splitter:
                             )
 
                     else:
+                        # use the cellid remapper
                         new_node1 = np.full(
                             (len(recarray),), None, dtype=object
                         )
@@ -2827,8 +2820,9 @@ class Mf6Splitter:
                             layers1, node1 = self._cellid_to_layer_node(
                                 recarray.id[idx]
                             )
-                            new_node1[idx] = [remapper[i][-1] for i in node1]
-                            new_model1[idx] = [remapper[i][0] for i in node1]
+
+                            new_node1[idx] = self._node_map_arr[node1]
+                            new_model1[idx] = self._model_map_arr[node1]
 
                         new_node1[bidx] = [i for i in recarray.id[bidx]]
                         new_model1[bidx] = [
@@ -2918,8 +2912,8 @@ class Mf6Splitter:
                             (len(recarray),), None, dtype=object
                         )
 
-                        new_node2[conv_idx] = [remapper[i][-1] for i in node2]
-                        new_model2[conv_idx] = [remapper[i][0] for i in node2]
+                        new_node2[conv_idx] = self._node_map_arr[node2]
+                        new_model2[conv_idx] = self._model_map_arr[node2]
                         for ix in range(len(recarray)):
                             if ix in conv_idx:
                                 continue
@@ -3104,13 +3098,8 @@ class Mf6Splitter:
         tuple (list, list) list of new model numbers and new node numbers
 
         """
-        new_model = np.zeros((len(nodes),), dtype=int)
-        new_node = np.zeros((len(nodes),), dtype=int)
-        for ix, node in enumerate(nodes):
-            nm, nn = self._node_map[node]
-            new_model[ix] = nm
-            new_node[ix] = nn
-
+        new_model = self._model_map_arr[nodes]
+        new_node = self._node_map_arr[nodes]
         return new_model, new_node
 
     def _new_node_to_cellid(self, model, new_node, layers, idx):
@@ -3374,7 +3363,7 @@ class Mf6Splitter:
         elif isinstance(package, modflow.ModflowUtlobs):
             if package.parent_file is not None:
                 return {}
-            mapped_data = self._remap_obs(package, mapped_data, self._node_map)
+            mapped_data = self._remap_obs(package, mapped_data, None)
 
         elif isinstance(package, modflow.ModflowGwtfmi):
             mapped_data = self._remap_fmi(package, mapped_data)
@@ -3484,7 +3473,7 @@ class Mf6Splitter:
                     pass
 
             if hasattr(package, "obs"):
-                obs_map = {"cellid": dict(self._node_map)}
+                obs_map = {"cellid": {}}
                 for mkey, mdict in mapped_data.items():
                     if "stress_period_data" in mdict:
                         for _, ra in mdict["stress_period_data"].items():
