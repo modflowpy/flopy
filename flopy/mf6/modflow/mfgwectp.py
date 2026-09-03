@@ -105,7 +105,7 @@ class ModflowGwectp(MFPackage):
     _package_type = "ctp"
     dfn_file_name = "gwe-ctp.dfn"
     dfn = [
-        ["header", "multi-package"],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",
@@ -136,7 +136,7 @@ class ModflowGwectp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "mf6internal iprflow",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -144,7 +144,7 @@ class ModflowGwectp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "mf6internal ipakcb",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -152,7 +152,7 @@ class ModflowGwectp(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "mf6internal iprpak",
+            "mf6internal ipakcb",
         ],
         [
             "block options",

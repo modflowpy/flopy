@@ -86,10 +86,11 @@ class ModflowGwfevta(MFPackage):
         is an array of values for auxiliary variable aux(iaux), where iaux is a value
         from 1 to naux, and aux(iaux) must be listed as part of the auxiliary
         variables.  a separate array can be specified for each auxiliary variable.  if
-        an array is not specified for an auxiliary variable, then a value of zero is
-        assigned.  if the value specified here for the auxiliary variable is the same
-        as auxmultname, then the evapotranspiration rate will be multiplied by this
-        array.
+        an array is not specified for an auxiliary variable, then it will retain its
+        value from the most recently specified period block.  if an auxiliary variable
+        array has never been specified, its value is zero.  if the value specified here
+        for the auxiliary variable is the same as auxmultname, then the
+        evapotranspiration rate will be multiplied by this array.
 
     filename : str or PathLike, optional
         Name or path of file where this package is stored.

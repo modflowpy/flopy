@@ -20,8 +20,8 @@ class ModflowGweadv(MFPackage):
         Do not set this parameter. It is intended for debugging and internal
         processing purposes only.
     scheme : string
-        scheme used to solve the advection term.  can be upstream, central, or tvd.  if
-        not specified, upstream weighting is the default weighting scheme.
+        scheme used to solve the advection term.  can be upstream, central, tvd, or
+        utvd.  if not specified, upstream weighting is the default weighting scheme.
     ats_percel : double precision
         fractional cell distance submitted by the adv package to the adaptive time
         stepping (ats) package.  if ats_percel is specified and the ats package is

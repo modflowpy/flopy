@@ -36,6 +36,24 @@ class ModflowGwfcsub(MFPackage):
         compressibility of water. typical values of beta are 4.6512e-10 1/pa or
         2.2270e-8 lb/square foot in si and english units, respectively. by default,
         beta is 4.6512e-10 1/pa.
+    elastic_inelastic_smoothing : keyword
+        keyword to activate smoothing of the delay interbed skeletal specific storage
+        as the effective stress exceeds the preconsolidation stress. when active, the
+        skeletal specific storage is smoothly transitioned from the elastic value to
+        the inelastic value over a small window (0.001 of the preconsolidation stress)
+        instead of switching discontinuously at the preconsolidation stress. activating
+        this option can improve convergence of models with delay interbeds. by default,
+        the elastic to inelastic transition is discontinuous.
+    strict_effective_stress : keyword
+        keyword to terminate the simulation when the calculated effective stress is
+        small or negative, instead of regularizing it. by default the effective stress
+        used to calculate the skeletal specific storage is not allowed to fall below a
+        small fraction (0.001) of the geostatic stress, which keeps the specific
+        storage bounded and allows the simulation to continue; a warning reports the
+        number of time steps in which a negative effective stress was regularized.
+        negative effective stress typically occurs in uppermost cells where simulated
+        water levels rise above land surface. this keyword is deprecated and will be
+        removed in a future release.
     head_based : keyword
         keyword to indicate the head-based formulation will be used to simulate coarse-
         grained aquifer materials and no-delay and delay interbeds. specifying
@@ -198,7 +216,13 @@ class ModflowGwfcsub(MFPackage):
                 block, PCS0 is the initial offset from the calculated initial head or initial
                 preconsolidation head in the CSUB interbed and the initial preconsolidation
                 stress is calculated from the calculated initial effective stress or calculated
-                initial geostatic stress, respectively.
+                initial geostatic stress, respectively. When PCS0 is a relative offset, the
+                sign depends on the formulation. For the default effective-stress formulation,
+                specify a positive PCS0 for an overconsolidated interbed since the
+                preconsolidation stress is greater than the initial effective stress. If
+                HEAD_BASED is specified, specify a negative PCS0 for an overconsolidated
+                interbed since the preconsolidation head is less than the initial head. A PCS0
+                of zero is normally consolidated in both formulations.
         * thick_frac : double precision
                 is the interbed thickness or cell fraction of the interbed. Interbed thickness
                 is specified as a fraction of the cell thickness if CELL_FRACTION is specified
@@ -340,6 +364,23 @@ class ModflowGwfcsub(MFPackage):
             "reader urword",
             "optional true",
             "default 4.6512e-10",
+        ],
+        [
+            "block options",
+            "name elastic_inelastic_smoothing",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal ei_smoothing",
+        ],
+        [
+            "block options",
+            "name strict_effective_stress",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "deprecated 6.8.0",
+            "mf6internal strict_stress",
         ],
         [
             "block options",
@@ -1026,6 +1067,8 @@ class ModflowGwfcsub(MFPackage):
         save_flows=None,
         gammaw=9806.65,
         beta=4.6512e-10,
+        elastic_inelastic_smoothing=None,
+        strict_effective_stress=None,
         head_based=None,
         initial_preconsolidation_head=None,
         ndelaycells=None,
@@ -1074,6 +1117,12 @@ class ModflowGwfcsub(MFPackage):
         self.save_flows = self.build_mfdata("save_flows", save_flows)
         self.gammaw = self.build_mfdata("gammaw", gammaw)
         self.beta = self.build_mfdata("beta", beta)
+        self.elastic_inelastic_smoothing = self.build_mfdata(
+            "elastic_inelastic_smoothing", elastic_inelastic_smoothing
+        )
+        self.strict_effective_stress = self.build_mfdata(
+            "strict_effective_stress", strict_effective_stress
+        )
         self.head_based = self.build_mfdata("head_based", head_based)
         self.initial_preconsolidation_head = self.build_mfdata(
             "initial_preconsolidation_head", initial_preconsolidation_head

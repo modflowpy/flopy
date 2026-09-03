@@ -87,7 +87,7 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.10.1
+        uses: prefix-dev/setup-pixi@v0.10.2
         with:
           pixi-version: v0.70.1
           manifest-path: modflow6/pixi.toml
@@ -131,7 +131,7 @@ jobs:
           version: 13
 
       - name: Set up headless display
-        uses: pyvista/setup-headless-display-action@v4
+        uses: pyvista/setup-headless-display-action@v5
 
       - name: Build MODFLOW 6
         working-directory: modflow6

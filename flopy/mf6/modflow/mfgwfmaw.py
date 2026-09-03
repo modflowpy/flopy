@@ -74,6 +74,23 @@ class ModflowGwfmaw(MFPackage):
         when flow corrections are activated, unit head gradients are used to calculate
         the flow between a multi-aquifer well and a connected gwf cell. by default,
         flow corrections are not made.
+    non_vertical_wells : keyword
+        keyword that activates support for non-vertical (slanted) multi-aquifer well
+        connections.  when this option is specified, an angledata block can be used to
+        assign a tilt angle (deviation from vertical) to individual multi-aquifer well
+        connections.  the saturated conductance for a connection listed in the
+        angledata block is scaled by the in-cell screen length, which is calculated
+        from the screen top, screen bottom, and tilt angle (or specified directly),
+        instead of the vertical screen thickness.  by default, all multi-aquifer well
+        connections are assumed to be vertical.  the tilt angle and connection length
+        scale the conductance for a single connection only and do not route flow
+        through intervening cells; a well that passes through more than one cell (a
+        slanted well or a horizontal lateral) must have a separate connection to each
+        cell that it penetrates.  for a connection that uses the specified conductance
+        equation, the saturated conductance is used unchanged (the length correction is
+        not applied because the conductance is provided by the user), but the screen
+        top and bottom are honored so that the connection saturation is calculated over
+        the correct interval rather than over the full cell.
     flowing_wells : keyword
         keyword that activates the flowing wells option for the multi-aquifer well
         package.
@@ -120,6 +137,10 @@ class ModflowGwfmaw(MFPackage):
         water mover (mvr) package.  when the mover option is specified, additional
         memory is allocated within the package to store the available, provided, and
         received water.
+    dev_peaceman_effective_radius : keyword
+        keyword that calculates the effective radius for structured grids using the
+        approach of peaceman (1983) instead of the default approach.  this development
+        option is not supported.
     nmawwells : integer
         integer value specifying the number of multi-aquifer wells that will be
         simulated for all stress periods.
@@ -188,8 +209,8 @@ class ModflowGwfmaw(MFPackage):
                 NMAWWELLS.
         * icon : integer
                 integer value that defines the GWF connection number for this multi-aquifer
-                well connection entry. ICONN must be greater than zero and less than or equal
-                to NGWFNODES for multi-aquifer well IFNO.
+                well connection entry. ICON must be greater than zero and less than or equal to
+                NGWFNODES for multi-aquifer well IFNO.
         * cellid : [integer]
                 is the cell identifier, and depends on the type of grid that is used for the
                 simulation.  For a structured grid that uses the DIS input file, CELLID is the
@@ -233,6 +254,48 @@ class ModflowGwfmaw(MFPackage):
                 aquifer well. RADIUS_SKIN can be any value if CONDEQN is SPECIFIED or THIEM. If
                 CONDEQN is SKIN, CUMULATIVE, or MEAN, the program will terminate with an error
                 if  RADIUS_SKIN is less than or equal to the RADIUS for the multi-aquifer well.
+
+    angledata : [(ifno, icon, angle, conn_length)]
+        * ifno : integer
+                integer value that defines the well number associated with the specified PERIOD
+                data on the line. IFNO must be greater than zero and less than or equal to
+                NMAWWELLS.
+        * icon : integer
+                integer value that defines the GWF connection number for this multi-aquifer
+                well connection entry. ICON must be greater than zero and less than or equal to
+                NGWFNODES for multi-aquifer well IFNO.
+        * angle : double precision
+                value that defines the tilt angle of the multi-aquifer well connection, in
+                degrees measured as a deviation from vertical.  ANGLE must be greater than or
+                equal to 0.0 (a vertical connection) and less than or equal to 90.0 (a
+                horizontal connection) degrees.  The in-cell screen length used to calculate
+                the saturated conductance is computed from the screen top, screen bottom, well
+                radius, and ANGLE, unless CONN_LENGTH is specified.  The horizontal distance
+                spanned by a connection grows rapidly as ANGLE approaches 90.0 degrees, and a
+                warning is issued if it is greater than the maximum horizontal extent of the
+                connected cell.  A connection that is intended to pass through more than one
+                cell should be specified as a separate connection to each cell that it passes
+                through.  If a connection passes through more than one cell unintentionally,
+                ANGLE or CONN_LENGTH should be reduced.
+        * conn_length : double precision
+                optional value that defines the length of the multi-aquifer well screen within
+                the connected GWF cell.  If CONN_LENGTH is specified (and greater than zero),
+                it is used directly as the in-cell screen length; otherwise, the in-cell screen
+                length is calculated from the screen top, screen bottom, well radius, and
+                ANGLE.  CONN_LENGTH must be specified for horizontal connections (ANGLE equal
+                to 90.0 degrees) because the in-cell screen length cannot be derived from the
+                screen elevations for a horizontal connection.  A warning is issued if the
+                horizontal distance spanned by the connection is greater than the maximum
+                horizontal extent of the connected cell.  The MEAN conductance equation is
+                recommended for horizontal connections.  For a horizontal connection using the
+                MEAN conductance equation, SCRN_TOP and SCRN_BOT do not affect the magnitude of
+                the saturated conductance but do determine the elevation range over which the
+                connection saturates and dewaters; SCRN_TOP and SCRN_BOT should be set to the
+                top and bottom of the horizontal borehole so that the vertical screen extent
+                (SCRN_TOP :math:`-` SCRN_BOT) equals the well diameter (2 times RADIUS).  The
+                program snaps SCRN_TOP to SCRN_BOT plus the well diameter when the specified
+                extent is essentially equal to the well diameter, and otherwise issues a
+                warning.
 
     perioddata : [(ifno, mawsetting)]
         * ifno : integer
@@ -381,6 +444,7 @@ class ModflowGwfmaw(MFPackage):
     connectiondata = ListTemplateGenerator(
         ("gwf6", "maw", "connectiondata", "connectiondata")
     )
+    angledata = ListTemplateGenerator(("gwf6", "maw", "angledata", "angledata"))
     perioddata = ListTemplateGenerator(("gwf6", "maw", "period", "perioddata"))
     package_abbr = "gwfmaw"
     _package_type = "maw"
@@ -547,6 +611,13 @@ class ModflowGwfmaw(MFPackage):
         ],
         [
             "block options",
+            "name non_vertical_wells",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name flowing_wells",
             "type keyword",
             "reader urword",
@@ -675,6 +746,13 @@ class ModflowGwfmaw(MFPackage):
             "name mover",
             "type keyword",
             "tagged true",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_peaceman_effective_radius",
+            "type keyword",
             "reader urword",
             "optional true",
         ],
@@ -838,6 +916,53 @@ class ModflowGwfmaw(MFPackage):
             "tagged false",
             "in_record true",
             "reader urword",
+        ],
+        [
+            "block angledata",
+            "name angledata",
+            "type recarray ifno icon angle conn_length",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block angledata",
+            "name ifno",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block angledata",
+            "name icon",
+            "type integer",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index true",
+        ],
+        [
+            "block angledata",
+            "name angle",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "numeric_index false",
+        ],
+        [
+            "block angledata",
+            "name conn_length",
+            "type double precision",
+            "shape",
+            "tagged false",
+            "in_record true",
+            "reader urword",
+            "optional true",
         ],
         [
             "block period",
@@ -1082,6 +1207,7 @@ class ModflowGwfmaw(MFPackage):
         budgetcsv_filerecord=None,
         no_well_storage=None,
         flow_correction=None,
+        non_vertical_wells=None,
         flowing_wells=None,
         shutdown_theta=None,
         shutdown_kappa=None,
@@ -1089,9 +1215,11 @@ class ModflowGwfmaw(MFPackage):
         timeseries=None,
         observations=None,
         mover=None,
+        dev_peaceman_effective_radius=None,
         nmawwells=None,
         packagedata=None,
         connectiondata=None,
+        angledata=None,
         perioddata=None,
         filename=None,
         pname=None,
@@ -1122,6 +1250,9 @@ class ModflowGwfmaw(MFPackage):
         )
         self.no_well_storage = self.build_mfdata("no_well_storage", no_well_storage)
         self.flow_correction = self.build_mfdata("flow_correction", flow_correction)
+        self.non_vertical_wells = self.build_mfdata(
+            "non_vertical_wells", non_vertical_wells
+        )
         self.flowing_wells = self.build_mfdata("flowing_wells", flowing_wells)
         self.shutdown_theta = self.build_mfdata("shutdown_theta", shutdown_theta)
         self.shutdown_kappa = self.build_mfdata("shutdown_kappa", shutdown_kappa)
@@ -1137,9 +1268,13 @@ class ModflowGwfmaw(MFPackage):
             "obs", observations, "continuous", self._obs_filerecord
         )
         self.mover = self.build_mfdata("mover", mover)
+        self.dev_peaceman_effective_radius = self.build_mfdata(
+            "dev_peaceman_effective_radius", dev_peaceman_effective_radius
+        )
         self.nmawwells = self.build_mfdata("nmawwells", nmawwells)
         self.packagedata = self.build_mfdata("packagedata", packagedata)
         self.connectiondata = self.build_mfdata("connectiondata", connectiondata)
+        self.angledata = self.build_mfdata("angledata", angledata)
         self.perioddata = self.build_mfdata("perioddata", perioddata)
 
         self._init_complete = True
