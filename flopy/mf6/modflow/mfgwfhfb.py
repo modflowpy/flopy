@@ -32,11 +32,10 @@ class ModflowGwfhfb(MFPackage):
                 file, CELLID1 is the layer, row, and column numbers of the cell.   For a grid
                 that uses the DISV input file, CELLID1 is the layer number and CELL2D number
                 for the two cells.  If the model uses the unstructured discretization (DISU)
-                input file, then CELLID1 is the node numbers for the cell.  The barrier is
-                located between cells designated as CELLID1 and CELLID2.  For models that use
-                the DIS and DISV grid types, the layer number for CELLID1 and CELLID2 must be
-                the same.  For all grid types, cells must be horizontally or vertically
-                adjacent.
+                input file, then CELLID1 is the node number for the cell.  The barrier is
+                located between cells designated as CELLID1 and CELLID2.  The program will
+                terminate with an error if CELLID1 and CELLID2 are not horizontally or
+                vertically adjacent.
         * cellid2 : [integer]
                 identifier for the second cell. See CELLID1 for description of how to specify.
         * hydchr : double precision

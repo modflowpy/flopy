@@ -22,6 +22,16 @@ class ModflowGwfsfr(MFPackage):
     storage : keyword
         keyword that activates storage contributions to the stream-flow routing package
         continuity equation.
+    ats_courant : double precision
+        real number value that defines the target courant number submitted by the sfr
+        package to the adaptive time stepping (ats) package.  if ats_courant is
+        specified and the ats package is active, the sfr package will compute the time
+        step that achieves the target courant number for the most constraining reach
+        (the reach with the highest wave celerity-to-length ratio) and submit that time
+        step to the ats package.  the storage option must be active when ats_courant is
+        specified.  ats_courant must be greater than zero.  a recommended baseline
+        value is 1.0, which targets unit courant number; values between 0.5 and 2.0 are
+        generally acceptable for kinematic wave routing.
     auxiliary : [string]
         defines an array of one or more auxiliary variable names.  there is no limit on
         the number of auxiliary variables that can be provided on this line; however,
@@ -127,8 +137,13 @@ class ModflowGwfsfr(MFPackage):
         seconds.
     dev_storage_weight : double precision
         real number value that defines the time weighting factor used to calculate the
-        change in channel storage. storage_weight must have a value between 0.5 and 1.
-        default storage_weight value is 1.
+        change in channel storage. dev_storage_weight must have a value between 0.5 and
+        1. the default dev_storage_weight value is 1, which is fully implicit and is
+        recommended for all practical applications.
+    dev_no_check : keyword
+        keyword that deactivates the checks of reach geometry relative to the model
+        grid and of reach parameters for reasonable values.  this development option is
+        not supported.
     nreaches : integer
         integer value specifying the number of stream reaches.  there must be nreaches
         entries in the packagedata block.
@@ -460,6 +475,13 @@ class ModflowGwfsfr(MFPackage):
         ],
         [
             "block options",
+            "name ats_courant",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name auxiliary",
             "type string",
             "shape (naux)",
@@ -760,6 +782,13 @@ class ModflowGwfsfr(MFPackage):
             "block options",
             "name dev_storage_weight",
             "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_no_check",
+            "type keyword",
             "reader urword",
             "optional true",
         ],
@@ -1319,6 +1348,7 @@ class ModflowGwfsfr(MFPackage):
         model,
         loading_package=False,
         storage=None,
+        ats_courant=None,
         auxiliary=None,
         boundnames=None,
         print_input=None,
@@ -1339,6 +1369,7 @@ class ModflowGwfsfr(MFPackage):
         length_conversion=None,
         time_conversion=None,
         dev_storage_weight=None,
+        dev_no_check=None,
         nreaches=None,
         packagedata=None,
         crosssections=None,
@@ -1361,6 +1392,7 @@ class ModflowGwfsfr(MFPackage):
         )
 
         self.storage = self.build_mfdata("storage", storage)
+        self.ats_courant = self.build_mfdata("ats_courant", ats_courant)
         self.auxiliary = self.build_mfdata("auxiliary", auxiliary)
         self.boundnames = self.build_mfdata("boundnames", boundnames)
         self.print_input = self.build_mfdata("print_input", print_input)
@@ -1403,6 +1435,7 @@ class ModflowGwfsfr(MFPackage):
         self.dev_storage_weight = self.build_mfdata(
             "dev_storage_weight", dev_storage_weight
         )
+        self.dev_no_check = self.build_mfdata("dev_no_check", dev_no_check)
         self.nreaches = self.build_mfdata("nreaches", nreaches)
         self.packagedata = self.build_mfdata("packagedata", packagedata)
         self.crosssections = self.build_mfdata("crosssections", crosssections)

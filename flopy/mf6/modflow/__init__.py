@@ -82,6 +82,7 @@ from .mfgwtsrc import ModflowGwtsrc
 from .mfgwtssm import ModflowGwtssm
 from .mfgwtuzt import ModflowGwtuzt
 from .mfims import ModflowIms
+from .mfmve import ModflowMve
 from .mfmvr import ModflowMvr
 from .mfmvt import ModflowMvt
 from .mfnam import ModflowNam
@@ -93,7 +94,6 @@ from .mfprtmip import ModflowPrtmip
 from .mfprtnam import ModflowPrtnam
 from .mfprtoc import ModflowPrtoc
 from .mfprtprp import ModflowPrtprp
-from .mfpts import ModflowPts
 from .mfsimulation import MFSimulation
 from .mftdis import ModflowTdis
 from .mfutlats import ModflowUtlats

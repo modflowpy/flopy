@@ -21,13 +21,16 @@ class ModflowGwfoc(MFPackage):
         processing purposes only.
     budget_filerecord : (budgetfile)
         * budgetfile : string
-                name of the output file to write budget information.
+                name of the output file to write budget information. Data are written to this
+                file only for time steps in which SAVE BUDGET is specified in a PERIOD block.
+                If SAVE BUDGET is specified in a PERIOD block and this file is not specified,
+                MODFLOW 6 will terminate with an error.
 
     budgetcsv_filerecord : (budgetcsvfile)
         * budgetcsvfile : string
                 name of the comma-separated value (CSV) output file to write budget summary
-                information.  A budget summary record will be written to this file for each
-                time step of the simulation.
+                information. If specified, a budget summary record will be written to this file
+                for every time step of the simulation.
 
     head_filerecord : (headfile)
         * headfile : string

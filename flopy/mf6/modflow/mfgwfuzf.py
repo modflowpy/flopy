@@ -82,6 +82,9 @@ class ModflowGwfuzf(MFPackage):
         water mover (mvr) package.  when the mover option is specified, additional
         memory is allocated within the package to store the available, provided, and
         received water.
+    dev_no_final_check : keyword
+        keyword that deactivates the final convergence check of the change in uzf
+        recharge.  this development option is not supported.
     simulate_et : keyword
         keyword specifying that et in the unsaturated (uzf) and saturated zones (gwf)
         will be simulated. et can be simulated in the uzf cell and not the gwf cell by
@@ -528,6 +531,13 @@ class ModflowGwfuzf(MFPackage):
         ],
         [
             "block options",
+            "name dev_no_final_check",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name simulate_et",
             "type keyword",
             "tagged true",
@@ -836,6 +846,7 @@ class ModflowGwfuzf(MFPackage):
         timeseries=None,
         observations=None,
         mover=None,
+        dev_no_final_check=None,
         simulate_et=None,
         linear_gwet=None,
         square_gwet=None,
@@ -886,6 +897,9 @@ class ModflowGwfuzf(MFPackage):
             "obs", observations, "continuous", self._obs_filerecord
         )
         self.mover = self.build_mfdata("mover", mover)
+        self.dev_no_final_check = self.build_mfdata(
+            "dev_no_final_check", dev_no_final_check
+        )
         self.simulate_et = self.build_mfdata("simulate_et", simulate_et)
         self.linear_gwet = self.build_mfdata("linear_gwet", linear_gwet)
         self.square_gwet = self.build_mfdata("square_gwet", square_gwet)

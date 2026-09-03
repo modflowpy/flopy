@@ -84,22 +84,61 @@ class ModflowGwflak(MFPackage):
         water mover (mvr) package.  when the mover option is specified, additional
         memory is allocated within the package to store the available, provided, and
         received water.
+    dev_force_fallback : keyword
+        keyword that solves every active lake with the substitution fallback under the
+        implicit formulation, instead of only those lakes that are too poorly
+        conditioned to solve as a matrix unknown.  this development option is not
+        supported.
+    dev_groundwater_head_conductance : keyword
+        keyword that calculates the conductance for horizontal connections using the
+        groundwater head instead of the lake stage.  this development option is not
+        supported.
+    dev_maximum_outlet_depth : double precision
+        real number value that defines the maximum depth used to calculate outlet flow.
+        this development option is not supported.
     surfdep : double precision
         real value that defines the surface depression depth for vertical lake-gwf
         connections. if specified, surfdep must be greater than or equal to zero. if
         surfdep is not specified, a default value of zero is used for all vertical
         lake-gwf connections.
+    implicit : keyword
+        keyword that activates the implicit formulation. with this option each lake
+        stage is solved as an additional unknown in the groundwater flow matrix,
+        instead of by the default substitution-iteration solver. the implicit
+        formulation typically converges in far fewer outer iterations for steady-state
+        and strongly coupled lakes and can solve problems for which the default
+        formulation fails to converge. converged results are equivalent to the default
+        formulation. the implicit formulation makes the coefficient matrix asymmetric
+        and therefore requires the bicgstab linear acceleration in the iterative model
+        solution (ims). each lake must have at least one groundwater connection when
+        the implicit option is active because the implicit formulation solves the lake
+        stage through its lakebed seepage; the program will terminate with an error if
+        a lake with no groundwater connections is specified with the implicit option.
+        if a lake stage becomes too poorly conditioned to solve as a matrix unknown,
+        which can happen for a weakly connected or disconnected lake, that lake is
+        solved automatically by the default substitution solver instead, so the
+        implicit formulation remains as robust as the default formulation. the newton
+        formulation is recommended for lakes that may become perched (disconnected from
+        the aquifer), because results obtained with the standard rewetting (rewet)
+        capability can otherwise differ between the two approaches.
     maximum_iterations : integer
         integer value that defines the maximum number of newton-raphson iterations
         allowed for a lake. by default, maximum_iterations is equal to 100.
         maximum_iterations would only need to be increased from the default value if
-        one or more lakes in a simulation has a large water budget error.
+        one or more lakes in a simulation has a large water budget error. this option
+        applies only to the default substitution-iteration solver; when the implicit
+        option is active the lake stage is solved within the groundwater flow matrix
+        and its convergence is controlled by the iterative model solution (ims)
+        settings instead.
     maximum_stage_change : double precision
         real value that defines the lake stage closure tolerance. by default,
         maximum_stage_change is equal to :math:`1 times 10^{-5}`. the
         maximum_stage_change would only need to be increased or decreased from the
         default value if the water budget error for one or more lakes is too small or
-        too large, respectively.
+        too large, respectively. this option applies only to the default substitution-
+        iteration solver; when the implicit option is active the lake stage is solved
+        within the groundwater flow matrix and its convergence is controlled by the
+        iterative model solution (ims) settings instead.
     time_conversion : double precision
         real value that is used to convert user-specified manning's roughness
         coefficients or gravitational acceleration used to calculate outlet flows from
@@ -681,8 +720,36 @@ class ModflowGwflak(MFPackage):
         ],
         [
             "block options",
+            "name dev_force_fallback",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_groundwater_head_conductance",
+            "type keyword",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name dev_maximum_outlet_depth",
+            "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name surfdep",
             "type double precision",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
+            "name implicit",
+            "type keyword",
             "reader urword",
             "optional true",
         ],
@@ -1226,7 +1293,11 @@ class ModflowGwflak(MFPackage):
         timeseries=None,
         observations=None,
         mover=None,
+        dev_force_fallback=None,
+        dev_groundwater_head_conductance=None,
+        dev_maximum_outlet_depth=None,
         surfdep=None,
+        implicit=None,
         maximum_iterations=None,
         maximum_stage_change=None,
         time_conversion=None,
@@ -1278,7 +1349,17 @@ class ModflowGwflak(MFPackage):
             "obs", observations, "continuous", self._obs_filerecord
         )
         self.mover = self.build_mfdata("mover", mover)
+        self.dev_force_fallback = self.build_mfdata(
+            "dev_force_fallback", dev_force_fallback
+        )
+        self.dev_groundwater_head_conductance = self.build_mfdata(
+            "dev_groundwater_head_conductance", dev_groundwater_head_conductance
+        )
+        self.dev_maximum_outlet_depth = self.build_mfdata(
+            "dev_maximum_outlet_depth", dev_maximum_outlet_depth
+        )
         self.surfdep = self.build_mfdata("surfdep", surfdep)
+        self.implicit = self.build_mfdata("implicit", implicit)
         self.maximum_iterations = self.build_mfdata(
             "maximum_iterations", maximum_iterations
         )

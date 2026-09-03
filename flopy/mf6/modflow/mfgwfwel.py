@@ -54,11 +54,13 @@ class ModflowGwfwel(MFPackage):
         rates are adjusted to 0 or a smaller negative value when the head in the cell
         is equal to or less than the calculated interval above the cell bottom.
         auto_flow_reduce is set to 0.1 if the specified value is less than or equal to
-        zero. by default, negative pumping rates are not reduced during a simulation.
-        this auto_flow_reduce option only applies to wells in model cells that are
-        marked as 'convertible' (icelltype /= 0) in the node property flow (npf) input
-        file. reduction in flow will not occur for wells in cells marked as confined
-        (icelltype = 0).
+        zero. auto_flow_reduce is set to 1.0 if the specified value is greater than 1.0
+        and the flow_reduction_length option is not specified (that is, the value is
+        interpreted as a fraction of the cell thickness). by default, negative pumping
+        rates are not reduced during a simulation.  this auto_flow_reduce option only
+        applies to wells in model cells that are marked as 'convertible' (icelltype /=
+        0) in the node property flow (npf) input file. reduction in flow will not occur
+        for wells in cells marked as confined (icelltype = 0).
     afrcsv_filerecord : (afrcsvfile)
         * afrcsvfile : string
                 name of the comma-separated value (CSV) output file to write information about
@@ -72,6 +74,24 @@ class ModflowGwfwel(MFPackage):
         not specified in the options block. the program will terminate with an error if
         the flow_reduction_length option is specified and the auto_flow_reduce value
         specified in the options block is less than or equal to zero.
+    auto_flow_reduce_auxname : string
+        name of a variable listed in auxiliary that defines the per-well
+        auto_flow_reduce value used to compute the flow reduction threshold for each
+        well. the auxiliary variable is interpreted the same way as the global
+        auto_flow_reduce value: as a length above the cell bottom when
+        flow_reduction_length is specified, or otherwise as a fraction of the cell
+        thickness. when specified, the per-well auxiliary value overrides the global
+        auto_flow_reduce value for that well. a warning will be issued if
+        auto_flow_reduce_auxname is specified but auto_flow_reduce is not specified in
+        the options block. a warning will be issued if auto_flow_reduce_auxname is
+        specified but flow_reduction_length is not specified in the options block. the
+        program will terminate with an error if auto_flow_reduce_auxname is specified
+        but no auxiliary variables are specified, or if the named auxiliary variable
+        cannot be found. the per-well value must be greater than zero and less than or
+        equal to 1 when flow_reduction_length is not specified, or greater than zero
+        and less than or equal to the cell thickness when flow_reduction_length is
+        specified; the program will terminate with an error if a value is outside the
+        valid range.
     timeseries : record ts6 filein ts6_filename
         Contains data for the ts package. Data can be passed as a dictionary to the ts
         package with variable names as keys and package data as values. Data for the
@@ -247,6 +267,15 @@ class ModflowGwfwel(MFPackage):
         ],
         [
             "block options",
+            "name auto_flow_reduce_auxname",
+            "type string",
+            "shape",
+            "reader urword",
+            "optional true",
+            "mf6internal afrauxname",
+        ],
+        [
+            "block options",
             "name ts_filerecord",
             "type record ts6 filein ts6_filename",
             "shape",
@@ -410,6 +439,7 @@ class ModflowGwfwel(MFPackage):
         auto_flow_reduce=None,
         afrcsv_filerecord=None,
         flow_reduction_length=None,
+        auto_flow_reduce_auxname=None,
         timeseries=None,
         observations=None,
         mover=None,
@@ -441,6 +471,9 @@ class ModflowGwfwel(MFPackage):
         )
         self.flow_reduction_length = self.build_mfdata(
             "flow_reduction_length", flow_reduction_length
+        )
+        self.auto_flow_reduce_auxname = self.build_mfdata(
+            "auto_flow_reduce_auxname", auto_flow_reduce_auxname
         )
         self._ts_filerecord = self.build_mfdata("ts_filerecord", None)
         self._ts_package = self.build_child_package(

@@ -136,6 +136,7 @@ class ModflowUtlspca(MFPackage):
             "type double precision",
             "shape (ncol*nrow; ncpl)",
             "reader readarray",
+            "time_series true",
             "optional true",
         ],
         [
@@ -144,6 +145,7 @@ class ModflowUtlspca(MFPackage):
             "type double precision",
             "shape (ncol*nrow; ncpl)",
             "reader readarray",
+            "time_series true",
             "optional true",
         ],
     ]

@@ -105,7 +105,7 @@ class ModflowGwtcnc(MFPackage):
     _package_type = "cnc"
     dfn_file_name = "gwt-cnc.dfn"
     dfn = [
-        ["header", "multi-package"],
+        ["header", "multi-package", "package-type stress-package"],
         [
             "block options",
             "name auxiliary",
@@ -136,7 +136,7 @@ class ModflowGwtcnc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "mf6internal iprflow",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -144,7 +144,7 @@ class ModflowGwtcnc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "mf6internal ipakcb",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -152,7 +152,7 @@ class ModflowGwtcnc(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
-            "mf6internal iprpak",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
