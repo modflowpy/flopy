@@ -441,6 +441,7 @@ def test_save_load_node_mapping_structured_to_disv(function_tmpdir):
         mfsplit2._node_map_arr,
         err_msg="Node map read/write not returning proper values",
     )
+    
     array_dict = {}
     for mkey in (0, 1):
         ml = new_sim2.get_model(f"freyberg_{mkey}")
