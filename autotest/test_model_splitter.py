@@ -2134,7 +2134,7 @@ def test_sfr_none_cells(function_tmpdir):
         nreach = valid_nreach[ix]
         none_cells = sfr_none_cells[ix]
         recarray = new_sim.get_model(f"model_{ix}").sfr.packagedata.array
-        assert len(recarray) == nreach, "Wrong number of SFR reaches assinged to model"
+        assert len(recarray) == nreach, "Wrong number of SFR reaches assigned to model"
 
         none_cnt = 0
         for cid in recarray.cellid:
