@@ -2126,10 +2126,8 @@ class Mf6Splitter:
                         else:
                             break
 
-                    # con = np.abs(connectiondata[connectiondata.ifno == rch].ic_0)[0]
-                    # cid = packagedata[packagedata.ifno == con].cellid[0]
-                    # use absolute value in case this is connected to cell(s) that are
-                    # also not connected to the model
+                    # use absolute value in case there are no connected cells
+                    # that exchange with the GWF system
                     rcids.append(tuple(np.abs(cid)))
                 cellids[messy_idx] = rcids
 
