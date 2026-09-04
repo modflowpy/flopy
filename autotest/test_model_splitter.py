@@ -1981,3 +1981,163 @@ def test_reconstruct_recarray(function_tmpdir):
             vrec = vrecarray[ix]
             for name in recarray.dtype.names:
                 assert rec[name] == vrec[name], "Recarray reconstruction failed"
+
+
+@requires_exe("mf6")
+def test_sfr_none_cells(function_tmpdir):
+    sim_ws = function_tmpdir / "sfr_none_test"
+    split_ws = sim_ws / "split_model"
+
+    # build the model
+    sim = flopy.mf6.MFSimulation(sim_ws=sim_ws)
+    tdis = flopy.mf6.ModflowTdis(sim, perioddata=[(365.0, 365, 1.0)])
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    gwf = flopy.mf6.ModflowGwf(sim)
+
+    nlay, nrow, ncol = (1, 10, 10)
+    delc = np.full((nrow,), 100)
+    delr = np.full((ncol,), 100)
+    top = np.ones((nrow, ncol)) * np.linspace(100, 97, 10)
+    botm = np.zeros((nlay, nrow, ncol))
+    idomain = np.ones(botm.shape, dtype=int)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delc=delc,
+        delr=delr,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    npf = flopy.mf6.ModflowGwfnpf(gwf, icelltype=1, k=5.0, k33=1.0)
+
+    sto = flopy.mf6.ModflowGwfsto(
+        gwf,
+        iconvert=1,
+        ss=1e-06,
+        sy=0.12,
+        steady_state=[False],
+        transient=[
+            True,
+        ],
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top - 10)
+
+    recs = [(0, i, 0, 90.0) for i in range(nrow)]
+    chd_l = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: recs}, pname="chd_l")
+
+    recs = [(0, i, 9, 85.0, 100 * 100 * 0.01) for i in range(nrow)]
+    ghb_l = flopy.mf6.ModflowGwfghb(gwf, stress_period_data={0: recs}, pname="ghb_r")
+
+    sfr_con = [
+        (0, -1),
+        (1, 0, -2),
+        (2, 1, -3),
+        (3, 2, 10, -4),
+        (4, 3, -5),
+        (5, 4, -6),
+        (6, 5, -7),
+        (7, 6, 12, -8),
+        (8, 7, -9),
+        (9, 8),
+        (10, 11, -3),
+        (11, -10),
+        (12, 13, -7),
+        (13, 14, -12),
+        (14, -13),
+    ]
+
+    packagedata = []
+    rgrd = np.round((top[0, 0] - top[0, 1]) / 100.0, 4)
+    for c, cons in enumerate(sfr_con):
+        ncon = len(cons) - 1
+        if c < 10:
+            rec = (
+                c,
+                (0, 4, c),
+                100,
+                5,
+                rgrd,
+                top[4, c] - 4,
+                1.0,
+                0.005,
+                0.025,
+                ncon,
+                1,
+                0,
+            )
+        elif c < 12:
+            rec = (
+                c,
+                (-1, -1, -1),
+                100,
+                5,
+                rgrd,
+                top[4, 3],
+                1.0,
+                0.005,
+                0.025,
+                ncon,
+                1,
+                0,
+            )
+        else:
+            rec = (
+                c,
+                (-1, -1, -1),
+                100,
+                5,
+                rgrd,
+                top[4, 7],
+                1.0,
+                0.005,
+                0.025,
+                ncon,
+                1,
+                0,
+            )
+        packagedata.append(rec)
+
+    nreaches = len(packagedata)
+
+    perioddata = [(0, "inflow", 100), (11, "inflow", 50), (14, "inflow", 75)]
+
+    sfr = flopy.mf6.ModflowGwfsfr(
+        gwf,
+        nreaches=nreaches,
+        packagedata=packagedata,
+        connectiondata=sfr_con,
+        perioddata={0: perioddata},
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    # split the model so each section has a connected segment
+    # (multiple reaches) of SFR NONE cells
+    arr = np.zeros(top.shape, dtype=int)
+    arr[:, (ncol // 2) :] = 1
+
+    mfs = Mf6Splitter(sim)
+    new_sim = mfs.split_model(arr, sim_ws=split_ws)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    valid_nreach = [7, 8]
+    sfr_none_cells = [2, 3]
+    for ix in range(2):
+        nreach = valid_nreach[ix]
+        none_cells = sfr_none_cells[ix]
+        recarray = new_sim.get_model(f"model_{ix}").sfr.packagedata.array
+        assert len(recarray) == nreach, "Wrong number of SFR reaches assinged to model"
+
+        none_cnt = 0
+        for cid in recarray.cellid:
+            if cid == (-1, -1, -1):
+                none_cnt += 1
+        assert none_cnt == none_cells, "Splitter not correctly assigning SFR None cells"
