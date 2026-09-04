@@ -499,7 +499,7 @@ class ModflowSfr2(Package):
         diff = np.diff(self.reach_data.iseg)
         if len(diff) > 0:
             if (
-                np.diff(diff).max() != 0
+                diff.max() != 0
                 and np.max(list(set(self.graph.keys()))) != 0
                 and np.max(list(set(self.graph.values()))) != 0
             ):
