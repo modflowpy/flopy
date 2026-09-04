@@ -2929,10 +2929,10 @@ class Mf6Splitter:
                             "structured",
                             "vertex",
                         ):
-                            layers2 = [
+                            layers2 = np.array([
                                 cid[0] if cid is not None else None
                                 for cid in cellid2
-                            ]
+                            ], dtype=object)
                             if self._modelgrid.grid_type == "structured":
                                 cellid2 = [
                                     (
@@ -2949,7 +2949,7 @@ class Mf6Splitter:
                                 ]
 
                         node2 = self._modelgrid.get_node(
-                            list(cellid2[conv_idx])
+                            [cellid2[cv_ix] for cv_ix in conv_idx]
                         )
                         new_node2 = np.full(
                             (len(recarray),), None, dtype=object
@@ -2964,10 +2964,10 @@ class Mf6Splitter:
                             if ix in conv_idx:
                                 continue
                             else:
-                                new_node2.append(None)
-                                new_model2.append(new_model1[ix])
+                                new_node2[ix] = None
+                                new_model2[ix] = int(new_model1[ix])
 
-                        if not np.allclose(new_model1, new_model2):
+                        if not np.allclose(new_model1, new_model2.astype(int)):
                             raise AssertionError(
                                 "One or more observation records cross model boundaries"
                             )
@@ -2978,20 +2978,11 @@ class Mf6Splitter:
                         for mkey, model in self._model_dict.items():
                             idx = np.asarray(new_model2 == mkey).nonzero()
                             tmp_node = new_node2[idx]
-                            cidx = np.asarray(tmp_node != None).nonzero()  # noqa: E711
-                            tmp_cellid = model.modelgrid.get_lrc(
-                                tmp_node[cidx].to_list()
+                            tmp_layers = layers2[idx]
+                            cidx = np.asarray(tmp_node != None).nonzero() # noqa: E711
+                            tmp_cellid = self._new_node_to_cellid(
+                                model, tmp_node, tmp_layers, cidx
                             )
-                            if self._modelgrid.grid_type in (
-                                "structured",
-                                "vertex",
-                            ):
-                                tmp_layers = layers2[cidx]
-                                tmp_cellid = [
-                                    (tmp_layers[ix],) + cid[1:]
-                                    for ix, cid in enumerate(tmp_cellid)
-                                ]
-
                             tmp_node[cidx] = tmp_cellid
                             new_cellid2[idx] = tmp_node
                     else:
@@ -3169,7 +3160,7 @@ class Mf6Splitter:
 
         new_node = new_node[idx].astype(int)
         if self._modelgrid.grid_type == "structured":
-            new_node += layers[idx] * model.modelgrid.ncpl
+            new_node += layers[idx].astype(int) * model.modelgrid.ncpl
             new_cellids = model.modelgrid.get_lrc(new_node.astype(int))
         elif self._modelgrid.grid_type == "vertex":
             new_cellids = [tuple(cid) for cid in zip(layers[idx], new_node)]
