@@ -33,6 +33,7 @@ This document describes how to set up a FloPy development environment, run the e
     - [Snapshot testing](#snapshot-testing)
   - [Branching model](#branching-model)
   - [Deprecation policy](#deprecation-policy)
+  - [Releasing](#releasing)
   - [Miscellaneous](#miscellaneous)
     - [Locating the root](#locating-the-root)
     - [Dependency analysis](#dependency-analysis)
@@ -458,6 +459,10 @@ This project loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-
 - Deprecation warning messages should include the deprecation version number (the release in which the deprecation message first appears) to permit timely follow-through later.
 
 See the linked article for more detail.
+
+## Releasing
+
+The release procedure is documented separately in [docs/make_release.md](docs/make_release.md). FloPy releases are automated from a pushed `v<x.y.z>` branch, publish to PyPI with [trusted publishing](https://docs.pypi.org/trusted-publishers/) from a `release` environment, and reach conda-forge through the autotick bot. There are also a few manual steps (updating citations, reviewing deprecations, regenerating the MF6 module); see the release guide for the full sequence and the caveats.
 
 ## Miscellaneous
 

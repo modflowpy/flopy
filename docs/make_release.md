@@ -86,7 +86,11 @@ Review the release and publish it. Publishing the release triggers a final job t
 
 The release workflow assumes [trusted publishing](https://docs.pypi.org/trusted-publishers/) has been configured in the PyPI admin interface. A GitHub environment called `release` is required (however it needs no secrets or environment variables).
 
+**Note:** PyPI matches a trusted publisher on the organization name, the repository name, the workflow filename and the environment name. Renaming any of them silently invalidates the publisher, and nothing reports it until the next release fails with `invalid-publisher`. This bit `modflowapi` when its organization was renamed and went unnoticed until the next release. After any such rename, update the publisher at <https://pypi.org/manage/project/flopy/settings/publishing/> to match.
+
 For the Conda distribution, there [is a bot](https://github.com/regro-cf-autotick-bot) which will [automatically detect new package versions uploaded to PyPI and create a PR](https://github.com/conda-forge/flopy-feedstock/pull/50) to update the `conda-forge/flopy-feedstock` repository. This PR can be reviewed, updated if needed, and merged to update the package on the `conda-forge` channel. If it becomes necessary to manually publish an update to conda forge, see below.
+
+**Note:** the bot updates only the version number and the checksum. If the release changed FloPy's dependencies or minimum versions, update the recipe's `host` and `run` requirements to match the `Requires-Dist` metadata of the sdist on PyPI before merging. A maintainer can push the correction to the bot's branch.
 
 ### Reset the develop branch
 
