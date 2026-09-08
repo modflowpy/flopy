@@ -15,7 +15,7 @@ jobs:
         shell: bash
     timeout-minutes: 10
     env:
-      PYTHON_VERSION: '3.11'
+      PYTHON_VERSION: '3.12'
     strategy:
       fail-fast: false
       matrix:
