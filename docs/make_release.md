@@ -72,6 +72,8 @@ Pushing the release branch to the repository triggers the workflow.
 
 If the branch name ends with `rc`, it's a dry run and the workflow stops here. If the branch name does not end with `rc` the workflow creates a draft PR from the release branch into the `master` branch.
 
+**Note:** the changelog is generated from commit messages with git-cliff. Development PRs are squash merged, so the PR title becomes that message, and a title that is not a [conventional commit](https://www.conventionalcommits.org/) header is dropped from the notes without warning. [`.github/workflows/pull_request.yml`](../.github/workflows/pull_request.yml) rejects such titles, but it cannot tell whether the type is the right one: a user facing change titled `chore:` still passes the check and is still dropped. Review the generated changelog on the release PR and add anything missing to the section for the version being cut.
+
 ### Merge release branch to master
 
 Review the PR and merging if it passes inspection.
@@ -86,7 +88,11 @@ Review the release and publish it. Publishing the release triggers a final job t
 
 The release workflow assumes [trusted publishing](https://docs.pypi.org/trusted-publishers/) has been configured in the PyPI admin interface. A GitHub environment called `release` is required (however it needs no secrets or environment variables).
 
+**Note:** PyPI matches a trusted publisher on the organization name, the repository name, the workflow filename and the environment name. Renaming any of them silently invalidates the publisher, and nothing reports it until the next release fails with `invalid-publisher` &mdash; possibly long after the rename. After any such rename, update the publisher at <https://pypi.org/manage/project/flopy/settings/publishing/> to match.
+
 For the Conda distribution, there [is a bot](https://github.com/regro-cf-autotick-bot) which will [automatically detect new package versions uploaded to PyPI and create a PR](https://github.com/conda-forge/flopy-feedstock/pull/50) to update the `conda-forge/flopy-feedstock` repository. This PR can be reviewed, updated if needed, and merged to update the package on the `conda-forge` channel. If it becomes necessary to manually publish an update to conda forge, see below.
+
+**Note:** the bot updates only the version number and the checksum. If the release changed FloPy's dependencies or minimum versions, update the recipe's `host` and `run` requirements to match the `Requires-Dist` metadata of the sdist on PyPI before merging. A maintainer can push the correction to the bot's branch.
 
 ### Reset the develop branch
 
