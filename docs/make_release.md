@@ -72,6 +72,8 @@ Pushing the release branch to the repository triggers the workflow.
 
 If the branch name ends with `rc`, it's a dry run and the workflow stops here. If the branch name does not end with `rc` the workflow creates a draft PR from the release branch into the `master` branch.
 
+**Note:** the changelog is generated from commit messages with git-cliff. Development PRs are squash merged, so the PR title becomes that message, and a title that is not a [conventional commit](https://www.conventionalcommits.org/) header is dropped from the notes without warning. [`.github/workflows/pull_request.yml`](../.github/workflows/pull_request.yml) rejects such titles, but it cannot tell whether the type is the right one: a user facing change titled `chore:` still passes the check and is still dropped. Review the generated changelog on the release PR and add anything missing to the section for the version being cut.
+
 ### Merge release branch to master
 
 Review the PR and merging if it passes inspection.
