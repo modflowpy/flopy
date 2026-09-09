@@ -96,24 +96,9 @@ For the Conda distribution, there [is a bot](https://github.com/regro-cf-autotic
 
 ### Reset the develop branch
 
-Make a new branch from `master`:
+Publishing the release triggers a final job to draft a pull request resetting `develop` from `master`. The job sets the development version for the next cycle with `scripts/update_version.py --post-release`: the next anticipated minor version, with a `.devN` segment where `N` is the patch number just released (e.g. `3.10.0.dev2` after `3.9.2`, `3.12.0.dev0` after `3.11.0`). The version number complies with [PEP 440](https://peps.python.org/pep-0440/).
 
-```shell
-git checkout master
-git switch -c post-x.y.z-release-reset
-```
-
-Update the version number for the next development cycle:
-
-```shell
-python scripts/update_version.py -v x.y.z.dev0
-```
-
-The version number must comply with [PEP 440](https://peps.python.org/pep-0440/).
-
-Lint and format Python files: `ruff check .` and `ruff format .` from the project root.
-
-Create and merge (don't squash) a pull request from this branch into `develop`.
+Review the draft PR and merge it &mdash; don't squash. Squashing removes the commit history from `develop` and causes it to diverge from `master`.
 
 ## Conda
 
