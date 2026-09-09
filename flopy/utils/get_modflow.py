@@ -8,12 +8,14 @@ It requires Python 3.6 or later, and has no dependencies.
 See https://developer.github.com/v3/repos/releases/ for GitHub Releases API.
 """
 
+import http.client
 import json
 import os
 import shutil
 import ssl
 import sys
 import tempfile
+import time
 import urllib
 import urllib.request
 import warnings
@@ -37,6 +39,29 @@ renamed_prefix = {
 }
 available_repos = list(renamed_prefix.keys())
 max_http_tries = 3
+http_retry_delay = 2.0  # base seconds between retries; grows exponentially
+_max_retry_delay = 60.0  # ceiling on any single backoff sleep
+
+# HTTP status codes worth retrying
+_retry_http_codes = {429, 500, 502, 503, 504}
+
+
+def _env(name, default):
+    """
+    Parse an env var as the type of ``default``.
+    Fall back to ``default`` on any error.
+    """
+    val = os.environ.get(name)
+    if val is None:
+        return default
+    try:
+        return type(default)(val)
+    except (TypeError, ValueError):
+        return default
+
+
+max_http_tries = max(1, _env("GET_MODFLOW_RETRIES", max_http_tries))
+http_retry_delay = max(0.0, _env("GET_MODFLOW_RETRY_DELAY", http_retry_delay))
 
 # Check if this is running from flopy
 within_flopy = False
@@ -119,7 +144,77 @@ def urlopen(request, timeout=10, quiet=False):
         return urllib.request.urlopen(request, timeout=timeout, context=context)
 
 
-def get_releases(owner=None, repo=None, quiet=False, per_page=None) -> List[str]:
+def _is_transient(err) -> bool:
+    """Whether an exception from urlopen + read is worth retrying."""
+    if isinstance(err, urllib.error.HTTPError):
+        return err.code in _retry_http_codes
+    if isinstance(err, urllib.error.URLError):
+        # SSLCertVerificationError is handled inside urlopen(); any other
+        # transport-level failure (reset, DNS blip, timeout) is retryable.
+        return not isinstance(err.reason, ssl.SSLCertVerificationError)
+    return isinstance(
+        err, (http.client.IncompleteRead, ConnectionResetError, TimeoutError)
+    )
+
+
+def _retry_config(tries, delay):
+    """Fill unset retry knobs from the module defaults and clamp to sane bounds."""
+    tries = max_http_tries if tries is None else tries
+    delay = http_retry_delay if delay is None else delay
+    return max(1, tries), max(0.0, delay)
+
+
+def _sleep_before_retry(attempt, tries, delay, err, quiet):
+    """Sleep with exponential backoff, capped at _max_retry_delay."""
+    secs = min(delay * (2 ** (attempt - 1)), _max_retry_delay)
+    retry_after = getattr(err, "headers", None) and err.headers.get("Retry-After")
+    if retry_after and str(retry_after).isdigit():
+        secs = max(secs, int(retry_after))
+    if not quiet:
+        print(f"  attempt {attempt}/{tries} failed ({err}); retrying in {secs:.0f}s")
+    time.sleep(secs)
+
+
+def fetch(request, timeout=10, quiet=False, tries=None, delay=None):
+    """Send a request, returning (response body, headers). Retries on failure."""
+    tries, delay = _retry_config(tries, delay)
+    for attempt in range(1, tries + 1):
+        try:
+            with urlopen(request, timeout=timeout, quiet=quiet) as resp:
+                return resp.read(), resp.headers
+        except Exception as err:
+            if attempt == tries or not _is_transient(err):
+                raise
+            _sleep_before_retry(attempt, tries, delay, err, quiet)
+
+
+def download(
+    request, dest_path, timeout=120, quiet=False, tries=None, delay=None
+) -> None:
+    """Like fetch, but stream the response to dest_path (atomic via <dest>.part)."""
+    tries, delay = _retry_config(tries, delay)
+    dest_path = Path(dest_path)
+    part_path = dest_path.with_name(dest_path.name + ".part")
+    for attempt in range(1, tries + 1):
+        try:
+            with urlopen(request, timeout=timeout, quiet=quiet) as resp:
+                with open(part_path, "wb") as f:
+                    shutil.copyfileobj(resp, f)
+            os.replace(part_path, dest_path)
+            return
+        except Exception as err:
+            try:
+                part_path.unlink()
+            except FileNotFoundError:
+                pass
+            if attempt == tries or not _is_transient(err):
+                raise
+            _sleep_before_retry(attempt, tries, delay, err, quiet)
+
+
+def get_releases(
+    owner=None, repo=None, quiet=False, per_page=None, tries=None, delay=None
+) -> List[str]:
     """Get list of available releases."""
     owner = default_owner if owner is None else owner
     repo = default_repo if repo is None else repo
@@ -132,25 +227,16 @@ def get_releases(owner=None, repo=None, quiet=False, per_page=None) -> List[str]
         params["per_page"] = per_page
 
     request = get_request(req_url, params=params)
-    num_tries = 0
-    while True:
-        num_tries += 1
-        try:
-            with urlopen(request, timeout=10, quiet=quiet) as resp:
-                result = resp.read()
-                break
-        except urllib.error.HTTPError as err:
-            if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
-                raise ValueError("GITHUB_TOKEN env is invalid") from err
-            elif err.code == 403 and "rate limit exceeded" in err.reason:
-                raise ValueError(
-                    f"use GITHUB_TOKEN env to bypass rate limit ({err})"
-                ) from err
-            elif err.code in {404, 503} and num_tries < max_http_tries:
-                # GitHub sometimes returns this error for valid URLs, so retry
-                print(f"URL request {num_tries} did not work ({err})")
-                continue
-            raise RuntimeError(f"cannot retrieve data from {req_url}") from err
+    try:
+        result, _ = fetch(request, timeout=10, quiet=quiet, tries=tries, delay=delay)
+    except urllib.error.HTTPError as err:
+        if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
+            raise ValueError("GITHUB_TOKEN env is invalid") from err
+        elif err.code == 403 and "rate limit exceeded" in err.reason:
+            raise ValueError(
+                f"use GITHUB_TOKEN env to bypass rate limit ({err})"
+            ) from err
+        raise RuntimeError(f"cannot retrieve data from {req_url}") from err
 
     releases = json.loads(result.decode())
     if not quiet:
@@ -161,7 +247,9 @@ def get_releases(owner=None, repo=None, quiet=False, per_page=None) -> List[str]
     return avail_releases
 
 
-def get_release(owner=None, repo=None, tag="latest", quiet=False) -> dict:
+def get_release(
+    owner=None, repo=None, tag="latest", quiet=False, tries=None, delay=None
+) -> dict:
     """Get info about a particular release."""
     owner = default_owner if owner is None else owner
     repo = default_repo if repo is None else repo
@@ -172,40 +260,31 @@ def get_release(owner=None, repo=None, tag="latest", quiet=False) -> dict:
         else f"{api_url}/releases/tags/{tag}"
     )
     request = get_request(req_url)
-    releases = None
-    num_tries = 0
 
-    while True:
-        num_tries += 1
-        try:
-            with urlopen(request, timeout=10, quiet=quiet) as resp:
-                result = resp.read()
-                remaining = resp.headers.get("x-ratelimit-remaining", None)
-                if remaining and int(remaining) <= 10:
-                    warnings.warn(
-                        f"Only {remaining} GitHub API requests remaining "
-                        "before rate-limiting"
-                    )
-                break
-        except urllib.error.HTTPError as err:
-            if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
-                raise ValueError("GITHUB_TOKEN env is invalid") from err
-            elif err.code == 403 and "rate limit exceeded" in err.reason:
+    try:
+        result, headers = fetch(
+            request, timeout=10, quiet=quiet, tries=tries, delay=delay
+        )
+        remaining = headers.get("x-ratelimit-remaining", None)
+        if remaining and int(remaining) <= 10:
+            warnings.warn(
+                f"Only {remaining} GitHub API requests remaining before rate-limiting"
+            )
+    except urllib.error.HTTPError as err:
+        if err.code == 401 and os.environ.get("GITHUB_TOKEN"):
+            raise ValueError("GITHUB_TOKEN env is invalid") from err
+        elif err.code == 403 and "rate limit exceeded" in err.reason:
+            raise ValueError(
+                f"use GITHUB_TOKEN env to bypass rate limit ({err})"
+            ) from err
+        elif err.code == 404:
+            # resolve the tag against the release list for a better message
+            releases = get_releases(owner, repo, quiet, tries=tries, delay=delay)
+            if tag not in releases:
                 raise ValueError(
-                    f"use GITHUB_TOKEN env to bypass rate limit ({err})"
+                    f"Release {tag} not found (choose from {', '.join(releases)})"
                 ) from err
-            elif err.code == 404:
-                if releases is None:
-                    releases = get_releases(owner, repo, quiet)
-                if tag not in releases:
-                    raise ValueError(
-                        f"Release {tag} not found (choose from {', '.join(releases)})"
-                    )
-            elif err.code == 503 and num_tries < max_http_tries:
-                # GitHub sometimes returns this error for valid URLs, so retry
-                warnings.warn(f"URL request {num_tries} did not work ({err})")
-                continue
-            raise RuntimeError(f"cannot retrieve data from {req_url}") from err
+        raise RuntimeError(f"cannot retrieve data from {req_url}") from err
 
     release = json.loads(result.decode())
     tag_name = release["tag_name"]
@@ -314,6 +393,8 @@ def run_main(
     downloads_dir=None,
     force=False,
     quiet=False,
+    retries=None,
+    retry_delay=None,
     _is_cli=False,
 ):
     """Run main method to get MODFLOW and related programs.
@@ -344,6 +425,12 @@ def run_main(
         previously downloaded in ``downloads_dir``.
     quiet : bool, default False
         If True, show fewer messages.
+    retries : int, optional
+        Attempts per network request. Defaults to the ``GET_MODFLOW_RETRIES``
+        environment variable, or 3.
+    retry_delay : float, optional
+        Base seconds between retries, growing exponentially. Defaults to the
+        ``GET_MODFLOW_RETRY_DELAY`` environment variable, or 2.0.
     _is_cli : bool, default False
         Control behavior of method if this is run as a command-line interface
         or as a Python function.
@@ -423,7 +510,9 @@ def run_main(
         raise KeyError(f"repo {repo!r} not supported; choose one of {available_repos}")
 
     # get the selected release
-    release = get_release(owner, repo, release_id, quiet)
+    release = get_release(
+        owner, repo, release_id, quiet, tries=retries, delay=retry_delay
+    )
     assets = release.get("assets", [])
     for asset in assets:
         asset_name = asset["name"]
@@ -464,11 +553,14 @@ def run_main(
     else:
         if not quiet:
             print(f"downloading '{download_url}' to '{download_pth}'")
-        with urlopen(
-            urllib.request.Request(download_url), timeout=120, quiet=quiet
-        ) as resp:
-            with open(download_pth, "wb") as f:
-                shutil.copyfileobj(resp, f)
+        download(
+            urllib.request.Request(download_url),
+            download_pth,
+            timeout=120,
+            quiet=quiet,
+            tries=retries,
+            delay=retry_delay,
+        )
 
     if subset:
         if isinstance(subset, str):
@@ -739,6 +831,20 @@ Examples:
         "previously downloaded in downloads-dir.",
     )
     parser.add_argument("--quiet", action="store_true", help="Show fewer messages.")
+    parser.add_argument(
+        "--retries",
+        type=int,
+        default=None,
+        help="Number of attempts per network request; default is "
+        f"{max_http_tries} (env: GET_MODFLOW_RETRIES). Use 1 to disable retries.",
+    )
+    parser.add_argument(
+        "--retry-delay",
+        type=float,
+        default=None,
+        help="Base seconds between retries, grows exponentially; default is "
+        f"{http_retry_delay} (env: GET_MODFLOW_RETRY_DELAY).",
+    )
     args = vars(parser.parse_args())
     try:
         run_main(**args, _is_cli=True)
