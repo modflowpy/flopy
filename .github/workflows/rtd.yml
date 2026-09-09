@@ -98,14 +98,6 @@ jobs:
           pixi run -e rtd install
           pixi run -e rtd pip install "../flopy[optional]"
 
-      - name: Workaround OpenGL issue on Linux
-        if: runner.os == 'Linux'
-        working-directory: modflow6
-        run: |
-          # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          pixi run -e rtd pip uninstall vtk
-          pixi run -e rtd pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
-
       - name: Install fonts on Linux
         if: runner.os == 'Linux'
         run: |
