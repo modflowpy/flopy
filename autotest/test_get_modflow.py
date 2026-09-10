@@ -15,8 +15,8 @@ from modflow_devtools.markers import requires_github
 from modflow_devtools.misc import run_py_script
 
 from autotest.conftest import get_project_root_path
-from flopy.utils import get_modflow
-from flopy.utils.get_modflow import get_release, get_releases, select_bindir
+from flopy.utils import get_modflow_module as get_modflow
+from flopy.utils.get_modflow import get_release, get_releases, run_main, select_bindir
 
 rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
@@ -459,7 +459,7 @@ def test_script(function_tmpdir, owner, repo, downloads_dir):
 def test_python_api(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     try:
-        get_modflow(bindir, owner=owner, repo=repo, downloads_dir=downloads_dir)
+        run_main(bindir, owner=owner, repo=repo, downloads_dir=downloads_dir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
