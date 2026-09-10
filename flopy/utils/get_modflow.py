@@ -191,7 +191,7 @@ def fetch(request, timeout=10, quiet=False, tries=None, delay=None):
 def download(
     request, dest_path, timeout=120, quiet=False, tries=None, delay=None
 ) -> None:
-    """Like fetch, but stream the response to dest_path (atomic via <dest>.part)."""
+    """Download (stream) a file to dest_path (atomic via a <dest>.part file)."""
     tries, delay = _retry_config(tries, delay)
     dest_path = Path(dest_path)
     part_path = dest_path.with_name(dest_path.name + ".part")
@@ -278,7 +278,6 @@ def get_release(
                 f"use GITHUB_TOKEN env to bypass rate limit ({err})"
             ) from err
         elif err.code == 404:
-            # resolve the tag against the release list for a better message
             releases = get_releases(owner, repo, quiet, tries=tries, delay=delay)
             if tag not in releases:
                 raise ValueError(
