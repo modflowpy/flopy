@@ -85,8 +85,7 @@ def create_home_local_bin():
 
 @pytest.fixture(autouse=True)
 def fast_retries(monkeypatch):
-    # make retries instant for the paths that use the module default (real
-    # network calls in-process, and get_modflow.py subprocesses)
+    # make retries instant
     monkeypatch.setattr(get_modflow, "http_retry_delay", 0.0)
     monkeypatch.setenv("GET_MODFLOW_RETRY_DELAY", "0")
 
@@ -275,7 +274,6 @@ def test_cli_forwards_retry_flags_to_run_main(monkeypatch):
 
     assert captured["retries"] == 9
     assert captured["retry_delay"] == 0.5
-    # cli_main forwards the flags rather than mutating module state
     assert get_modflow.max_http_tries == tries_before
 
 
