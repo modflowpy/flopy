@@ -1,11 +1,13 @@
 """Test get-modflow utility."""
 
+import io
 import os
 import sys
+import urllib.request
 from os.path import expandvars
 from pathlib import Path
 from platform import system
-from urllib.error import HTTPError
+from urllib.error import HTTPError, URLError
 
 import pytest
 from flaky import flaky
@@ -13,8 +15,8 @@ from modflow_devtools.markers import requires_github
 from modflow_devtools.misc import run_py_script
 
 from autotest.conftest import get_project_root_path
-from flopy.utils import get_modflow
-from flopy.utils.get_modflow import get_release, get_releases, select_bindir
+from flopy.utils import get_modflow_module as get_modflow
+from flopy.utils.get_modflow import get_release, get_releases, run_main, select_bindir
 
 rate_limit_msg = "rate limit exceeded"
 flopy_dir = get_project_root_path()
@@ -81,6 +83,13 @@ def create_home_local_bin():
     home_local.mkdir(parents=True, exist_ok=True)
 
 
+@pytest.fixture(autouse=True)
+def fast_retries(monkeypatch):
+    # make retries instant
+    monkeypatch.setattr(get_modflow, "http_retry_delay", 0.0)
+    monkeypatch.setenv("GET_MODFLOW_RETRY_DELAY", "0")
+
+
 def run_get_modflow_script(*args):
     return run_py_script(get_modflow_script, *args, verbose=True)
 
@@ -98,6 +107,187 @@ def append_ext(path: str):
 def test_get_releases_bad_page_size(per_page):
     with pytest.raises(ValueError):
         get_releases(repo="executables", per_page=per_page)
+
+
+class FakeResponse(io.BytesIO):
+    def __init__(self, data=b"", headers=None):
+        super().__init__(data)
+        self.headers = headers or {}
+
+
+def fake_urlopen(fail_times, exc, data=b"{}", headers=None):
+    # raises exc the first fail_times calls, then returns a fresh FakeResponse;
+    # call count is tracked on .calls
+    state = {"n": 0}
+
+    def _fake(request, timeout=10, quiet=False):
+        state["n"] += 1
+        if state["n"] <= fail_times:
+            raise exc
+        return FakeResponse(data, headers)
+
+    _fake.calls = state
+    return _fake
+
+
+def reset_error():
+    return URLError(ConnectionResetError(104, "Connection reset by peer"))
+
+
+def test_fetch_returns_body_and_headers(monkeypatch):
+    fake = fake_urlopen(
+        0, None, data=b'{"a": 1}', headers={"x-ratelimit-remaining": "42"}
+    )
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+    body, headers = get_modflow.fetch(object())
+    assert body == b'{"a": 1}'
+    assert headers.get("x-ratelimit-remaining") == "42"
+
+
+def test_fetch_retries_transient_then_succeeds(monkeypatch):
+    fake = fake_urlopen(2, reset_error(), data=b"OK")
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+
+    body, _ = get_modflow.fetch(object(), tries=3, delay=0)
+
+    assert body == b"OK"
+    assert fake.calls["n"] == 3
+
+
+def test_fetch_default_tries_from_module(monkeypatch):
+    # no tries= arg: falls back to the module-level max_http_tries
+    fake = fake_urlopen(99, reset_error())
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+    monkeypatch.setattr(get_modflow, "max_http_tries", 4)
+
+    with pytest.raises(URLError):
+        get_modflow.fetch(object(), delay=0)
+    assert fake.calls["n"] == 4
+
+
+def test_fetch_reraises_after_cap(monkeypatch):
+    fake = fake_urlopen(99, reset_error())
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+
+    with pytest.raises(URLError):
+        get_modflow.fetch(object(), tries=3, delay=0)
+    assert fake.calls["n"] == 3
+
+
+def test_fetch_tries_1_disables_retry(monkeypatch):
+    fake = fake_urlopen(99, reset_error())
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+
+    with pytest.raises(URLError):
+        get_modflow.fetch(object(), tries=1)
+    assert fake.calls["n"] == 1
+
+
+def test_fetch_non_transient_raises_immediately(monkeypatch):
+    slept = []
+    monkeypatch.setattr(get_modflow.time, "sleep", slept.append)
+    fake = fake_urlopen(99, HTTPError("u", 401, "Unauthorized", {}, None))
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+
+    with pytest.raises(HTTPError):
+        get_modflow.fetch(object(), tries=3, delay=0)
+    assert fake.calls["n"] == 1
+    assert slept == []
+
+
+def test_fetch_404_not_retried(monkeypatch):
+    slept = []
+    monkeypatch.setattr(get_modflow.time, "sleep", slept.append)
+    fake = fake_urlopen(99, HTTPError("u", 404, "Not Found", {}, None))
+    monkeypatch.setattr(get_modflow, "urlopen", fake)
+
+    with pytest.raises(HTTPError) as exc_info:
+        get_modflow.fetch(object(), tries=3, delay=0)
+    assert exc_info.value.code == 404
+    assert fake.calls["n"] == 1
+    assert slept == []
+
+
+def test_sleep_before_retry_backoff_and_cap(monkeypatch):
+    slept = []
+    monkeypatch.setattr(get_modflow.time, "sleep", slept.append)
+    err = reset_error()
+
+    get_modflow._sleep_before_retry(1, 3, 2.0, err, quiet=True)
+    get_modflow._sleep_before_retry(2, 3, 2.0, err, quiet=True)
+    get_modflow._sleep_before_retry(3, 3, 2.0, err, quiet=True)
+    assert slept == [2.0, 4.0, 8.0]  # exponential
+
+    # ceiling
+    get_modflow._sleep_before_retry(1, 3, 100.0, err, quiet=True)
+    assert slept[-1] == get_modflow._max_retry_delay
+
+    # Retry-After header wins when larger
+    retry_after = HTTPError("u", 503, "err", {"Retry-After": "30"}, None)
+    get_modflow._sleep_before_retry(1, 3, 2.0, retry_after, quiet=True)
+    assert slept[-1] == 30.0
+
+    # zero delay stays zero
+    get_modflow._sleep_before_retry(5, 3, 0.0, err, quiet=True)
+    assert slept[-1] == 0.0
+
+
+def test_download_atomic_success(tmp_path, monkeypatch):
+    monkeypatch.setattr(
+        get_modflow, "urlopen", fake_urlopen(1, reset_error(), data=b"PK\x03\x04zip")
+    )
+    dest = tmp_path / "asset.zip"
+
+    request = urllib.request.Request("http://example/asset.zip")
+    get_modflow.download(request, dest, quiet=True, tries=3, delay=0)
+
+    assert dest.read_bytes() == b"PK\x03\x04zip"
+    assert not (tmp_path / "asset.zip.part").exists()
+
+
+def test_download_failure_preserves_existing(tmp_path, monkeypatch):
+    monkeypatch.setattr(get_modflow, "urlopen", fake_urlopen(99, reset_error()))
+    dest = tmp_path / "asset.zip"
+    dest.write_bytes(b"OLD-GOOD-CACHE")
+
+    request = urllib.request.Request("http://example/asset.zip")
+    with pytest.raises(URLError):
+        get_modflow.download(request, dest, quiet=True, tries=3, delay=0)
+
+    assert dest.read_bytes() == b"OLD-GOOD-CACHE"
+    assert not (tmp_path / "asset.zip.part").exists()
+
+
+def test_cli_forwards_retry_flags_to_run_main(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        get_modflow, "run_main", lambda **kwargs: captured.update(kwargs)
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["get_modflow.py", str(Path.home()), "--retries", "9", "--retry-delay", "0.5"],
+    )
+    tries_before = get_modflow.max_http_tries
+
+    get_modflow.cli_main()
+
+    assert captured["retries"] == 9
+    assert captured["retry_delay"] == 0.5
+    assert get_modflow.max_http_tries == tries_before
+
+
+def test_cli_omitted_retry_flags_are_none(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        get_modflow, "run_main", lambda **kwargs: captured.update(kwargs)
+    )
+    monkeypatch.setattr(sys, "argv", ["get_modflow.py", str(Path.home())])
+
+    get_modflow.cli_main()
+
+    assert captured["retries"] is None
+    assert captured["retry_delay"] is None
 
 
 @flaky
@@ -267,7 +457,7 @@ def test_script(function_tmpdir, owner, repo, downloads_dir):
 def test_python_api(function_tmpdir, owner, repo, downloads_dir):
     bindir = str(function_tmpdir)
     try:
-        get_modflow(bindir, owner=owner, repo=repo, downloads_dir=downloads_dir)
+        run_main(bindir, owner=owner, repo=repo, downloads_dir=downloads_dir)
     except HTTPError as err:
         if err.code == 403:
             pytest.skip(f"GitHub {rate_limit_msg}")
