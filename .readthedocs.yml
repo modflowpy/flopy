@@ -9,7 +9,7 @@ version: 2
 build:
   os: ubuntu-22.04
   tools:
-    python: "3.11"
+    python: "3.12"
   # todo: uncomment below if notebooks are to be executed in RTD build
   # instead of in CI as currently, requires runtime reduction <15 mins
   # jobs:
