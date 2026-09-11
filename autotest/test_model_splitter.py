@@ -1981,3 +1981,134 @@ def test_reconstruct_recarray(function_tmpdir):
             vrec = vrecarray[ix]
             for name in recarray.dtype.names:
                 assert rec[name] == vrec[name], "Recarray reconstruction failed"
+
+
+@requires_exe("mf6")
+def test_fjf_obs_structured(function_tmpdir):
+    sim_ws = function_tmpdir
+    split_ws = function_tmpdir / "split_model"
+
+    nlay = 1
+    nrow = 10
+    ncol = 10
+    delc = np.full((nrow,), 10)
+    delr = np.full((ncol,), 10)
+    top = np.full((nrow, ncol), 50)
+    botm = np.full((nlay, nrow, ncol), 0)
+    idomain = np.ones(botm.shape, dtype=int)
+
+    sim = flopy.mf6.MFSimulation(sim_ws=sim_ws)
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim)
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+    npf = flopy.mf6.ModflowGwfnpf(gwf, k=5, k33=1)
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top - 5)
+
+    chd_rec = [(0, i, 0, 45) for i in range(nrow)]
+    ghb_rec = [(0, i, 9, 35, 25) for i in range(nrow)]
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data={0: chd_rec}, pname="chd_left"
+    )
+    ghb = flopy.mf6.ModflowGwfghb(
+        gwf, stress_period_data={0: ghb_rec}, pname="ghb_right"
+    )
+
+    obs = flopy.mf6.ModflowUtlobs(
+        gwf,
+        continuous={
+            "obs.csv": [
+                ("faceflow1", "flow-ja-face", (0, 3, 3), (0, 3, 4)),
+                ("h1", "head", (0, 3, 4)),
+                ("faceflow2", "flow-ja-face", (0, 6, 6), (0, 6, 7)),
+                ("h2", "head", (0, 6, 7)),
+            ]
+        },
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    array = np.zeros(top.shape, dtype=int)
+    array[:, (ncol // 2) :] = 1
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array, sim_ws=split_ws)
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+    assert success, "split model run failed, obs remapping may have failed"
+
+    for mdl in range(2):
+        obs_ra = new_sim.get_model(f"{gwf.name}_{mdl}").obs.continuous.data[
+            f"obs_{mdl}.csv"
+        ]
+        assert len(obs_ra) == 2, "number remapped of observation records incorrect"
+        id2 = obs_ra[obs_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+        assert isinstance(id2, tuple), "obs id2 datatype is incorrect"
+
+        if mdl == 0:
+            v_ra = obs.continuous.data["obs.csv"]
+            v_id = v_ra[v_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+
+            assert id2 == v_id, "id2 cellid not properly set"
+
+
+@requires_exe("mf6")
+def test_fjf_obs_vertex(function_tmpdir):
+    sim_ws = get_example_data_path() / "mf6" / "test003_gwfs_disv"
+    split_ws = function_tmpdir / "split_model"
+
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws)
+    sim.set_sim_path(function_tmpdir)
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+    ncpl = modelgrid.ncpl
+
+    obs = flopy.mf6.ModflowUtlobs(
+        gwf,
+        continuous={
+            "obs.csv": [
+                ("faceflow1", "flow-ja-face", (0, 24), (0, 34)),
+                ("h1", "head", (0, 34)),
+                ("faceflow2", "flow-ja-face", (0, 64), (0, 74)),
+                ("h2", "head", (0, 74)),
+            ]
+        },
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    array = np.zeros((ncpl,), dtype=int)
+    array[(ncpl // 2) :] = 1
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array, sim_ws=split_ws)
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+    assert success, "split model run failed, obs remapping may have failed"
+
+    for mdl in range(2):
+        obs_ra = new_sim.get_model(f"{gwf.name}_{mdl}").obs.continuous.data[
+            f"obs_{mdl}.csv"
+        ]
+        assert len(obs_ra) == 2, "number remapped of observation records incorrect"
+        id2 = obs_ra[obs_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+        assert isinstance(id2, tuple), "obs id2 datatype is incorrect"
+
+        if mdl == 0:
+            v_ra = obs.continuous.data["obs.csv"]
+            v_id = v_ra[v_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+
+            assert id2 == v_id, "id2 cellid not properly set"
