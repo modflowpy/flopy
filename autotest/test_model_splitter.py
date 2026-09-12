@@ -139,6 +139,324 @@ def test_unstructured_model_splitter(function_tmpdir):
 
 
 @requires_exe("mf6")
+def test_structured_to_disv_model_splitter(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6-freyberg"
+    split_path = function_tmpdir / "split_model"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+    idomain = modelgrid.idomain.reshape((modelgrid.nlay, modelgrid.ncpl))
+
+    array = np.zeros((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    array[modelgrid.nrow // 2 :, :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array, to_disv=True)
+
+    new_sim.set_sim_path(split_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    ml0 = new_sim.get_model("freyberg_0")
+    ml1 = new_sim.get_model("freyberg_1")
+
+    for ml in (ml0, ml1):
+        if ml.modelgrid.grid_type != "vertex":
+            raise AssertionError("Split model is not a DISV model")
+
+    # every stack of cells that is active in a layer, and no other, is split
+    nactive = np.count_nonzero(np.any(idomain != 0, axis=0))
+    if ml0.modelgrid.ncpl + ml1.modelgrid.ncpl != nactive:
+        raise AssertionError("Split models do not include all active cells")
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array({0: heads0, 1: heads1})
+
+    idx = modelgrid.idomain != 0
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads[idx], original_heads[idx], err_msg=err_msg)
+
+
+@requires_exe("mf6")
+def test_structured_to_disv_idomain(function_tmpdir):
+    nlay, nrow, ncol = 3, 10, 10
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+    idomain[:, 0:2, 0:2] = 0  # inactive in every layer, excluded from the split
+    idomain[0, 5:, 5:] = 0  # inactive in one layer, carried into the split
+    idomain[2, 0:3, 7:] = 0
+    idomain[1, 3:7, 3:7] = -1  # vertical passthrough, carried into the split
+
+    sim = flopy.mf6.MFSimulation(sim_name="ml", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(sim, complexity="simple")
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="ml", save_flows=True)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=100.0,
+        delc=100.0,
+        top=30.0,
+        botm=[20.0, 10.0, 0.0],
+        idomain=idomain,
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=25.0)
+    chd = [[(0, i, 2), 25.0] for i in range(2, nrow)]
+    chd += [[(0, i, ncol - 1), 20.0] for i in range(0, 5)]
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd)
+    flopy.mf6.ModflowGwfoc(
+        gwf,
+        head_filerecord="ml.hds",
+        saverecord=[("HEAD", "ALL")],
+    )
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    # split on a raveled array that covers every cell of the DIS grid
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, ncol // 2 :] = 1
+    array = array.ravel()
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array, to_disv=True)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    heads = {}
+    ncpl = 0
+    oidomain = idomain.reshape((nlay, nrow * ncol))
+    for mkey in (0, 1):
+        ml = new_sim.get_model(f"ml_{mkey}")
+        grid = ml.modelgrid
+        nodes = mfsplit._grid_info[mkey][-1]
+        ncpl += grid.ncpl
+
+        # a stack that is inactive or passes flow vertically in one layer
+        # keeps its idomain
+        for value in (0, -1):
+            nexpected = np.count_nonzero(oidomain[:, nodes] == value)
+            if np.count_nonzero(grid.idomain == value) != nexpected:
+                raise AssertionError(
+                    f"Model {mkey} idomain {value} cells were not remapped"
+                )
+
+        heads[mkey] = ml.output.head().get_alldata()[-1]
+
+    # a stack that is inactive in every layer is excluded
+    nactive = np.count_nonzero(np.any(oidomain != 0, axis=0))
+    if ncpl != nactive:
+        raise AssertionError("Split models do not include all active cells")
+
+    new_heads = mfsplit.reconstruct_array(heads)
+
+    idx = idomain > 0
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads[idx], original_heads[idx], err_msg=err_msg)
+
+
+def test_structured_to_disv_reconstruct_recarray():
+    sim_path = get_example_data_path() / "mf6-freyberg"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    array[modelgrid.nrow // 2 :, :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array, to_disv=True)
+
+    # riv and wel are split across both models, chd is in one model
+    for pkgtype in ("riv", "wel", "chd"):
+        original = getattr(gwf, pkgtype).stress_period_data.get_data(0)
+        recarrays = {}
+        for mkey in (0, 1):
+            ml = new_sim.get_model(f"freyberg_{mkey}")
+            if hasattr(ml, pkgtype):
+                recarrays[mkey] = getattr(ml, pkgtype).stress_period_data.get_data(0)
+
+        new_recarray = mfsplit.reconstruct_recarray(recarrays)
+
+        # cellids are returned as the layer, row, column of the original model
+        onodes = modelgrid.get_node([tuple(cid) for cid in original.cellid])
+        nnodes = modelgrid.get_node([tuple(cid) for cid in new_recarray.cellid])
+        oidx = np.argsort(onodes)
+        nidx = np.argsort(nnodes)
+
+        err_msg = f"Reconstructed {pkgtype} recarray does not match the original"
+        if not np.array_equal(np.array(onodes)[oidx], np.array(nnodes)[nidx]):
+            raise AssertionError(err_msg)
+
+        for name in original.dtype.names:
+            if name == "cellid":
+                continue
+            np.testing.assert_allclose(
+                new_recarray[name][nidx], original[name][oidx], err_msg=err_msg
+            )
+
+
+def test_vertex_reconstruct_recarray():
+    sim_path = get_example_data_path() / "mf6" / "test003_gwftri_disv"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.ncpl,), dtype=int)
+    array[0:85] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    for pname in ("chd_left", "chd_right"):
+        original = gwf.get_package(pname).stress_period_data.get_data(0)
+        recarrays = {}
+        for mkey in (0, 1):
+            ml = new_sim.get_model(f"gwf_1_{mkey}")
+            pkg = ml.get_package(pname)
+            if pkg is not None:
+                recarrays[mkey] = pkg.stress_period_data.get_data(0)
+
+        new_recarray = mfsplit.reconstruct_recarray(recarrays)
+
+        # cellids are returned as the layer, node of the original model
+        onodes = sorted(cid[-1] for cid in original.cellid)
+        nnodes = sorted(cid[-1] for cid in new_recarray.cellid)
+
+        err_msg = f"Reconstructed {pname} recarray does not match the original"
+        if onodes != nnodes:
+            raise AssertionError(err_msg)
+
+
+def test_structured_to_disv_model_geometry():
+    sim_path = get_example_data_path() / "mf6-freyberg"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    gwf = sim.get_model()
+    gwf.modelgrid.set_coord_info(xoff=1000.0, yoff=2000.0, angrot=15.0)
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    array[:, modelgrid.ncol // 2 :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    mfsplit.split_model(array, to_disv=True)
+
+    xcenters = modelgrid.xcellcenters.ravel()
+    ycenters = modelgrid.ycellcenters.ravel()
+    areas = modelgrid.area.ravel()
+    for mkey, model in mfsplit._model_dict.items():
+        grid = model.modelgrid
+        nodes = mfsplit._grid_info[mkey][-1]
+
+        err_msg = f"Model {mkey} cells are not coincident with original cells"
+        np.testing.assert_allclose(grid.xcellcenters, xcenters[nodes], err_msg=err_msg)
+        np.testing.assert_allclose(grid.ycellcenters, ycenters[nodes], err_msg=err_msg)
+
+        # MODFLOW 6 calculates a CELL2D area that is positive only when the
+        # vertices are listed in clockwise order (Disv.f90 get_cell2d_area)
+        cell2d = model.disv.cell2d.array
+        vertices = model.disv.vertices.array
+        icvert = np.column_stack([cell2d[f"icvert_{iv}"] for iv in range(4)])
+        x = vertices["xv"][icvert]
+        y = vertices["yv"][icvert]
+        cell_area = -0.5 * np.sum(
+            x * np.roll(y, -1, axis=1) - np.roll(x, -1, axis=1) * y, axis=1
+        )
+        err_msg = f"Model {mkey} CELL2D vertices are not in clockwise order"
+        np.testing.assert_allclose(cell_area, areas[nodes], err_msg=err_msg)
+
+
+def test_to_disv_grid_types():
+    sim_path = get_example_data_path() / "mf6" / "test003_gwftri_disv"
+    sim = MFSimulation.load(sim_ws=sim_path)
+    modelgrid = sim.get_model().modelgrid
+
+    array = np.zeros((modelgrid.ncpl,), dtype=int)
+    array[0:85] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    with pytest.warns(UserWarning, match="already a DISV model"):
+        mfsplit.split_model(array, to_disv=True)
+
+    sim_path = get_example_data_path() / "mf6" / "test006_gwf3"
+    sim = MFSimulation.load(sim_ws=sim_path)
+    modelgrid = sim.get_model().modelgrid
+
+    array = np.zeros((modelgrid.nnodes,), dtype=int)
+    array[65:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    with pytest.raises(ValueError, match="DISU"):
+        mfsplit.split_model(array, to_disv=True)
+
+
+@requires_exe("mf6")
+@requires_pkg("h5py")
+def test_save_load_node_mapping_structured_to_disv(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6-freyberg"
+    new_sim_path = function_tmpdir / "split_model"
+    hdf_file = new_sim_path / "node_map.hdf5"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    array = np.zeros((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    array[modelgrid.nrow // 2 :, :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array, to_disv=True)
+    new_sim.set_sim_path(new_sim_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+    original_node_map = mfsplit._node_map_arr
+
+    mfsplit.save_node_mapping(hdf_file)
+
+    new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
+    mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
+
+    np.testing.assert_allclose(
+        original_node_map,
+        mfsplit2._node_map_arr,
+        err_msg="Node map read/write not returning proper values",
+    )
+
+    array_dict = {}
+    for mkey in (0, 1):
+        ml = new_sim2.get_model(f"freyberg_{mkey}")
+        if ml.modelgrid.grid_type != "vertex":
+            raise AssertionError("Loaded node mapping grid type is not vertex")
+        array_dict[mkey] = ml.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit2.reconstruct_array(array_dict)
+
+    idx = modelgrid.idomain != 0
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads[idx], original_heads[idx], err_msg=err_msg)
+
+
+@requires_exe("mf6")
 @pytest.mark.slow
 def test_model_with_lak_sfr_mvr(function_tmpdir):
     sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
@@ -175,6 +493,95 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
 
 @requires_exe("mf6")
+def test_structured_to_disv_multi_model(function_tmpdir):
+    nlay, nrow, ncol = 1, 10, 10
+    idomain = np.ones((nlay, nrow, ncol), dtype=int)
+    idomain[:, 0:2, 0:2] = 0
+
+    sim = flopy.mf6.MFSimulation(sim_name="mm", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim, nper=1, perioddata=[(100.0, 10, 1.0)])
+    ims_gwf = flopy.mf6.ModflowIms(sim, complexity="simple", filename="gwf.ims")
+    ims_gwt = flopy.mf6.ModflowIms(
+        sim,
+        complexity="simple",
+        linear_acceleration="bicgstab",
+        filename="gwt.ims",
+    )
+
+    dis_kwargs = {
+        "nlay": nlay,
+        "nrow": nrow,
+        "ncol": ncol,
+        "delr": 100.0,
+        "delc": 100.0,
+        "top": 10.0,
+        "botm": [0.0],
+        "idomain": idomain,
+    }
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="gwf", save_flows=True)
+    flopy.mf6.ModflowGwfdis(gwf, **dis_kwargs)
+    flopy.mf6.ModflowGwfnpf(gwf, save_specific_discharge=True, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10.0)
+    flopy.mf6.ModflowGwfsto(gwf, ss=1e-5, iconvert=0)
+    chd = [[(0, i, 2), 10.0, 1.0] for i in range(2, nrow)]
+    chd += [[(0, i, ncol - 1), 9.0, 0.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(
+        gwf, pname="chd-1", auxiliary=["conc"], stress_period_data=chd
+    )
+    flopy.mf6.ModflowGwfoc(
+        gwf,
+        head_filerecord="gwf.hds",
+        budget_filerecord="gwf.cbc",
+        saverecord=[("HEAD", "ALL"), ("BUDGET", "ALL")],
+    )
+
+    gwt = flopy.mf6.ModflowGwt(sim, modelname="gwt")
+    flopy.mf6.ModflowGwtdis(gwt, **dis_kwargs)
+    flopy.mf6.ModflowGwtic(gwt, strt=0.0)
+    flopy.mf6.ModflowGwtmst(gwt, porosity=0.2)
+    flopy.mf6.ModflowGwtadv(gwt, scheme="upstream")
+    flopy.mf6.ModflowGwtssm(gwt, sources=[["chd-1", "AUX", "conc"]])
+    flopy.mf6.ModflowGwtoc(
+        gwt,
+        concentration_filerecord="gwt.ucn",
+        saverecord=[("CONCENTRATION", "ALL")],
+    )
+    flopy.mf6.ModflowGwfgwt(sim, exgmnamea="gwf", exgmnameb="gwt")
+    sim.register_ims_package(ims_gwf, ["gwf"])
+    sim.register_ims_package(ims_gwt, ["gwt"])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_conc = gwt.output.concentration().get_alldata()[-1]
+
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, ncol // 2 :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_multi_model(array, to_disv=True)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    conc = {}
+    for mkey in (0, 1):
+        for mname in (f"gwf_{mkey}", f"gwt_{mkey}"):
+            if new_sim.get_model(mname).modelgrid.grid_type != "vertex":
+                raise AssertionError(f"Model {mname} is not a DISV model")
+
+        conc[mkey] = new_sim.get_model(f"gwt_{mkey}").output.concentration()
+        conc[mkey] = conc[mkey].get_alldata()[-1]
+
+    new_conc = mfsplit.reconstruct_array(conc)
+
+    idx = idomain != 0
+    err_msg = "Concentrations from original and split models do not match"
+    np.testing.assert_allclose(
+        new_conc[idx], original_conc[idx], atol=1e-6, err_msg=err_msg
+    )
+
+
 def test_hfb_model_splitter(function_tmpdir):
     nlay, nrow, ncol = 3, 10, 10
 
@@ -264,6 +671,54 @@ def test_hfb_model_splitter(function_tmpdir):
         mfsplit = Mf6Splitter(sim)
         with pytest.raises(AssertionError, match="split along faults"):
             mfsplit.split_model(array)
+
+
+@requires_exe("mf6")
+@pytest.mark.slow
+def test_structured_to_disv_with_lak_sfr_mvr(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.zeros((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    array[0:14, :] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array, to_disv=True)
+
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    ml0 = new_sim.get_model("lakeex2a_0")
+    ml1 = new_sim.get_model("lakeex2a_1")
+    for ml in (ml0, ml1):
+        if ml.modelgrid.grid_type != "vertex":
+            raise AssertionError("Split model is not a DISV model")
+
+        # the advanced packages remap cellids through the new grid type
+        for pkgtype in ("lak", "sfr", "mvr", "evta", "rcha"):
+            if ml.get_package(pkgtype) is None:
+                raise AssertionError(f"{pkgtype} package was not split")
+
+    heads0 = ml0.output.head().get_alldata()[-1]
+    heads1 = ml1.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array({0: heads0, 1: heads1})
+
+    idx = modelgrid.idomain != 0
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(
+        new_heads[idx], original_heads[idx], atol=1e-4, err_msg=err_msg
+    )
 
 
 @requires_exe("mf6")
@@ -815,7 +1270,8 @@ def test_empty_ssm(function_tmpdir):
 
 
 @requires_exe("mf6")
-def test_transient_array(function_tmpdir):
+@pytest.mark.parametrize("to_disv", [False, True])
+def test_transient_array(function_tmpdir, to_disv):
     name = "tarr"
     new_sim_path = function_tmpdir / f"{name}_split_model"
     nper = 3
@@ -893,7 +1349,7 @@ def test_transient_array(function_tmpdir):
     sarr = np.ones((nrow, ncol), dtype=int)
     sarr[:, int(ncol / 2) :] = 2
     mfsplit = Mf6Splitter(sim)
-    new_sim = mfsplit.split_model(sarr)
+    new_sim = mfsplit.split_model(sarr, to_disv=to_disv)
 
     for name in new_sim.model_names:
         g = new_sim.get_model(name)
