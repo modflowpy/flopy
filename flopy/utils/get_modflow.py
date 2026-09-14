@@ -60,7 +60,7 @@ def _env(name, default):
         return default
 
 
-max_http_tries = max(1, _env("GET_MODFLOW_RETRIES", max_http_tries))
+max_http_tries = max(1, _env("GET_MODFLOW_TRIES", max_http_tries))
 http_retry_delay = max(0.0, _env("GET_MODFLOW_RETRY_DELAY", http_retry_delay))
 
 # Check if this is running from flopy
@@ -392,7 +392,7 @@ def run_main(
     downloads_dir=None,
     force=False,
     quiet=False,
-    retries=None,
+    tries=None,
     retry_delay=None,
     _is_cli=False,
 ):
@@ -424,8 +424,8 @@ def run_main(
         previously downloaded in ``downloads_dir``.
     quiet : bool, default False
         If True, show fewer messages.
-    retries : int, optional
-        Attempts per network request. Defaults to the ``GET_MODFLOW_RETRIES``
+    tries : int, optional
+        Attempts per network request. Defaults to the ``GET_MODFLOW_TRIES``
         environment variable, or 3.
     retry_delay : float, optional
         Base seconds between retries, growing exponentially. Defaults to the
@@ -510,7 +510,7 @@ def run_main(
 
     # get the selected release
     release = get_release(
-        owner, repo, release_id, quiet, tries=retries, delay=retry_delay
+        owner, repo, release_id, quiet, tries=tries, delay=retry_delay
     )
     assets = release.get("assets", [])
     for asset in assets:
@@ -557,7 +557,7 @@ def run_main(
             download_pth,
             timeout=120,
             quiet=quiet,
-            tries=retries,
+            tries=tries,
             delay=retry_delay,
         )
 
@@ -831,11 +831,11 @@ Examples:
     )
     parser.add_argument("--quiet", action="store_true", help="Show fewer messages.")
     parser.add_argument(
-        "--retries",
+        "--tries",
         type=int,
         default=None,
         help="Number of attempts per network request; default is "
-        f"{max_http_tries} (env: GET_MODFLOW_RETRIES). Use 1 to disable retries.",
+        f"{max_http_tries} (env: GET_MODFLOW_TRIES). Use 1 to disable retries.",
     )
     parser.add_argument(
         "--retry-delay",

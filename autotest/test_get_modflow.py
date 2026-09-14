@@ -266,13 +266,13 @@ def test_cli_forwards_retry_flags_to_run_main(monkeypatch):
     monkeypatch.setattr(
         sys,
         "argv",
-        ["get_modflow.py", str(Path.home()), "--retries", "9", "--retry-delay", "0.5"],
+        ["get_modflow.py", str(Path.home()), "--tries", "9", "--retry-delay", "0.5"],
     )
     tries_before = get_modflow.max_http_tries
 
     get_modflow.cli_main()
 
-    assert captured["retries"] == 9
+    assert captured["tries"] == 9
     assert captured["retry_delay"] == 0.5
     assert get_modflow.max_http_tries == tries_before
 
@@ -286,7 +286,7 @@ def test_cli_omitted_retry_flags_are_none(monkeypatch):
 
     get_modflow.cli_main()
 
-    assert captured["retries"] is None
+    assert captured["tries"] is None
     assert captured["retry_delay"] is None
 
 
