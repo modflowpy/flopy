@@ -1,0 +1,43 @@
+name: pull request
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+    branches: [develop]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+
+  title:
+    name: check title
+    # the release and reset pull requests are opened by a bot and are not
+    # squash merged, so their titles do not reach the changelog
+    if: github.event.pull_request.user.type != 'Bot'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+
+      - name: Check conventional commit format
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # pull requests are squash merged, so the title becomes the commit
+          # message in develop, and the changelog is generated from those
+          # messages. a title that is not a conventional commit is dropped
+          # from the release notes without warning.
+          types="build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test"
+          if [[ ! "$TITLE" =~ ^($types)(\([^\)]+\))?!?:\ .+ ]]; then
+            echo "::error::'$TITLE' is not a conventional commit header."
+            echo ""
+            echo "Use '<type>(<scope>): <subject>', for example:"
+            echo "  feat(mf6): support adaptive time step retries"
+            echo ""
+            echo "Type is one of: ${types//|/, }."
+            echo "Only feat, fix, perf and refactor reach the release notes;"
+            echo "see cliff.toml. A user facing change needs one of those."
+            exit 1
+          fi
+          echo "'$TITLE' is a conventional commit header"

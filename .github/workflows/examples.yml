@@ -30,12 +30,9 @@ jobs:
       - name: Install FloPy
         run: uv sync --all-extras
 
-      - name: OpenGL workaround on Linux
+      - name: Set up headless display on Linux
         if: runner.os == 'Linux'
-        run: |
-          # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          uv pip uninstall vtk
-          uv pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
+        uses: pyvista/setup-headless-display-action@v5
 
       - name: Install OpenGL on Windows
         if: runner.os == 'Windows'

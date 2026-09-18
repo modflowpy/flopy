@@ -2109,10 +2109,25 @@ class Mf6Splitter:
                 messy_rch = packagedata.ifno[messy_idx] # store these for later
                 rcids = []
                 for rch in messy_rch:
-                    con = np.abs(connectiondata[connectiondata.ifno == rch].ic_0)[0]
-                    cid = packagedata[packagedata.ifno == con].cellid[0]
-                    # use absolute value in case this is connected to cell(s) that are
-                    # also not connected to the model
+                    rch_cons = tuple(connectiondata[connectiondata.ifno == rch][0])[1:]
+                    stack = [np.abs(i) for i in rch_cons if not np.isnan(i)]
+                    visited = [rch,]
+                    while stack:
+                        con = stack.pop(0)
+                        cid = packagedata[packagedata.ifno == con].cellid[0]
+                        if cid in (messy_val, "None", None):
+                            rch_cons = tuple(connectiondata[connectiondata.ifno == con][0])[1:]
+                            for nc in rch_cons:
+                                nc = np.abs(nc)
+                                if np.isnan(nc) or nc in visited:
+                                    continue
+                                stack.append(nc)
+                            visited.append(con)
+                        else:
+                            break
+
+                    # use absolute value in case there are no connected cells
+                    # that exchange with the GWF system
                     rcids.append(tuple(np.abs(cid)))
                 cellids[messy_idx] = rcids
 

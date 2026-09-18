@@ -39,16 +39,21 @@ The `update_version.py` script can be used to update FloPy version numbers. Runn
 
 The script acquires a file lock before writing to files to make sure only one process edits the files at any given time and prevent desynchronization.
 
-If the script is run with no arguments, the version number is not changed, but updated timestamps are written. To set the version number, use the `--version` (short `-v`) option, e.g.:
+If the script is run with no arguments, the version number is not changed, but updated timestamps are written. In all cases the resulting version is printed to stdout. To set the version number, use the `--version` (short `-v`) option, e.g.:
 
 ```shell
 python scripts/update_version.py -v 3.3.6
 ```
 
-To get the current version number, use the `--get` flag (short `-g`):
+Two flags derive the version instead of taking it explicitly:
+
+- `--release` (short `-r`) strips the development segment (e.g. `.dev0`) from the current version, giving the version to release.
+- `--post-release` (short `-p`) gives the development version for the next cycle: the next minor version, with a `.devN` segment where `N` is the patch number just released (e.g. `3.10.0.dev2` after `3.9.2`).
+
+To print the version without writing any changes, add `--dry-run`:
 
 ```shell
-python scripts/update_version.py -g
+python scripts/update_version.py --dry-run
 ```
 
-This simply returns the contents of `version.txt` and does not write any changes to the repository's files.
+With no other flag this simply returns the contents of `version.txt`.

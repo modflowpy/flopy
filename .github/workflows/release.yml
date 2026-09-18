@@ -223,3 +223,66 @@ jobs:
 
       - name: Publish package
         run: uv publish --verbose --trusted-publishing always
+
+  reset:
+    name: Draft develop reset PR
+    # runs after a release is published, opens a PR merging master back into develop
+    if: ${{ github.event_name == 'release' }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    defaults:
+      run:
+        shell: bash
+    steps:
+
+      - name: Checkout master branch
+        uses: actions/checkout@v7
+        with:
+          ref: master
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: astral-sh/setup-uv@v7
+        with:
+          enable-cache: false
+
+      - name: Install FloPy
+        run: uv sync --all-extras
+
+      - name: Update version numbers
+        id: version
+        run: |
+          ver=$(cat version.txt)
+          next=$(uv run scripts/update_version.py --post-release)
+          echo "version=$ver" >> $GITHUB_OUTPUT
+          echo "next=$next" >> $GITHUB_OUTPUT
+
+      - name: Format and lint Python files
+        run: |
+          uvx ruff format flopy/version.py
+          uvx ruff check --fix flopy/version.py
+
+      - name: Draft pull request
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          ver="${{ steps.version.outputs.version }}"
+          next="${{ steps.version.outputs.next }}"
+          branch="post-release-$ver-reset"
+
+          git config core.sharedRepository true
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$branch"
+          git add flopy/version.py version.txt CITATION.cff README.md docs/PyPI_release.md
+          git commit -m "ci(release): update version to $next"
+          git push origin "$branch"
+
+          body='
+          # Reset `develop` after release '$ver'
+
+          Merge (do not squash) this pull request to bring `master` back into `develop` and set the development version to `'$next'`.
+          '
+          gh pr create -B "develop" -H "$branch" --title "Reset develop after release $ver" --draft --body "$body"
