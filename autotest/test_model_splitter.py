@@ -2002,7 +2002,7 @@ def test_fjf_obs_structured(function_tmpdir):
     tdis = flopy.mf6.ModflowTdis(sim)
 
     gwf = flopy.mf6.ModflowGwf(sim)
-    
+
     dis = flopy.mf6.ModflowGwfdis(
         gwf,
         nlay=nlay,
@@ -2090,7 +2090,7 @@ def test_fjf_obs_vertex(function_tmpdir):
 
     sim.write_simulation()
     sim.run_simulation()
-    
+
     array = np.zeros((ncpl,), dtype=int)
     array[(ncpl // 2) :] = 1
 
@@ -2113,7 +2113,7 @@ def test_fjf_obs_vertex(function_tmpdir):
             v_id = v_ra[v_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
 
             assert id2 == v_id, "id2 cellid not properly set"
-            
+
 
 def test_sfr_none_cells(function_tmpdir):
     sim_ws = function_tmpdir / "sfr_none_test"
