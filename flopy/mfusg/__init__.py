@@ -20,6 +20,7 @@ from .mfusgoc import MfUsgOc
 from .mfusgpcb import MfUsgPcb
 from .mfusgrch import MfUsgRch
 from .mfusgsms import MfUsgSms
+from .mfusgtib import MfUsgTib
 from .mfusgwel import MfUsgWel
 
 __all__ = [
@@ -43,5 +44,6 @@ __all__ = [
     "MfUsgPcb",
     "MfUsgRch",
     "MfUsgSms",
+    "MfUsgTib",
     "MfUsgWel",
 ]
