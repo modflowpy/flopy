@@ -689,8 +689,7 @@ class ListBudget:
             incdict, cumdict = self._get_sp(ts, sp, seekpoint)
         except Exception as e:
             raise ValueError(
-                "unable to read budget information from first entry "
-                f"in list file {self.file_name}: {e}"
+                f"unable to read first budget in list file {self.file_name}: {e}"
             ) from e
         self.entries = incdict.keys()
         null_entries = {}
@@ -774,8 +773,8 @@ class ListBudget:
             line = self.f.readline()
             if line == "":
                 return self._sp_failed(
-                    "end of file found while seeking budget "
-                    f"information for ts,sp: {ts} {sp}"
+                    "end of file found while reading budget "
+                    f"at time step {ts}, stress period {sp}"
                 )
 
             # --if there are two '=' in this line, then it is a budget line
@@ -789,26 +788,16 @@ class ListBudget:
         while True:
             if line == "":
                 return self._sp_failed(
-                    "end of file found while seeking budget "
-                    f"information for ts,sp: {ts} {sp}"
+                    "end of file found while reading budget "
+                    f"at time step {ts}, stress period {sp}"
                 )
             if len(re.findall(r"=", line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
                 except Exception:
                     return self._sp_failed(
-                        f"error parsing budget line in ts,sp {ts} {sp}: "
-                        f"{line.strip()!r}"
-                    )
-                if flux is None:
-                    return self._sp_failed(
-                        f"error casting in flux for {entry} to float "
-                        f"in ts,sp {ts} {sp}: {line.strip()!r}"
-                    )
-                if cumu is None:
-                    return self._sp_failed(
-                        f"error casting in cumu for {entry} to float "
-                        f"in ts,sp {ts} {sp}: {line.strip()!r}"
+                        "could not parse budget line at time step "
+                        f"{ts}, stress period {sp}: {line.strip()!r}"
                     )
                 if entry.endswith(tag.upper()):
                     if " - " in entry.upper():
@@ -826,6 +815,11 @@ class ListBudget:
                     else:
                         entrydict[entry] = 0
                     key = f"{entry}_{tag}"
+                if flux is None or cumu is None:
+                    return self._sp_failed(
+                        f"could not parse value for {key} at time step {ts}, "
+                        f"stress period {sp}: {line.strip()!r}"
+                    )
                 incdict[key] = flux
                 cumdict[key] = cumu
             else:
