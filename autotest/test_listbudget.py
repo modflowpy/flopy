@@ -141,3 +141,64 @@ def test_mtlist(example_data_path):
         assert len(w) == 1, len(w)
         assert w[0].category == UserWarning, w[0]
         assert "error parsing SW mass budget" in str(w[0].message)
+
+
+MF6_BUDGET_MISSING_E = """
+  MASS BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   1
+  ------------------------------------------------------------------------------
+
+     CUMULATIVE MASS      M       RATES FOR THIS TIME STEP      M/T
+     ------------------                 ------------------------
+
+           IN:                                      IN:
+           ---                                      ---
+     STORAGE-AQUEOUS =       1.6172E-08       STORAGE-AQUEOUS =       1.6172E-08
+                 SRC =          60.3962                   SRC =          60.3962
+        FLOW-JA-FACE =      3.9204E-103          FLOW-JA-FACE =      3.9204E-103
+
+            TOTAL IN =          60.3962              TOTAL IN =          60.3962
+
+          OUT:                                     OUT:
+          ----                                     ----
+     STORAGE-AQUEOUS =          60.3063       STORAGE-AQUEOUS =          60.3063
+                 SRC =           0.0000                   SRC =           0.0000
+        FLOW-JA-FACE =       8.5159-100          FLOW-JA-FACE =       8.5159-100
+
+           TOTAL OUT =          60.3962             TOTAL OUT =          60.3962
+
+            IN - OUT =      -3.1974E-13              IN - OUT =      -3.1974E-13
+
+ PERCENT DISCREPANCY =          -0.00     PERCENT DISCREPANCY =          -0.00
+"""
+
+
+def test_mf6listfile_three_digit_exponent_missing_e(function_tmpdir):
+    # Fortran drops the "E" for three-digit exponents unless an exponent
+    # width is specified, see https://github.com/modflowpy/flopy/issues/2855
+    list_file = function_tmpdir / "gwt.lst"
+    list_file.write_text(MF6_BUDGET_MISSING_E)
+    mflist = Mf6ListBudget(list_file, budgetkey="MASS BUDGET")
+
+    inc, cum = mflist.get_budget()
+    assert "FLOW-JA-FACE_OUT" in inc.dtype.names
+    assert inc["STORAGE-AQUEOUS_OUT"][0] == pytest.approx(60.3063)
+    assert cum["TOTAL_OUT"][0] == pytest.approx(60.3962)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("8.5159-100", 8.5159e-100),
+        ("-8.5159-100", -8.5159e-100),
+        ("1.0000+100", 1.0e100),
+        ("-1.2000+150", -1.2e150),
+        ("3.9204E-103", 3.9204e-103),
+        ("60.3962", 60.3962),
+    ],
+)
+def test_mf6listfile_parse_budget_line_missing_e(value, expected):
+    line = f"        FLOW-JA-FACE = {value:>16}          FLOW-JA-FACE = {value:>16}"
+    entry, flux, cumu = Mf6ListBudget._parse_budget_line(None, line)
+    assert entry == "FLOW-JA-FACE"
+    assert flux == expected
+    assert cumu == expected

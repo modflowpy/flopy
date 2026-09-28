@@ -16,6 +16,24 @@ import pandas as pd
 from ..utils.flopy_io import get_ts_sp
 from ..utils.utils_def import totim_to_datetime
 
+# Fortran E/ES edit descriptors without an exponent width drop the "E"
+# when the exponent has three digits, e.g. 8.5159E-100 -> 8.5159-100
+_MISSING_E = re.compile(r"^([+-]?\d*\.?\d+)([+-]\d{3})$")
+
+
+def _parse_float(s):
+    """Parse a float from a list file, tolerating a missing "E" and NaN."""
+    s = s.strip()
+    try:
+        return float(s)
+    except ValueError:
+        m = _MISSING_E.match(s)
+        if m:
+            return float(f"{m.group(1)}E{m.group(2)}")
+        if "NAN" in s.upper():
+            return np.nan
+    return None
+
 
 class ListBudget:
     """
@@ -825,17 +843,8 @@ class ListBudget:
         idx = line2.index("=") + 1
         fx_str = line2[idx:].split()[0].strip()
 
-        flux, cumu = None, None
-        try:
-            cumu = float(cu_str)
-        except:
-            if "NAN" in cu_str.strip().upper():
-                cumu = np.nan
-        try:
-            flux = float(fx_str)
-        except:
-            if "NAN" in fx_str.strip().upper():
-                flux = np.nan
+        cumu = _parse_float(cu_str)
+        flux = _parse_float(fx_str)
         return entry, flux, cumu
 
     def _get_totim(self, ts, sp, seekpoint):
