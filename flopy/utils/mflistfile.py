@@ -630,20 +630,23 @@ class ListBudget:
     def _get_index(self, maxentries):
         # --parse through the file looking for matches and parsing ts and sp
         idxs = []
-        l_count = 1
+        l_count = 0
         while True:
             seekpoint = self.f.tell()
             line = self.f.readline()
+            l_count += 1
             if line == "":
                 break
             if self.budgetkey in line:
                 for _ in range(self.tssp_lines):
                     line = self.f.readline()
+                    l_count += 1
                 try:
                     ts, sp = get_ts_sp(line)
-                except:
+                except Exception:
                     print(
-                        "unable to cast ts,sp on line number", l_count, " line: ", line
+                        "could not parse time step and stress period "
+                        f"on line {l_count}: {line.strip()!r}"
                     )
                     break
 
@@ -799,6 +802,7 @@ class ListBudget:
                         "could not parse budget line at time step "
                         f"{ts}, stress period {sp}: {line.strip()!r}"
                     )
+                label = entry
                 if entry.endswith(tag.upper()):
                     if " - " in entry.upper():
                         key = entry.replace(" ", "")
@@ -815,9 +819,10 @@ class ListBudget:
                     else:
                         entrydict[entry] = 0
                     key = f"{entry}_{tag}"
+                    label = f"{label} ({tag})"
                 if flux is None or cumu is None:
                     return self._sp_failed(
-                        f"could not parse value for {key} at time step {ts}, "
+                        f"could not parse value for {label} at time step {ts}, "
                         f"stress period {sp}: {line.strip()!r}"
                     )
                 incdict[key] = flux
@@ -858,8 +863,8 @@ class ListBudget:
             ihead += 1
             if line == "":
                 print(
-                    "end of file found while seeking budget "
-                    f"information for ts,sp: {ts} {sp}"
+                    "end of file found while reading time summary "
+                    f"at time step {ts}, stress period {sp}"
                 )
                 return np.nan, np.nan, np.nan
             elif (
@@ -875,28 +880,37 @@ class ListBudget:
             translen = self._parse_time_line(line)
             line = self.f.readline()
             if translen is None:
-                print("error parsing translen for ts,sp", ts, sp)
+                print(
+                    f"could not parse transport step length at time step {ts}, "
+                    f"stress period {sp}"
+                )
                 return np.nan, np.nan, np.nan
 
         tslen = self._parse_time_line(line)
         if tslen is None:
-            print("error parsing tslen for ts,sp", ts, sp)
+            print(
+                f"could not parse time step length at time step {ts}, "
+                f"stress period {sp}"
+            )
             return np.nan, np.nan, np.nan
 
         sptim = self._parse_time_line(self.f.readline())
         if sptim is None:
-            print("error parsing sptim for ts,sp", ts, sp)
+            print(
+                f"could not parse stress period time at time step {ts}, "
+                f"stress period {sp}"
+            )
             return np.nan, np.nan, np.nan
 
         totim = self._parse_time_line(self.f.readline())
         if totim is None:
-            print("error parsing totim for ts,sp", ts, sp)
+            print(f"could not parse total time at time step {ts}, stress period {sp}")
             return np.nan, np.nan, np.nan
         return tslen, sptim, totim
 
     def _parse_time_line(self, line):
         if line == "":
-            print("end of file found while parsing time information")
+            print("end of file found while reading time summary")
             return None
         try:
             time_str = line[self.time_line_idx :]
@@ -912,7 +926,7 @@ class ListBudget:
                 idx = 0
             tval = float(raw[idx])
         except:
-            print("error parsing tslen information: ", time_str)
+            print(f"could not parse time value: {line.strip()!r}")
             return None
         return tval
 

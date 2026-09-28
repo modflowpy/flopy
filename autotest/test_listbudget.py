@@ -195,7 +195,7 @@ def test_mf6listfile_unparseable_first_entry(function_tmpdir):
         MF6_BUDGET_TEMPLATE.format(kper=1, chd="********")
         + MF6_BUDGET_TEMPLATE.format(kper=2, chd="0.0000")
     )
-    match = r"first budget.*CHD_IN at time step 1, stress period 1: .*\*{8}"
+    match = r"first budget.*CHD \(IN\) at time step 1, stress period 1: .*\*{8}"
     with pytest.raises(ValueError, match=match):
         Mf6ListBudget(list_file)
 
