@@ -684,14 +684,14 @@ class ListBudget:
             raise Exception(f"entries already set:{self.entries}")
         if not self.idx_map:
             raise Exception("must call build_index before call set_entries")
+        ts, sp, seekpoint = self.idx_map[0]
         try:
-            incdict, cumdict = self._get_sp(
-                self.idx_map[0][0], self.idx_map[0][1], self.idx_map[0][2]
-            )
-        except:
-            raise Exception(
-                "unable to read budget information from first entry in list file"
-            )
+            incdict, cumdict = self._get_sp(ts, sp, seekpoint)
+        except Exception as e:
+            raise ValueError(
+                "unable to read budget information from first entry "
+                f"in list file {self.file_name}: {e}"
+            ) from e
         self.entries = incdict.keys()
         null_entries = {}
         incdict = {}
@@ -759,17 +759,24 @@ class ListBudget:
 
         return
 
+    def _sp_failed(self, msg):
+        # entries are read from the first budget, so until they are set
+        # there are no null entries to fall back on
+        if not self.entries:
+            raise ValueError(msg)
+        print(msg)
+        return self.null_entries
+
     def _get_sp(self, ts, sp, seekpoint):
         self.f.seek(seekpoint)
         # --read to the start of the "in" budget information
         while True:
             line = self.f.readline()
             if line == "":
-                print(
+                return self._sp_failed(
                     "end of file found while seeking budget "
                     f"information for ts,sp: {ts} {sp}"
                 )
-                return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
             if len(re.findall(r"=", line)) == 2:
@@ -781,27 +788,28 @@ class ListBudget:
         entrydict = {}
         while True:
             if line == "":
-                print(
+                return self._sp_failed(
                     "end of file found while seeking budget "
                     f"information for ts,sp: {ts} {sp}"
                 )
-                return self.null_entries
             if len(re.findall(r"=", line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
                 except Exception:
-                    print("error parsing budget line in ts,sp", ts, sp)
-                    return self.null_entries
+                    return self._sp_failed(
+                        f"error parsing budget line in ts,sp {ts} {sp}: "
+                        f"{line.strip()!r}"
+                    )
                 if flux is None:
-                    print(
-                        "error casting in flux for", entry, " to float in ts,sp", ts, sp
+                    return self._sp_failed(
+                        f"error casting in flux for {entry} to float "
+                        f"in ts,sp {ts} {sp}: {line.strip()!r}"
                     )
-                    return self.null_entries
                 if cumu is None:
-                    print(
-                        "error casting in cumu for", entry, " to float in ts,sp", ts, sp
+                    return self._sp_failed(
+                        f"error casting in cumu for {entry} to float "
+                        f"in ts,sp {ts} {sp}: {line.strip()!r}"
                     )
-                    return self.null_entries
                 if entry.endswith(tag.upper()):
                     if " - " in entry.upper():
                         key = entry.replace(" ", "")
