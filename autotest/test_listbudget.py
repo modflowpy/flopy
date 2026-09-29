@@ -141,3 +141,22 @@ def test_mtlist(example_data_path):
         assert len(w) == 1, len(w)
         assert w[0].category == UserWarning, w[0]
         assert "error parsing SW mass budget" in str(w[0].message)
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    [
+        ("8.5159-100", 8.5159e-100),
+        ("-8.5159-100", -8.5159e-100),
+        ("1.0000+100", 1.0e100),
+        ("-1.2000+150", -1.2e150),
+        ("3.9204E-103", 3.9204e-103),
+        ("60.3962", 60.3962),
+    ],
+)
+def test_mf6listfile_parse_budget_line_missing_e(value, expected):
+    line = f"        FLOW-JA-FACE = {value:>16}          FLOW-JA-FACE = {value:>16}"
+    entry, flux, cumu = Mf6ListBudget._parse_budget_line(None, line)
+    assert entry == "FLOW-JA-FACE"
+    assert flux == expected
+    assert cumu == expected
