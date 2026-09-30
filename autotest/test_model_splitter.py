@@ -291,6 +291,14 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
             "optimize_splitting_mask is not correcting for lakes properly"
         )
 
+    counts = [np.count_nonzero(array == i) for i in np.unique(array)]
+    ratio = np.max(counts) / np.mean(counts)
+    if ratio > 1.05:
+        raise AssertionError(
+            "load balancing ratio is higher than expected, LAK_EDGE_WEIGHTS "
+            "may be too low or not properly applied"
+        )
+
     new_sim = mfsplit.split_model(array)
     new_sim.set_sim_path(function_tmpdir / "split_model")
     new_sim.write_simulation()
@@ -2272,3 +2280,20 @@ def test_sfr_none_cells(function_tmpdir):
             if cid == (-1, -1, -1):
                 none_cnt += 1
         assert none_cnt == none_cells, "Splitter not correctly assigning SFR None cells"
+
+
+@requires_pkg("pymetis")
+def test_optimal_mask_force_lak_rebalancing():
+    sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    mfsplit = Mf6Splitter(sim)
+    array = mfsplit.optimize_splitting_mask(nparts=15)
+
+    counts = [np.count_nonzero(array == i) for i in np.unique(array)]
+    ratio = np.max(counts) / np.mean(counts)
+    if ratio > 1.75:
+        raise AssertionError(
+            "load balancing ratio is higher than expected, lak remapping "
+            "rebalancing adjustments should be checked"
+        )

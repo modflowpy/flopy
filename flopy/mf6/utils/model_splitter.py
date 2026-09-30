@@ -123,9 +123,10 @@ OBS_ID2_LUT = {
 }
 
 
-# cost of cutting a cell face that a horizontal flow barrier crosses,
-# relative to the cost of one for every other face
+# cost of cutting a graph edge for special conditions,
+# relative to the cost of one for every other graph edge
 HFB_EDGE_WEIGHT = 1000
+LAK_EDGE_WEIGHT = 1000
 
 
 class Mf6Splitter:
@@ -611,10 +612,6 @@ class Mf6Splitter:
         -------
             np.ndarray
         """
-        if active_only:
-            import_optional_dependency("sklearn")
-            from sklearn.neighbors import NearestNeighbors
-
         pymetis = import_optional_dependency(
             "pymetis",
             "please install pymetis using: "
@@ -691,17 +688,21 @@ class Mf6Splitter:
             # for k in inactive:
             [neighbors.pop(k) for k in inactive]
             node_map = {i: ix for ix, i in enumerate(np.where(iact > 0)[0])}
+            # todo: this might need be better as node_map[k]: [existing logic] for k, v in neighbors.items()
             neighbors = {
-                k : [node_map[i] for i in v if i not in inactive] for k, v in neighbors.items()
+                node_map[k] : [node_map[i] for i in v if i not in inactive] for k, v in neighbors.items()
             }
+            neighbors = dict(sorted(neighbors.items()))
+        else:
+            neighbors = dict(sorted(neighbors.items()))
+            node_map = {i: ix for ix, i in enumerate(neighbors.keys())}
 
         if verbose:
             print("Creating graph and weights")
-        neighbors = dict(sorted(neighbors.items()))
-        weights = [np.count_nonzero(idomain[:, nn]) + adv_pkg_weights[nn] for nn in neighbors.keys()]
+        weights = [np.count_nonzero(idomain[:, nn]) + adv_pkg_weights[nn] for nn in node_map.keys()]
         graph = [np.array(neigh, dtype=int) for neigh in neighbors.values()]
 
-        eweights = None
+        hfb_faces = []
         if hfbs:
             if verbose:
                 print("Weighting horizontal flow barrier faces")
@@ -709,24 +710,55 @@ class Mf6Splitter:
             # the faces it crosses expensive to cut steers the partition around
             # it. Barriers that are still cut are moved after the partition is
             # built.
-            gnode = {node: ix for ix, node in enumerate(neighbors.keys())}
-            hfb_faces = set()
             for hfb in hfbs:
                 for recarray in hfb.stress_period_data.data.values():
                     _, nodes1 = self._cellid_to_layer_node(recarray.cellid1)
                     _, nodes2 = self._cellid_to_layer_node(recarray.cellid2)
-                    for node1, node2 in zip(nodes1, nodes2):
-                        if node1 not in gnode or node2 not in gnode:
-                            continue
+                    nodes1 = [node_map[i] if i in node_map else -1 for i in nodes1]
+                    nodes2 = [node_map[i] if i in node_map else -1 for i in nodes2]
+                    hfb_nodes = np.array([nodes1, nodes2])
 
-                        hfb_faces.add((gnode[node1], gnode[node2]))
-                        hfb_faces.add((gnode[node2], gnode[node1]))
+                    # filter out barriers that touch inactive cells
+                    vidx = np.where(np.min(hfb_nodes, axis=0) > -1)[0]
+                    hfb_nodes = hfb_nodes[:, vidx]
 
+                    # filter out vertical flow barriers
+                    not_vfb = np.where((hfb_nodes[0] - hfb_nodes[1]) != 0)[0]
+                    hfb_nodes = hfb_nodes[:, not_vfb]
+
+                    hfb_faces.extend(zip(hfb_nodes[0], hfb_nodes[1]))
+                    hfb_faces.extend(zip(hfb_nodes[1], hfb_nodes[0]))
+
+            hfb_faces = set(hfb_faces)
+
+        lak_faces = []
+        if laks:
+            if verbose:
+                print("Weighting lak faces")
+            for lakeno in laks:
+                lak_nodes = np.where(lak_array == lakeno)[0]
+                lak_nodes = [node_map[i] for i in lak_nodes]
+                nodes1, nodes2 = [], []
+                for lak_node in lak_nodes:
+                    neighs = neighbors[lak_node]
+                    for nn in neighs:
+                        if nn in lak_nodes:
+                            nodes1.append(lak_node)
+                            nodes2.append(nn)
+
+                lak_faces.extend(zip(nodes1, nodes2))
+
+            lak_faces = set(lak_faces)
+
+        eweights = None
+        if hfbs or laks:
             eweights = []
             for node, conns in enumerate(graph):
                 for conn in conns:
                     if (node, int(conn)) in hfb_faces:
                         eweights.append(HFB_EDGE_WEIGHT)
+                    elif (node, int(conn)) in lak_faces:
+                        eweights.append(LAK_EDGE_WEIGHT)
                     else:
                         eweights.append(1)
 
@@ -753,7 +785,18 @@ class Mf6Splitter:
         if laks:
             for lak in laks:
                 idx = np.asarray(lak_array == lak).nonzero()[0]
-                mnum = np.unique(membership[idx])[0]
+                mnums = np.unique(membership[idx]) #[0]
+                mnum = mnums[0]
+
+                if len(mnums) > 1:
+                    # if the lake is in multiple parts of the membership array,
+                    # reset it so it's in the part of the array that has the
+                    # greatest coverage of the lake.
+                    lak_membership = membership[idx]
+                    counts = [np.count_nonzero(lak_membership == i) for i in mnums]
+                    ix = np.argmax(counts)
+                    mnum = mnums[ix]
+
                 membership[idx] = mnum
 
         if hfbs:
