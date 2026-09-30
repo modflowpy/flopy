@@ -823,6 +823,7 @@ class MFArray(MFMultiDimVar):
                     and kwargs["array"]
                     and isinstance(self, MFTransientArray)
                     and data is not []  # noqa: F632
+                    and data is not None
                 ):
                     data = np.expand_dims(data, 0)
                 return data
@@ -1889,7 +1890,10 @@ class MFTransientArray(MFArray, MFTransient):
                 if sp in self._data_storage:
                     self.get_data_prep(sp)
                     data = super().get_data(apply_mult=apply_mult, **kwargs)
-                    data = np.expand_dims(data, 0)
+                    if data is not None:
+                        data = np.expand_dims(data, 0)
+                    else:
+                        data = output
                 else:
                     # if there is no previous data provide array of
                     # zeros, otherwise provide last array of data found
@@ -2057,6 +2061,13 @@ class MFTransientArray(MFArray, MFTransient):
                 name = f"{self.path[1]}_{self.name}"
 
             data = self.get_data(key=kper, apply_mult=True)
+            if data is None:
+                per_with_data = np.array([i for i, v in self.empty_keys.items() if not v])
+                per_with_data = per_with_data[per_with_data < kper]
+                if len(per_with_data) == 0:
+                    return gdf
+                data = self.get_data(key=per_with_data[-1], apply_mult=True)
+
             if data.size == ncpl:
                 name = f"{name}_{kper}"
                 gdf[name] = data.ravel()
