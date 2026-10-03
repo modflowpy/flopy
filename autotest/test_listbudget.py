@@ -160,3 +160,54 @@ def test_mf6listfile_parse_budget_line_missing_e(value, expected):
     assert entry == "FLOW-JA-FACE"
     assert flux == expected
     assert cumu == expected
+
+
+MF6_BUDGET_TEMPLATE = """
+  VOLUME BUDGET FOR ENTIRE MODEL AT END OF TIME STEP    1, STRESS PERIOD   {kper}
+  ------------------------------------------------------------------------------
+
+     CUMULATIVE VOLUME      L**3       RATES FOR THIS TIME STEP      L**3/T
+
+           IN:                                      IN:
+           ---                                      ---
+                 STO =         100.0000                   STO =         100.0000
+                 CHD =         {chd:>8}                   CHD =         {chd:>8}
+
+            TOTAL IN =         100.0000              TOTAL IN =         100.0000
+
+          OUT:                                     OUT:
+          ----                                     ----
+                 STO =         100.0000                   STO =         100.0000
+                 CHD =           0.0000                   CHD =           0.0000
+
+           TOTAL OUT =         100.0000             TOTAL OUT =         100.0000
+
+            IN - OUT =           0.0000              IN - OUT =           0.0000
+
+ PERCENT DISCREPANCY =           0.00     PERCENT DISCREPANCY =           0.00
+"""
+
+
+def test_mf6listfile_unparseable_first_entry(function_tmpdir):
+    # see https://github.com/modflowpy/flopy/issues/2856
+    list_file = function_tmpdir / "gwf.lst"
+    list_file.write_text(
+        MF6_BUDGET_TEMPLATE.format(kper=1, chd="********")
+        + MF6_BUDGET_TEMPLATE.format(kper=2, chd="0.0000")
+    )
+    match = r"first budget.*CHD \(IN\) at time step 1, stress period 1: .*\*{8}"
+    with pytest.raises(ValueError, match=match):
+        Mf6ListBudget(list_file)
+
+
+def test_mf6listfile_unparseable_later_entry(function_tmpdir):
+    list_file = function_tmpdir / "gwf.lst"
+    list_file.write_text(
+        MF6_BUDGET_TEMPLATE.format(kper=1, chd="0.0000")
+        + MF6_BUDGET_TEMPLATE.format(kper=2, chd="********")
+    )
+    mflist = Mf6ListBudget(list_file)
+    inc, cum = mflist.get_budget()
+    assert inc["STO_IN"][0] == pytest.approx(100.0)
+    assert np.isnan(inc["STO_IN"][1])
+    assert np.isnan(cum["CHD_IN"][1])
