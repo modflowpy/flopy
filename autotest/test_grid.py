@@ -29,6 +29,7 @@ from flopy.utils.crs import get_authority_crs
 from flopy.utils.cvfdutil import (
     area_of_polygon,
     centroid_of_polygon,
+    shared_face,
     to_cvfd,
 )
 from flopy.utils.gridutil import get_disu_kwargs, get_disv_kwargs
@@ -1085,6 +1086,70 @@ def test_grid_crs_exceptions():
     # set_coord_info never had a 'prj' parameter; test it as unhandled keyword
     with pytest.raises(TypeError):
         sg.set_coord_info(prj=not_a_file)
+
+
+@pytest.mark.parametrize(
+    "ivlist1, ivlist2, expected",
+    [
+        ([0, 1, 2, 0], [1, 0, 3, 1], True),
+        ([0, 1, 2, 0], [0, 2, 3, 0], True),
+        ([0, 1, 2, 0], [0, 3, 4, 0], False),
+        ([0, 1, 2, 0], [3, 4, 5, 3], False),
+    ],
+    ids=["shared_edge", "closing_edge", "shared_vertex", "disjoint"],
+)
+def test_shared_face(ivlist1, ivlist2, expected):
+    assert shared_face(ivlist1, ivlist2) is expected
+    assert shared_face(ivlist2, ivlist1) is expected
+
+
+@requires_pkg("shapely")
+def test_tocvfd_conforming_voronoi():
+    # Four conforming Voronoi cells with a legitimate 0.205 m edge h1-h2.
+    # A nearby vertex must not be inserted into an already shared long face.
+    h1 = (761.6588, 226.6929)
+    h2 = (761.8516, 226.7616)
+    vertdict = {
+        0: [
+            (1377.0698, 53.9094),
+            (1531.84, -218.4504),
+            (983.2838, -719.9512),
+            (653.5306, -403.9829),
+            h1,
+            h2,
+            (1377.0698, 53.9094),
+        ],
+        1: [
+            h1,
+            (653.5306, -403.9829),
+            (29.5072, -478.2542),
+            (-263.5475, 28.6513),
+            (-84.6841, 419.1418),
+            (181.5654, 493.3532),
+            h1,
+        ],
+        2: [
+            (1518.7649, 417.5726),
+            (1377.0698, 53.9094),
+            h2,
+            (1010.2436, 646.2797),
+            (1379.6291, 658.2399),
+            (1518.7649, 417.5726),
+        ],
+        3: [
+            h2,
+            h1,
+            (181.5654, 493.3532),
+            (486.2154, 1094.5056),
+            (899.4437, 988.0309),
+            (1010.2436, 646.2797),
+            h2,
+        ],
+    }
+
+    verts, iverts = to_cvfd(vertdict)
+    for icell, points in vertdict.items():
+        np.testing.assert_array_equal(verts[iverts[icell]], points)
 
 
 @requires_pkg("shapely")
