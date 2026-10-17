@@ -1362,8 +1362,13 @@ class Mf6Splitter:
                 elif key == "ats_perioddata":
                     data = getattr(pak, "ats")
                     if len(data._packages) > 0:
-                        data = data._packages[0].perioddata.array
-                        d[key] = data
+                        # pass maxats along with perioddata, otherwise the new
+                        # ATS package keeps the default maxats of 1
+                        ats = data._packages[0]
+                        d[key] = {
+                            "maxats": ats.maxats.get_data(),
+                            "perioddata": ats.perioddata.array,
+                        }
 
                 else:
                     data = getattr(pak, key)
