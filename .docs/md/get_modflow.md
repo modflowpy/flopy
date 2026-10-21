@@ -82,10 +82,10 @@ By default the distribution from the [`MODFLOW-ORG/executables` repository](http
 - `zbud6`
 - `libmf6.dylib`
 
-To select a distribution, specify a repository name with the `--repo` command line option or the `repo` function argument. Valid names are:
+To select a distribution, specify a repository name with the `--repo` command line option or the `repo` function argument. The official repositories are:
 
 - `executables` (default)
 - `modflow6`
 - `modflow6-nightly-build`
 
-The repository owner can also be configured with the `--owner` option. This can be useful for installing from unreleased MODFLOW 6 feature branches still in development &mdash; the only compatibility requirement is that release assets be named identically to those on the official repositories.
+The repository owner can also be configured with the `--owner` option. Together with `--repo`, this can be used to install from any repository, such as one that builds an unreleased MODFLOW 6 feature branch still in development &mdash; the only compatibility requirement is that release assets be named like those on the official repositories, with the operating system tag (e.g. `linux.zip`, `mac.zip`, `macarm.zip`, or `win64.zip`).
