@@ -290,6 +290,32 @@ def test_cli_omitted_retry_flags_are_none(monkeypatch):
     assert captured["retry_delay"] is None
 
 
+def test_cli_accepts_any_repo(monkeypatch):
+    captured = {}
+    monkeypatch.setattr(
+        get_modflow, "run_main", lambda **kwargs: captured.update(kwargs)
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        ["get_modflow.py", str(Path.home()), "--owner", "me", "--repo", "my-build"],
+    )
+
+    get_modflow.cli_main()
+
+    assert captured["owner"] == "me"
+    assert captured["repo"] == "my-build"
+
+
+def test_run_main_any_repo(tmp_path, monkeypatch):
+    # a repo that is not an official repository reaches the release assets
+    release = {"tag_name": "v1", "assets": [], "html_url": "https://example.com"}
+    monkeypatch.setattr(get_modflow, "get_release", lambda *args, **kwargs: release)
+
+    with pytest.raises(ValueError, match="could not find ostag"):
+        run_main(tmp_path, owner="me", repo="my-build", ostag="linux", quiet=True)
+
+
 @flaky
 @requires_github
 @pytest.mark.parametrize("repo", repo_options.keys())

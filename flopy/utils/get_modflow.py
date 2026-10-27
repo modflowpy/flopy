@@ -31,7 +31,8 @@ from typing import Dict, List, Tuple
 
 default_owner = "MODFLOW-ORG"
 default_repo = "executables"
-# key is the repo name, value is the renamed file prefix for the download
+# key is the repo name, value is the renamed file prefix for the download;
+# any other repo uses its name as the prefix
 renamed_prefix = {
     "modflow6": "modflow6",
     "executables": "modflow_executables",
@@ -407,8 +408,10 @@ def run_main(
     owner : str, default "MODFLOW-ORG"
         Name of GitHub repository owner (user or organization).
     repo : str, default "executables"
-        Name of GitHub repository. Choose one of "executables" (default),
-        "modflow6", or "modflow6-nightly-build".
+        Name of GitHub repository, such as "executables" (default),
+        "modflow6", or "modflow6-nightly-build". Any other repository can be
+        used if its release assets are named like those of these
+        repositories, with the operating system tag (e.g. "linux.zip").
     release_id : str, default "latest"
         GitHub release ID.
     ostag : str, optional
@@ -504,10 +507,6 @@ def run_main(
     elif not os.access(bindir, os.W_OK):
         raise OSError(f"extraction directory '{bindir}' is not writable")
 
-    # make sure repo option is valid
-    if repo not in available_repos:
-        raise KeyError(f"repo {repo!r} not supported; choose one of {available_repos}")
-
     # get the selected release
     release = get_release(
         owner, repo, release_id, quiet, tries=tries, delay=retry_delay
@@ -529,7 +528,8 @@ def run_main(
         dst_fname = "-".join([repo, release["tag_name"], ostag]) + asset_suffix
     else:
         # change local download name so it is more unique
-        dst_fname = "-".join([renamed_prefix[repo], release["tag_name"], asset_name])
+        prefix = renamed_prefix.get(repo, repo)
+        dst_fname = "-".join([prefix, release["tag_name"], asset_name])
     tmpdir = None
     if downloads_dir is None:
         downloads_dir = Path.home() / "Downloads"
@@ -801,9 +801,10 @@ Examples:
     )
     parser.add_argument(
         "--repo",
-        choices=available_repos,
         default=default_repo,
-        help=f"Name of GitHub repository; default is '{default_repo}'.",
+        help=f"Name of GitHub repository, such as {', '.join(available_repos)}; "
+        f"default is '{default_repo}'. Release assets of any other repository "
+        "must be named like those of these repositories.",
     )
     parser.add_argument(
         "--release-id",
