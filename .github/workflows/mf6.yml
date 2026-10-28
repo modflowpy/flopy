@@ -41,7 +41,7 @@ jobs:
     - name: Setup pixi
       uses: prefix-dev/setup-pixi@v0.11.2
       with:
-        pixi-version: v0.70.1
+        pixi-version: v0.82.1
         manifest-path: modflow6/pixi.toml
 
     - name: Install dependencies
@@ -124,7 +124,7 @@ jobs:
     - name: Setup pixi
       uses: prefix-dev/setup-pixi@v0.11.2
       with:
-        pixi-version: v0.70.1
+        pixi-version: v0.82.1
         manifest-path: modflow6/pixi.toml
 
     - name: Install dependencies
