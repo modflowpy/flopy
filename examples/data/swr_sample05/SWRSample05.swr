@@ -1,0 +1,2446 @@
+# SURFACE WATER ROUTING (SWR1) PROCESS TEST DATASET
+# TITLE - SWR TEST PROBLEM 5
+# DATASET 1A - DIMENSIONS AND PRELIMINARIES
+# NREACHES ISWRONLY ISWRCBC ISWRPRGF ISWRPSTG ISWRPQAQ ISWRPQM ISWRPSTR ISWRFRN Option                      
+        19        0       0     -101      102     -103       0        0       0 SWROPTIONS AUX CONCENTRATION AUX TVAR1       
+
+# DATASET 1B - SWR1 OPTIONS
+PRINT_SWR_TO_SCREEN
+USE_TABFILES
+USE_NONCONVERGENCE_CONTINUE
+USE_EXPLICIT_NEWTON_CORRECTION
+SAVE_RIVER_PACKAGE_ALL 301
+SAVE_CONVERGENCE_HISTORY 302
+END
+
+# DATASET 2 - SOLUTION CONTROLS
+#DLENCONV TIMECONV      RTINI      RTMIN      RTMAX   RTPRN RTMULT NTMULT DMINGRAD DMNDEPTH DMAXRAI DMAXSTG DMAXINF
+      1.0   86400. 6.9444E-03 3.4722E-04 6.9444E-03 1.0E+00   1.01     10  1.0E-12  1.0E-03 0.15240    0.50     0.0
+
+# DATASET 3 - SOLVER PARAMETERS
+#ISOLVER NOUTER NINNER IBT    TOLS     TOLR    TOLA DAMPSS DAMPTR IPRSWR MUTSWR IPC NLEVELS DROPTOL IBTPRT
+#      1    031      1  10 1.0E-09   432.00  432.00    1.0    1.0      1      3                          1
+       2    031    100  10 1.0E-09    86.40   0.010    1.0    1.0      0      0   3                      0
+#ILUT  2    031    100  10 1.0E-09    86.40   8.640    1.0    1.0      0      0   4       7  1.0E-6      0
+
+# DATASET 4 - REACH LOCATION DATA
+#                   LAY  ROW  COL
+#IREACH IEQN IRGNUM KRCH IRCH JRCH   RLEN
+      1    1     01    1    1    1  304.8
+      2    1     01    1    2    1  304.8
+      3    1     01    1    3    1  304.8
+      4    1     02    1    4    1  304.8
+      5    1     02    1    5    1  304.8
+      6    1     02    1    6    1  304.8
+      7    2     03    1    2    2  350.0
+      8    2     03    1    2    3  350.0
+      9    2     03    1    4    2  340.0
+     10    2     03    1    4    3  460.0
+     11    2     03    1    3    3  100.0
+     12    2     03    1    3    3  250.0
+     13    2     03    1    3    3  150.0
+     14    2     03    1    3    4  380.0
+     15    1     04    1    3    5  304.8
+     16    1     04    1    4    5  304.8
+     17    3     05   -1    5    5  790.0
+     18    3     06   -1    5    6  325.0
+     19    1     07   -1    6    5  150.4
+    
+# DATASET 4B - REACH CONNECTIVITY
+#IREACH NCONN ICONN
+      1     1     2
+      2     3     1 3 7
+      3     1     2
+      4     2     5 9
+      5     2     4 6
+      6     1     5
+      7     2     2 8
+      8     2     7 11
+      9     2     4 10
+     10     2     9 12
+     11     3     8 12 13
+     12     3     10 11 13
+     13     3     11 12 14
+     14     2     13 15
+     15     2     14 16
+     16     2     15 17
+     17     3     16 18 19
+     18     1     17
+     19     1     17
+
+# DATASET 4C - TABULAR DIMENSION DATA
+#NTABS
+     1
+
+# DATASET 4D - TABULAR SPECIFICATION DATA
+#ITAB CTABTYPE ITABUNIT   CINTP NTABRCH ITABRCH(1:NTABRCH)
+    1    STAGE      201    NONE       6 1 2 3 4 5 6
+
+# DATASET 5 - STRESS PERIOD 1
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG [IRDAUX]
+     1     19    -19     19    -19     19      6     19      1       19
+
+# DATASET 6 - BOUNDARY DATA
+# IBNDRCH ISWRBND
+       01      -1
+       02      -1
+       03      -1
+       04      -1
+       05      -1
+       06      -1
+       07       1
+       08       1
+       09       1
+       10       1
+       11       1
+       12       1
+       13       1
+       14       1
+       15       1
+       16       1
+       17       1
+       18       1
+       19       1
+
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_001.ref 1.00 (FREE)   -1          #STRESS PERIOD 001
+
+# DATASET 8A - EVAPORATION DATA
+       01       3.7498E-03
+       02       3.7498E-03
+       03       3.7498E-03
+       04       3.7498E-03
+       05       3.7498E-03
+       06       3.7498E-03
+       07       3.7498E-03
+       08       3.7498E-03
+       09       3.7498E-03
+       10       3.7498E-03
+       11       3.7498E-03
+       12       3.7498E-03
+       13       3.7498E-03
+       14       3.7498E-03
+       15       3.7498E-03
+       16       3.7498E-03
+       17       3.7498E-03
+       18       3.7498E-03
+       19       3.7498E-03
+
+# DATASET 9A - LATERAL INFLOW DATA
+  CONSTANT 0.0000E-00 (11e12.4)                   +1     
+
+# DATASET 10 - GEOMETRY ASSIGNMENT DATA
+# DATASET 8A
+INTERNAL
+#IGMODRCH IGEONUMR GZSHIFT 
+       01        1     0.0
+       02        1     0.0
+       03        1     0.0
+       04        1     0.0
+       05        1     0.0
+       06        1     0.0
+       07        2     0.0
+       08        2     0.0
+       09        3     0.0
+       10        3     0.0
+       11        2     0.0
+       12        2     0.0
+       13        2     0.0
+       14        2     0.0
+       15        4     0.0
+       16        4     0.0
+       17        6     0.0
+       18        7     0.0
+       19        5     0.0
+
+# DATASET 11A - GEOMETRY DATA
+# IGEONUM IGEOTYPE IGCNDOP GMANNING NGEOPTS GWIDTH GBELEV GSSLOPE    GCND      GLK GCNDLN GETEXTD
+        1        5       0     0.25                               9.2E+04                    0.25
+        2        2       1     0.03          30.00 0.3048     1.0         2.50E-01     
+        3        1       1     0.03          30.00 0.3048                 2.50E-01     
+        4        5       1     0.25                                       2.00E-02           0.25
+        7        3       1     0.03       8                               5.00E-01    
+# DATASET 11B - FOR IGEONUM 7
+'OPEN/CLOSE' 'IrregularCrossSection_Reach18.dat'
+# DATASET 11A - IGEONUM 5
+        5        4       1     0.05       7                               1.00E-02                  
+# DATASET 11B - FOR IGEONUM 6
+'OPEN/CLOSE' 'SVAPCrossSection_Reach19.dat'
+# DATASET 11A - IGEONUM 6
+        6        3       3     0.10       8                               1.00E-01  63.50   
+# DATASET 11B - FOR IGEONUM 7
+'OPEN/CLOSE' 'IrregularCrossSection_Reach17.dat'
+
+# DATASET 12 - STRUCTURE ASSIGNMENT DATA
+#ISMODRCH NSTRUCT 
+       02       1
+       04       1
+       14       2
+       16       1
+       18       1
+       19       1
+
+# DATASET 13A
+#ISTRRCH ISTRNUM ISTRCONN ISTRTYPE NSTRPTS STRCD STRCD2 STRCD3 STRINV STRINV2 STRWID STRWID2 STRLEN STRMAN STRVAL ISTRDIR 
+      02       1        7        6          0.61           0.5  1.535          45.00                          0.0       0                                           
+      04       1        9        6          0.61           0.5  1.535          45.00                          0.0       0                                           
+      14       1       15        9          0.61   0.61    0.5  1.000          30.00                          0.0       0
+# DATASET 13B structure 1 reach 14
+#CSTROVAL ISTRORCH ISTROQCON ISTRLO STRCRIT STRCRITC  STRRT STRMAX    CSTRVAL
+    STAGE       14               GE   1.250      0.0  108.0   0.25 
+# DATASET 13A
+#ISTRRCH ISTRNUM ISTRCONN ISTRTYPE NSTRPTS STRCD STRCD2 STRCD3 STRINV STRINV2 STRWID STRWID2 STRLEN STRMAN STRVAL ISTRDIR 
+      14       2       15        3                                                                            0.0           
+# DATASET 13B structure 2 reach 14
+#CSTROVAL ISTRORCH ISTROQCON ISTRLO STRCRIT STRCRITC  STRRT STRMAX    CSTRVAL
+    STAGE       14               GE   1.750      0.0  450.0 21600. 
+# DATASET 13A
+#ISTRRCH ISTRNUM ISTRCONN ISTRTYPE NSTRPTS STRCD STRCD2 STRCD3 STRINV STRINV2 STRWID STRWID2 STRLEN STRMAN STRVAL ISTRDIR 
+      16       1       17        6          0.61           0.5  1.000          40.00                          0.0       0                                          
+      18       1        0        6          0.61           0.5  0.500          45.00                          0.0       0
+      19       1       17        8          0.61           0.5  0.450          10.00                         0.25       0
+# DATASET 13B structure 1 reach 19
+#CSTROVAL ISTRORCH ISTROQCON ISTRLO STRCRIT STRCRITC  STRRT STRMAX    CSTRVAL
+    STAGE       19               GE   0.750      0.0  108.0   0.25 
+
+# DATASET 14A - REACH STAGE DATA
+INTERNAL
+#IRCHSTG  STAGE
+      01  1.537
+      02  1.537
+      03  1.537
+      04  1.537
+      05  1.537
+      06  1.537
+      07  1.219
+      08  1.219
+      09  1.219
+      10  1.219
+      11  1.219
+      12  1.219
+      13  1.219
+      14  1.219
+      15  1.000
+      16  1.000
+      17  0.609
+      18  0.609
+      19  1.000
+
+# DATASET 15 - AUX DATA
+# IBNDRCH CONCENTRATION         TVAR1
+       19            01           119
+       18            02           118
+       17            03           117
+       16            04           116
+       15            05           115
+       14            06           114
+       13            07           113
+       12            08           112
+       11            09           111
+       10            10           110
+       09            11           109
+       08            12           108
+       07            13           107
+       06            14           106
+       05            15           105
+       04            16           104
+       03            17           103
+       02            18           102
+       01            19           101
+
+#DATASET 5 - STRESS PERIOD 002
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_002.ref 1.0 (FREE)   -1          #STRESS PERIOD 002
+
+#DATASET 5 - STRESS PERIOD 003
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_003.ref 1.0 (FREE)   -1          #STRESS PERIOD 003
+
+#DATASET 5 - STRESS PERIOD 004
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_004.ref 1.0 (FREE)   -1          #STRESS PERIOD 004
+
+#DATASET 5 - STRESS PERIOD 005
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_005.ref 1.0 (FREE)   -1          #STRESS PERIOD 005
+
+#DATASET 5 - STRESS PERIOD 006
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_006.ref 1.0 (FREE)   -1          #STRESS PERIOD 006
+
+#DATASET 5 - STRESS PERIOD 007
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_007.ref 1.0 (FREE)   -1          #STRESS PERIOD 007
+
+#DATASET 5 - STRESS PERIOD 008
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_008.ref 1.0 (FREE)   -1          #STRESS PERIOD 008
+
+#DATASET 5 - STRESS PERIOD 009
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_009.ref 1.0 (FREE)   -1          #STRESS PERIOD 009
+
+#DATASET 5 - STRESS PERIOD 010
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_010.ref 1.0 (FREE)   -1          #STRESS PERIOD 010
+
+#DATASET 5 - STRESS PERIOD 011
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_011.ref 1.0 (FREE)   -1          #STRESS PERIOD 011
+
+#DATASET 5 - STRESS PERIOD 012
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_012.ref 1.0 (FREE)   -1          #STRESS PERIOD 012
+
+#DATASET 5 - STRESS PERIOD 013
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_013.ref 1.0 (FREE)   -1          #STRESS PERIOD 013
+
+#DATASET 5 - STRESS PERIOD 014
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_014.ref 1.0 (FREE)   -1          #STRESS PERIOD 014
+
+#DATASET 5 - STRESS PERIOD 015
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_015.ref 1.0 (FREE)   -1          #STRESS PERIOD 015
+
+#DATASET 5 - STRESS PERIOD 016
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_016.ref 1.0 (FREE)   -1          #STRESS PERIOD 016
+
+#DATASET 5 - STRESS PERIOD 017
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_017.ref 1.0 (FREE)   -1          #STRESS PERIOD 017
+
+#DATASET 5 - STRESS PERIOD 018
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_018.ref 1.0 (FREE)   -1          #STRESS PERIOD 018
+
+#DATASET 5 - STRESS PERIOD 019
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_019.ref 1.0 (FREE)   -1          #STRESS PERIOD 019
+
+#DATASET 5 - STRESS PERIOD 020
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_020.ref 1.0 (FREE)   -1          #STRESS PERIOD 020
+
+#DATASET 5 - STRESS PERIOD 021
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_021.ref 1.0 (FREE)   -1          #STRESS PERIOD 021
+
+#DATASET 5 - STRESS PERIOD 022
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_022.ref 1.0 (FREE)   -1          #STRESS PERIOD 022
+
+#DATASET 5 - STRESS PERIOD 023
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_023.ref 1.0 (FREE)   -1          #STRESS PERIOD 023
+
+#DATASET 5 - STRESS PERIOD 024
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_024.ref 1.0 (FREE)   -1          #STRESS PERIOD 024
+
+#DATASET 5 - STRESS PERIOD 025
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_025.ref 1.0 (FREE)   -1          #STRESS PERIOD 025
+
+#DATASET 5 - STRESS PERIOD 026
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_026.ref 1.0 (FREE)   -1          #STRESS PERIOD 026
+
+#DATASET 5 - STRESS PERIOD 027
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_027.ref 1.0 (FREE)   -1          #STRESS PERIOD 027
+
+#DATASET 5 - STRESS PERIOD 028
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_028.ref 1.0 (FREE)   -1          #STRESS PERIOD 028
+
+#DATASET 5 - STRESS PERIOD 029
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_029.ref 1.0 (FREE)   -1          #STRESS PERIOD 029
+
+#DATASET 5 - STRESS PERIOD 030
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_030.ref 1.0 (FREE)   -1          #STRESS PERIOD 030
+
+#DATASET 5 - STRESS PERIOD 031
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_031.ref 1.0 (FREE)   -1          #STRESS PERIOD 031
+
+#DATASET 5 - STRESS PERIOD 032
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_032.ref 1.0 (FREE)   -1          #STRESS PERIOD 032
+
+#DATASET 5 - STRESS PERIOD 033
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_033.ref 1.0 (FREE)   -1          #STRESS PERIOD 033
+
+#DATASET 5 - STRESS PERIOD 034
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_034.ref 1.0 (FREE)   -1          #STRESS PERIOD 034
+
+#DATASET 5 - STRESS PERIOD 035
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_035.ref 1.0 (FREE)   -1          #STRESS PERIOD 035
+
+#DATASET 5 - STRESS PERIOD 036
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_036.ref 1.0 (FREE)   -1          #STRESS PERIOD 036
+
+#DATASET 5 - STRESS PERIOD 037
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_037.ref 1.0 (FREE)   -1          #STRESS PERIOD 037
+
+#DATASET 5 - STRESS PERIOD 038
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_038.ref 1.0 (FREE)   -1          #STRESS PERIOD 038
+
+#DATASET 5 - STRESS PERIOD 039
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_039.ref 1.0 (FREE)   -1          #STRESS PERIOD 039
+
+#DATASET 5 - STRESS PERIOD 040
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_040.ref 1.0 (FREE)   -1          #STRESS PERIOD 040
+
+#DATASET 5 - STRESS PERIOD 041
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_041.ref 1.0 (FREE)   -1          #STRESS PERIOD 041
+
+#DATASET 5 - STRESS PERIOD 042
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_042.ref 1.0 (FREE)   -1          #STRESS PERIOD 042
+
+#DATASET 5 - STRESS PERIOD 043
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_043.ref 1.0 (FREE)   -1          #STRESS PERIOD 043
+
+#DATASET 5 - STRESS PERIOD 044
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_044.ref 1.0 (FREE)   -1          #STRESS PERIOD 044
+
+#DATASET 5 - STRESS PERIOD 045
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_045.ref 1.0 (FREE)   -1          #STRESS PERIOD 045
+
+#DATASET 5 - STRESS PERIOD 046
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_046.ref 1.0 (FREE)   -1          #STRESS PERIOD 046
+
+#DATASET 5 - STRESS PERIOD 047
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_047.ref 1.0 (FREE)   -1          #STRESS PERIOD 047
+
+#DATASET 5 - STRESS PERIOD 048
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_048.ref 1.0 (FREE)   -1          #STRESS PERIOD 048
+
+#DATASET 5 - STRESS PERIOD 049
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_049.ref 1.0 (FREE)   -1          #STRESS PERIOD 049
+
+#DATASET 5 - STRESS PERIOD 050
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_050.ref 1.0 (FREE)   -1          #STRESS PERIOD 050
+
+#DATASET 5 - STRESS PERIOD 051
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_051.ref 1.0 (FREE)   -1          #STRESS PERIOD 051
+
+#DATASET 5 - STRESS PERIOD 052
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_052.ref 1.0 (FREE)   -1          #STRESS PERIOD 052
+
+#DATASET 5 - STRESS PERIOD 053
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_053.ref 1.0 (FREE)   -1          #STRESS PERIOD 053
+
+#DATASET 5 - STRESS PERIOD 054
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_054.ref 1.0 (FREE)   -1          #STRESS PERIOD 054
+
+#DATASET 5 - STRESS PERIOD 055
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_055.ref 1.0 (FREE)   -1          #STRESS PERIOD 055
+
+#DATASET 5 - STRESS PERIOD 056
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_056.ref 1.0 (FREE)   -1          #STRESS PERIOD 056
+
+#DATASET 5 - STRESS PERIOD 057
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_057.ref 1.0 (FREE)   -1          #STRESS PERIOD 057
+
+#DATASET 5 - STRESS PERIOD 058
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_058.ref 1.0 (FREE)   -1          #STRESS PERIOD 058
+
+#DATASET 5 - STRESS PERIOD 059
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_059.ref 1.0 (FREE)   -1          #STRESS PERIOD 059
+
+#DATASET 5 - STRESS PERIOD 060
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_060.ref 1.0 (FREE)   -1          #STRESS PERIOD 060
+
+#DATASET 5 - STRESS PERIOD 061
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_061.ref 1.0 (FREE)   -1          #STRESS PERIOD 061
+
+#DATASET 5 - STRESS PERIOD 062
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_062.ref 1.0 (FREE)   -1          #STRESS PERIOD 062
+
+#DATASET 5 - STRESS PERIOD 063
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_063.ref 1.0 (FREE)   -1          #STRESS PERIOD 063
+
+#DATASET 5 - STRESS PERIOD 064
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_064.ref 1.0 (FREE)   -1          #STRESS PERIOD 064
+
+#DATASET 5 - STRESS PERIOD 065
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_065.ref 1.0 (FREE)   -1          #STRESS PERIOD 065
+
+#DATASET 5 - STRESS PERIOD 066
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_066.ref 1.0 (FREE)   -1          #STRESS PERIOD 066
+
+#DATASET 5 - STRESS PERIOD 067
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_067.ref 1.0 (FREE)   -1          #STRESS PERIOD 067
+
+#DATASET 5 - STRESS PERIOD 068
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_068.ref 1.0 (FREE)   -1          #STRESS PERIOD 068
+
+#DATASET 5 - STRESS PERIOD 069
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_069.ref 1.0 (FREE)   -1          #STRESS PERIOD 069
+
+#DATASET 5 - STRESS PERIOD 070
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_070.ref 1.0 (FREE)   -1          #STRESS PERIOD 070
+
+#DATASET 5 - STRESS PERIOD 071
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_071.ref 1.0 (FREE)   -1          #STRESS PERIOD 071
+
+#DATASET 5 - STRESS PERIOD 072
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_072.ref 1.0 (FREE)   -1          #STRESS PERIOD 072
+
+#DATASET 5 - STRESS PERIOD 073
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_073.ref 1.0 (FREE)   -1          #STRESS PERIOD 073
+
+#DATASET 5 - STRESS PERIOD 074
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_074.ref 1.0 (FREE)   -1          #STRESS PERIOD 074
+
+#DATASET 5 - STRESS PERIOD 075
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_075.ref 1.0 (FREE)   -1          #STRESS PERIOD 075
+
+#DATASET 5 - STRESS PERIOD 076
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_076.ref 1.0 (FREE)   -1          #STRESS PERIOD 076
+
+#DATASET 5 - STRESS PERIOD 077
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_077.ref 1.0 (FREE)   -1          #STRESS PERIOD 077
+
+#DATASET 5 - STRESS PERIOD 078
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_078.ref 1.0 (FREE)   -1          #STRESS PERIOD 078
+
+#DATASET 5 - STRESS PERIOD 079
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_079.ref 1.0 (FREE)   -1          #STRESS PERIOD 079
+
+#DATASET 5 - STRESS PERIOD 080
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_080.ref 1.0 (FREE)   -1          #STRESS PERIOD 080
+
+#DATASET 5 - STRESS PERIOD 081
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_081.ref 1.0 (FREE)   -1          #STRESS PERIOD 081
+
+#DATASET 5 - STRESS PERIOD 082
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_082.ref 1.0 (FREE)   -1          #STRESS PERIOD 082
+
+#DATASET 5 - STRESS PERIOD 083
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_083.ref 1.0 (FREE)   -1          #STRESS PERIOD 083
+
+#DATASET 5 - STRESS PERIOD 084
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_084.ref 1.0 (FREE)   -1          #STRESS PERIOD 084
+
+#DATASET 5 - STRESS PERIOD 085
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_085.ref 1.0 (FREE)   -1          #STRESS PERIOD 085
+
+#DATASET 5 - STRESS PERIOD 086
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_086.ref 1.0 (FREE)   -1          #STRESS PERIOD 086
+
+#DATASET 5 - STRESS PERIOD 087
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_087.ref 1.0 (FREE)   -1          #STRESS PERIOD 087
+
+#DATASET 5 - STRESS PERIOD 088
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_088.ref 1.0 (FREE)   -1          #STRESS PERIOD 088
+
+#DATASET 5 - STRESS PERIOD 089
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_089.ref 1.0 (FREE)   -1          #STRESS PERIOD 089
+
+#DATASET 5 - STRESS PERIOD 090
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_090.ref 1.0 (FREE)   -1          #STRESS PERIOD 090
+
+#DATASET 5 - STRESS PERIOD 091
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_091.ref 1.0 (FREE)   -1          #STRESS PERIOD 091
+
+#DATASET 5 - STRESS PERIOD 092
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_092.ref 1.0 (FREE)   -1          #STRESS PERIOD 092
+
+#DATASET 5 - STRESS PERIOD 093
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_093.ref 1.0 (FREE)   -1          #STRESS PERIOD 093
+
+#DATASET 5 - STRESS PERIOD 094
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_094.ref 1.0 (FREE)   -1          #STRESS PERIOD 094
+
+#DATASET 5 - STRESS PERIOD 095
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_095.ref 1.0 (FREE)   -1          #STRESS PERIOD 095
+
+#DATASET 5 - STRESS PERIOD 096
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_096.ref 1.0 (FREE)   -1          #STRESS PERIOD 096
+
+#DATASET 5 - STRESS PERIOD 097
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_097.ref 1.0 (FREE)   -1          #STRESS PERIOD 097
+
+#DATASET 5 - STRESS PERIOD 098
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_098.ref 1.0 (FREE)   -1          #STRESS PERIOD 098
+
+#DATASET 5 - STRESS PERIOD 099
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_099.ref 1.0 (FREE)   -1          #STRESS PERIOD 099
+
+#DATASET 5 - STRESS PERIOD 100
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_100.ref 1.0 (FREE)   -1          #STRESS PERIOD 100
+
+#DATASET 5 - STRESS PERIOD 101
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_101.ref 1.0 (FREE)   -1          #STRESS PERIOD 101
+
+#DATASET 5 - STRESS PERIOD 102
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_102.ref 1.0 (FREE)   -1          #STRESS PERIOD 102
+
+#DATASET 5 - STRESS PERIOD 103
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_103.ref 1.0 (FREE)   -1          #STRESS PERIOD 103
+
+#DATASET 5 - STRESS PERIOD 104
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_104.ref 1.0 (FREE)   -1          #STRESS PERIOD 104
+
+#DATASET 5 - STRESS PERIOD 105
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_105.ref 1.0 (FREE)   -1          #STRESS PERIOD 105
+
+#DATASET 5 - STRESS PERIOD 106
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_106.ref 1.0 (FREE)   -1          #STRESS PERIOD 106
+
+#DATASET 5 - STRESS PERIOD 107
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_107.ref 1.0 (FREE)   -1          #STRESS PERIOD 107
+
+#DATASET 5 - STRESS PERIOD 108
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_108.ref 1.0 (FREE)   -1          #STRESS PERIOD 108
+
+#DATASET 5 - STRESS PERIOD 109
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_109.ref 1.0 (FREE)   -1          #STRESS PERIOD 109
+
+#DATASET 5 - STRESS PERIOD 110
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_110.ref 1.0 (FREE)   -1          #STRESS PERIOD 110
+
+#DATASET 5 - STRESS PERIOD 111
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_111.ref 1.0 (FREE)   -1          #STRESS PERIOD 111
+
+#DATASET 5 - STRESS PERIOD 112
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_112.ref 1.0 (FREE)   -1          #STRESS PERIOD 112
+
+#DATASET 5 - STRESS PERIOD 113
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_113.ref 1.0 (FREE)   -1          #STRESS PERIOD 113
+
+#DATASET 5 - STRESS PERIOD 114
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_114.ref 1.0 (FREE)   -1          #STRESS PERIOD 114
+
+#DATASET 5 - STRESS PERIOD 115
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_115.ref 1.0 (FREE)   -1          #STRESS PERIOD 115
+
+#DATASET 5 - STRESS PERIOD 116
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_116.ref 1.0 (FREE)   -1          #STRESS PERIOD 116
+
+#DATASET 5 - STRESS PERIOD 117
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_117.ref 1.0 (FREE)   -1          #STRESS PERIOD 117
+
+#DATASET 5 - STRESS PERIOD 118
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_118.ref 1.0 (FREE)   -1          #STRESS PERIOD 118
+
+#DATASET 5 - STRESS PERIOD 119
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_119.ref 1.0 (FREE)   -1          #STRESS PERIOD 119
+
+#DATASET 5 - STRESS PERIOD 120
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_120.ref 1.0 (FREE)   -1          #STRESS PERIOD 120
+
+#DATASET 5 - STRESS PERIOD 121
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_121.ref 1.0 (FREE)   -1          #STRESS PERIOD 121
+
+#DATASET 5 - STRESS PERIOD 122
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_122.ref 1.0 (FREE)   -1          #STRESS PERIOD 122
+
+#DATASET 5 - STRESS PERIOD 123
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_123.ref 1.0 (FREE)   -1          #STRESS PERIOD 123
+
+#DATASET 5 - STRESS PERIOD 124
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_124.ref 1.0 (FREE)   -1          #STRESS PERIOD 124
+
+#DATASET 5 - STRESS PERIOD 125
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_125.ref 1.0 (FREE)   -1          #STRESS PERIOD 125
+
+#DATASET 5 - STRESS PERIOD 126
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_126.ref 1.0 (FREE)   -1          #STRESS PERIOD 126
+
+#DATASET 5 - STRESS PERIOD 127
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_127.ref 1.0 (FREE)   -1          #STRESS PERIOD 127
+
+#DATASET 5 - STRESS PERIOD 128
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_128.ref 1.0 (FREE)   -1          #STRESS PERIOD 128
+
+#DATASET 5 - STRESS PERIOD 129
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_129.ref 1.0 (FREE)   -1          #STRESS PERIOD 129
+
+#DATASET 5 - STRESS PERIOD 130
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_130.ref 1.0 (FREE)   -1          #STRESS PERIOD 130
+
+#DATASET 5 - STRESS PERIOD 131
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_131.ref 1.0 (FREE)   -1          #STRESS PERIOD 131
+
+#DATASET 5 - STRESS PERIOD 132
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_132.ref 1.0 (FREE)   -1          #STRESS PERIOD 132
+
+#DATASET 5 - STRESS PERIOD 133
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_133.ref 1.0 (FREE)   -1          #STRESS PERIOD 133
+
+#DATASET 5 - STRESS PERIOD 134
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_134.ref 1.0 (FREE)   -1          #STRESS PERIOD 134
+
+#DATASET 5 - STRESS PERIOD 135
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_135.ref 1.0 (FREE)   -1          #STRESS PERIOD 135
+
+#DATASET 5 - STRESS PERIOD 136
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_136.ref 1.0 (FREE)   -1          #STRESS PERIOD 136
+
+#DATASET 5 - STRESS PERIOD 137
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_137.ref 1.0 (FREE)   -1          #STRESS PERIOD 137
+
+#DATASET 5 - STRESS PERIOD 138
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_138.ref 1.0 (FREE)   -1          #STRESS PERIOD 138
+
+#DATASET 5 - STRESS PERIOD 139
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_139.ref 1.0 (FREE)   -1          #STRESS PERIOD 139
+
+#DATASET 5 - STRESS PERIOD 140
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_140.ref 1.0 (FREE)   -1          #STRESS PERIOD 140
+
+#DATASET 5 - STRESS PERIOD 141
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_141.ref 1.0 (FREE)   -1          #STRESS PERIOD 141
+
+#DATASET 5 - STRESS PERIOD 142
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_142.ref 1.0 (FREE)   -1          #STRESS PERIOD 142
+
+#DATASET 5 - STRESS PERIOD 143
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_143.ref 1.0 (FREE)   -1          #STRESS PERIOD 143
+
+#DATASET 5 - STRESS PERIOD 144
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_144.ref 1.0 (FREE)   -1          #STRESS PERIOD 144
+
+#DATASET 5 - STRESS PERIOD 145
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_145.ref 1.0 (FREE)   -1          #STRESS PERIOD 145
+
+#DATASET 5 - STRESS PERIOD 146
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_146.ref 1.0 (FREE)   -1          #STRESS PERIOD 146
+
+#DATASET 5 - STRESS PERIOD 147
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_147.ref 1.0 (FREE)   -1          #STRESS PERIOD 147
+
+#DATASET 5 - STRESS PERIOD 148
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_148.ref 1.0 (FREE)   -1          #STRESS PERIOD 148
+
+#DATASET 5 - STRESS PERIOD 149
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_149.ref 1.0 (FREE)   -1          #STRESS PERIOD 149
+
+#DATASET 5 - STRESS PERIOD 150
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_150.ref 1.0 (FREE)   -1          #STRESS PERIOD 150
+
+#DATASET 5 - STRESS PERIOD 151
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_151.ref 1.0 (FREE)   -1          #STRESS PERIOD 151
+
+#DATASET 5 - STRESS PERIOD 152
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_152.ref 1.0 (FREE)   -1          #STRESS PERIOD 152
+
+#DATASET 5 - STRESS PERIOD 153
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_153.ref 1.0 (FREE)   -1          #STRESS PERIOD 153
+
+#DATASET 5 - STRESS PERIOD 154
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_154.ref 1.0 (FREE)   -1          #STRESS PERIOD 154
+
+#DATASET 5 - STRESS PERIOD 155
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_155.ref 1.0 (FREE)   -1          #STRESS PERIOD 155
+
+#DATASET 5 - STRESS PERIOD 156
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_156.ref 1.0 (FREE)   -1          #STRESS PERIOD 156
+
+#DATASET 5 - STRESS PERIOD 157
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_157.ref 1.0 (FREE)   -1          #STRESS PERIOD 157
+
+#DATASET 5 - STRESS PERIOD 158
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_158.ref 1.0 (FREE)   -1          #STRESS PERIOD 158
+
+#DATASET 5 - STRESS PERIOD 159
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_159.ref 1.0 (FREE)   -1          #STRESS PERIOD 159
+
+#DATASET 5 - STRESS PERIOD 160
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_160.ref 1.0 (FREE)   -1          #STRESS PERIOD 160
+
+#DATASET 5 - STRESS PERIOD 161
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_161.ref 1.0 (FREE)   -1          #STRESS PERIOD 161
+
+#DATASET 5 - STRESS PERIOD 162
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_162.ref 1.0 (FREE)   -1          #STRESS PERIOD 162
+
+#DATASET 5 - STRESS PERIOD 163
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_163.ref 1.0 (FREE)   -1          #STRESS PERIOD 163
+
+#DATASET 5 - STRESS PERIOD 164
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_164.ref 1.0 (FREE)   -1          #STRESS PERIOD 164
+
+#DATASET 5 - STRESS PERIOD 165
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_165.ref 1.0 (FREE)   -1          #STRESS PERIOD 165
+
+#DATASET 5 - STRESS PERIOD 166
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_166.ref 1.0 (FREE)   -1          #STRESS PERIOD 166
+
+#DATASET 5 - STRESS PERIOD 167
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_167.ref 1.0 (FREE)   -1          #STRESS PERIOD 167
+
+#DATASET 5 - STRESS PERIOD 168
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_168.ref 1.0 (FREE)   -1          #STRESS PERIOD 168
+
+#DATASET 5 - STRESS PERIOD 169
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_169.ref 1.0 (FREE)   -1          #STRESS PERIOD 169
+
+#DATASET 5 - STRESS PERIOD 170
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_170.ref 1.0 (FREE)   -1          #STRESS PERIOD 170
+
+#DATASET 5 - STRESS PERIOD 171
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_171.ref 1.0 (FREE)   -1          #STRESS PERIOD 171
+
+#DATASET 5 - STRESS PERIOD 172
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_172.ref 1.0 (FREE)   -1          #STRESS PERIOD 172
+
+#DATASET 5 - STRESS PERIOD 173
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_173.ref 1.0 (FREE)   -1          #STRESS PERIOD 173
+
+#DATASET 5 - STRESS PERIOD 174
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_174.ref 1.0 (FREE)   -1          #STRESS PERIOD 174
+
+#DATASET 5 - STRESS PERIOD 175
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_175.ref 1.0 (FREE)   -1          #STRESS PERIOD 175
+
+#DATASET 5 - STRESS PERIOD 176
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_176.ref 1.0 (FREE)   -1          #STRESS PERIOD 176
+
+#DATASET 5 - STRESS PERIOD 177
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_177.ref 1.0 (FREE)   -1          #STRESS PERIOD 177
+
+#DATASET 5 - STRESS PERIOD 178
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_178.ref 1.0 (FREE)   -1          #STRESS PERIOD 178
+
+#DATASET 5 - STRESS PERIOD 179
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_179.ref 1.0 (FREE)   -1          #STRESS PERIOD 179
+
+#DATASET 5 - STRESS PERIOD 180
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_180.ref 1.0 (FREE)   -1          #STRESS PERIOD 180
+
+#DATASET 5 - STRESS PERIOD 181
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_181.ref 1.0 (FREE)   -1          #STRESS PERIOD 181
+
+#DATASET 5 - STRESS PERIOD 182
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_182.ref 1.0 (FREE)   -1          #STRESS PERIOD 182
+
+#DATASET 5 - STRESS PERIOD 183
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_183.ref 1.0 (FREE)   -1          #STRESS PERIOD 183
+
+#DATASET 5 - STRESS PERIOD 184
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_184.ref 1.0 (FREE)   -1          #STRESS PERIOD 184
+
+#DATASET 5 - STRESS PERIOD 185
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_185.ref 1.0 (FREE)   -1          #STRESS PERIOD 185
+
+#DATASET 5 - STRESS PERIOD 186
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_186.ref 1.0 (FREE)   -1          #STRESS PERIOD 186
+
+#DATASET 5 - STRESS PERIOD 187
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_187.ref 1.0 (FREE)   -1          #STRESS PERIOD 187
+
+#DATASET 5 - STRESS PERIOD 188
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_188.ref 1.0 (FREE)   -1          #STRESS PERIOD 188
+
+#DATASET 5 - STRESS PERIOD 189
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_189.ref 1.0 (FREE)   -1          #STRESS PERIOD 189
+
+#DATASET 5 - STRESS PERIOD 190
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_190.ref 1.0 (FREE)   -1          #STRESS PERIOD 190
+
+#DATASET 5 - STRESS PERIOD 191
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_191.ref 1.0 (FREE)   -1          #STRESS PERIOD 191
+
+#DATASET 5 - STRESS PERIOD 192
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_192.ref 1.0 (FREE)   -1          #STRESS PERIOD 192
+
+#DATASET 5 - STRESS PERIOD 193
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_193.ref 1.0 (FREE)   -1          #STRESS PERIOD 193
+
+#DATASET 5 - STRESS PERIOD 194
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_194.ref 1.0 (FREE)   -1          #STRESS PERIOD 194
+
+#DATASET 5 - STRESS PERIOD 195
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_195.ref 1.0 (FREE)   -1          #STRESS PERIOD 195
+
+#DATASET 5 - STRESS PERIOD 196
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_196.ref 1.0 (FREE)   -1          #STRESS PERIOD 196
+
+#DATASET 5 - STRESS PERIOD 197
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_197.ref 1.0 (FREE)   -1          #STRESS PERIOD 197
+
+#DATASET 5 - STRESS PERIOD 198
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_198.ref 1.0 (FREE)   -1          #STRESS PERIOD 198
+
+#DATASET 5 - STRESS PERIOD 199
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_199.ref 1.0 (FREE)   -1          #STRESS PERIOD 199
+
+#DATASET 5 - STRESS PERIOD 200
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_200.ref 1.0 (FREE)   -1          #STRESS PERIOD 200
+
+#DATASET 5 - STRESS PERIOD 201
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_201.ref 1.0 (FREE)   -1          #STRESS PERIOD 201
+
+#DATASET 5 - STRESS PERIOD 202
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_202.ref 1.0 (FREE)   -1          #STRESS PERIOD 202
+
+#DATASET 5 - STRESS PERIOD 203
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_203.ref 1.0 (FREE)   -1          #STRESS PERIOD 203
+
+#DATASET 5 - STRESS PERIOD 204
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_204.ref 1.0 (FREE)   -1          #STRESS PERIOD 204
+
+#DATASET 5 - STRESS PERIOD 205
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_205.ref 1.0 (FREE)   -1          #STRESS PERIOD 205
+
+#DATASET 5 - STRESS PERIOD 206
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_206.ref 1.0 (FREE)   -1          #STRESS PERIOD 206
+
+#DATASET 5 - STRESS PERIOD 207
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_207.ref 1.0 (FREE)   -1          #STRESS PERIOD 207
+
+#DATASET 5 - STRESS PERIOD 208
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_208.ref 1.0 (FREE)   -1          #STRESS PERIOD 208
+
+#DATASET 5 - STRESS PERIOD 209
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_209.ref 1.0 (FREE)   -1          #STRESS PERIOD 209
+
+#DATASET 5 - STRESS PERIOD 210
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_210.ref 1.0 (FREE)   -1          #STRESS PERIOD 210
+
+#DATASET 5 - STRESS PERIOD 211
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_211.ref 1.0 (FREE)   -1          #STRESS PERIOD 211
+
+#DATASET 5 - STRESS PERIOD 212
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_212.ref 1.0 (FREE)   -1          #STRESS PERIOD 212
+
+#DATASET 5 - STRESS PERIOD 213
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_213.ref 1.0 (FREE)   -1          #STRESS PERIOD 213
+
+#DATASET 5 - STRESS PERIOD 214
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_214.ref 1.0 (FREE)   -1          #STRESS PERIOD 214
+
+#DATASET 5 - STRESS PERIOD 215
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_215.ref 1.0 (FREE)   -1          #STRESS PERIOD 215
+
+#DATASET 5 - STRESS PERIOD 216
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_216.ref 1.0 (FREE)   -1          #STRESS PERIOD 216
+
+#DATASET 5 - STRESS PERIOD 217
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_217.ref 1.0 (FREE)   -1          #STRESS PERIOD 217
+
+#DATASET 5 - STRESS PERIOD 218
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_218.ref 1.0 (FREE)   -1          #STRESS PERIOD 218
+
+#DATASET 5 - STRESS PERIOD 219
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_219.ref 1.0 (FREE)   -1          #STRESS PERIOD 219
+
+#DATASET 5 - STRESS PERIOD 220
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_220.ref 1.0 (FREE)   -1          #STRESS PERIOD 220
+
+#DATASET 5 - STRESS PERIOD 221
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_221.ref 1.0 (FREE)   -1          #STRESS PERIOD 221
+
+#DATASET 5 - STRESS PERIOD 222
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_222.ref 1.0 (FREE)   -1          #STRESS PERIOD 222
+
+#DATASET 5 - STRESS PERIOD 223
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_223.ref 1.0 (FREE)   -1          #STRESS PERIOD 223
+
+#DATASET 5 - STRESS PERIOD 224
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_224.ref 1.0 (FREE)   -1          #STRESS PERIOD 224
+
+#DATASET 5 - STRESS PERIOD 225
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_225.ref 1.0 (FREE)   -1          #STRESS PERIOD 225
+
+#DATASET 5 - STRESS PERIOD 226
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_226.ref 1.0 (FREE)   -1          #STRESS PERIOD 226
+
+#DATASET 5 - STRESS PERIOD 227
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_227.ref 1.0 (FREE)   -1          #STRESS PERIOD 227
+
+#DATASET 5 - STRESS PERIOD 228
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_228.ref 1.0 (FREE)   -1          #STRESS PERIOD 228
+
+#DATASET 5 - STRESS PERIOD 229
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_229.ref 1.0 (FREE)   -1          #STRESS PERIOD 229
+
+#DATASET 5 - STRESS PERIOD 230
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_230.ref 1.0 (FREE)   -1          #STRESS PERIOD 230
+
+#DATASET 5 - STRESS PERIOD 231
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_231.ref 1.0 (FREE)   -1          #STRESS PERIOD 231
+
+#DATASET 5 - STRESS PERIOD 232
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_232.ref 1.0 (FREE)   -1          #STRESS PERIOD 232
+
+#DATASET 5 - STRESS PERIOD 233
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_233.ref 1.0 (FREE)   -1          #STRESS PERIOD 233
+
+#DATASET 5 - STRESS PERIOD 234
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_234.ref 1.0 (FREE)   -1          #STRESS PERIOD 234
+
+#DATASET 5 - STRESS PERIOD 235
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_235.ref 1.0 (FREE)   -1          #STRESS PERIOD 235
+
+#DATASET 5 - STRESS PERIOD 236
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_236.ref 1.0 (FREE)   -1          #STRESS PERIOD 236
+
+#DATASET 5 - STRESS PERIOD 237
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_237.ref 1.0 (FREE)   -1          #STRESS PERIOD 237
+
+#DATASET 5 - STRESS PERIOD 238
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_238.ref 1.0 (FREE)   -1          #STRESS PERIOD 238
+
+#DATASET 5 - STRESS PERIOD 239
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_239.ref 1.0 (FREE)   -1          #STRESS PERIOD 239
+
+#DATASET 5 - STRESS PERIOD 240
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_240.ref 1.0 (FREE)   -1          #STRESS PERIOD 240
+
+#DATASET 5 - STRESS PERIOD 241
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_241.ref 1.0 (FREE)   -1          #STRESS PERIOD 241
+
+#DATASET 5 - STRESS PERIOD 242
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_242.ref 1.0 (FREE)   -1          #STRESS PERIOD 242
+
+#DATASET 5 - STRESS PERIOD 243
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_243.ref 1.0 (FREE)   -1          #STRESS PERIOD 243
+
+#DATASET 5 - STRESS PERIOD 244
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_244.ref 1.0 (FREE)   -1          #STRESS PERIOD 244
+
+#DATASET 5 - STRESS PERIOD 245
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_245.ref 1.0 (FREE)   -1          #STRESS PERIOD 245
+
+#DATASET 5 - STRESS PERIOD 246
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_246.ref 1.0 (FREE)   -1          #STRESS PERIOD 246
+
+#DATASET 5 - STRESS PERIOD 247
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_247.ref 1.0 (FREE)   -1          #STRESS PERIOD 247
+
+#DATASET 5 - STRESS PERIOD 248
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_248.ref 1.0 (FREE)   -1          #STRESS PERIOD 248
+
+#DATASET 5 - STRESS PERIOD 249
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_249.ref 1.0 (FREE)   -1          #STRESS PERIOD 249
+
+#DATASET 5 - STRESS PERIOD 250
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_250.ref 1.0 (FREE)   -1          #STRESS PERIOD 250
+
+#DATASET 5 - STRESS PERIOD 251
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_251.ref 1.0 (FREE)   -1          #STRESS PERIOD 251
+
+#DATASET 5 - STRESS PERIOD 252
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_252.ref 1.0 (FREE)   -1          #STRESS PERIOD 252
+
+#DATASET 5 - STRESS PERIOD 253
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_253.ref 1.0 (FREE)   -1          #STRESS PERIOD 253
+
+#DATASET 5 - STRESS PERIOD 254
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_254.ref 1.0 (FREE)   -1          #STRESS PERIOD 254
+
+#DATASET 5 - STRESS PERIOD 255
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_255.ref 1.0 (FREE)   -1          #STRESS PERIOD 255
+
+#DATASET 5 - STRESS PERIOD 256
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_256.ref 1.0 (FREE)   -1          #STRESS PERIOD 256
+
+#DATASET 5 - STRESS PERIOD 257
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_257.ref 1.0 (FREE)   -1          #STRESS PERIOD 257
+
+#DATASET 5 - STRESS PERIOD 258
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_258.ref 1.0 (FREE)   -1          #STRESS PERIOD 258
+
+#DATASET 5 - STRESS PERIOD 259
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_259.ref 1.0 (FREE)   -1          #STRESS PERIOD 259
+
+#DATASET 5 - STRESS PERIOD 260
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_260.ref 1.0 (FREE)   -1          #STRESS PERIOD 260
+
+#DATASET 5 - STRESS PERIOD 261
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_261.ref 1.0 (FREE)   -1          #STRESS PERIOD 261
+
+#DATASET 5 - STRESS PERIOD 262
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_262.ref 1.0 (FREE)   -1          #STRESS PERIOD 262
+
+#DATASET 5 - STRESS PERIOD 263
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_263.ref 1.0 (FREE)   -1          #STRESS PERIOD 263
+
+#DATASET 5 - STRESS PERIOD 264
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_264.ref 1.0 (FREE)   -1          #STRESS PERIOD 264
+
+#DATASET 5 - STRESS PERIOD 265
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_265.ref 1.0 (FREE)   -1          #STRESS PERIOD 265
+
+#DATASET 5 - STRESS PERIOD 266
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_266.ref 1.0 (FREE)   -1          #STRESS PERIOD 266
+
+#DATASET 5 - STRESS PERIOD 267
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_267.ref 1.0 (FREE)   -1          #STRESS PERIOD 267
+
+#DATASET 5 - STRESS PERIOD 268
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_268.ref 1.0 (FREE)   -1          #STRESS PERIOD 268
+
+#DATASET 5 - STRESS PERIOD 269
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_269.ref 1.0 (FREE)   -1          #STRESS PERIOD 269
+
+#DATASET 5 - STRESS PERIOD 270
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_270.ref 1.0 (FREE)   -1          #STRESS PERIOD 270
+
+#DATASET 5 - STRESS PERIOD 271
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_271.ref 1.0 (FREE)   -1          #STRESS PERIOD 271
+
+#DATASET 5 - STRESS PERIOD 272
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_272.ref 1.0 (FREE)   -1          #STRESS PERIOD 272
+
+#DATASET 5 - STRESS PERIOD 273
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_273.ref 1.0 (FREE)   -1          #STRESS PERIOD 273
+
+#DATASET 5 - STRESS PERIOD 274
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_274.ref 1.0 (FREE)   -1          #STRESS PERIOD 274
+
+#DATASET 5 - STRESS PERIOD 275
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_275.ref 1.0 (FREE)   -1          #STRESS PERIOD 275
+
+#DATASET 5 - STRESS PERIOD 276
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_276.ref 1.0 (FREE)   -1          #STRESS PERIOD 276
+
+#DATASET 5 - STRESS PERIOD 277
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_277.ref 1.0 (FREE)   -1          #STRESS PERIOD 277
+
+#DATASET 5 - STRESS PERIOD 278
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_278.ref 1.0 (FREE)   -1          #STRESS PERIOD 278
+
+#DATASET 5 - STRESS PERIOD 279
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_279.ref 1.0 (FREE)   -1          #STRESS PERIOD 279
+
+#DATASET 5 - STRESS PERIOD 280
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_280.ref 1.0 (FREE)   -1          #STRESS PERIOD 280
+
+#DATASET 5 - STRESS PERIOD 281
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_281.ref 1.0 (FREE)   -1          #STRESS PERIOD 281
+
+#DATASET 5 - STRESS PERIOD 282
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_282.ref 1.0 (FREE)   -1          #STRESS PERIOD 282
+
+#DATASET 5 - STRESS PERIOD 283
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_283.ref 1.0 (FREE)   -1          #STRESS PERIOD 283
+
+#DATASET 5 - STRESS PERIOD 284
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_284.ref 1.0 (FREE)   -1          #STRESS PERIOD 284
+
+#DATASET 5 - STRESS PERIOD 285
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_285.ref 1.0 (FREE)   -1          #STRESS PERIOD 285
+
+#DATASET 5 - STRESS PERIOD 286
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_286.ref 1.0 (FREE)   -1          #STRESS PERIOD 286
+
+#DATASET 5 - STRESS PERIOD 287
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_287.ref 1.0 (FREE)   -1          #STRESS PERIOD 287
+
+#DATASET 5 - STRESS PERIOD 288
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_288.ref 1.0 (FREE)   -1          #STRESS PERIOD 288
+
+#DATASET 5 - STRESS PERIOD 289
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_289.ref 1.0 (FREE)   -1          #STRESS PERIOD 289
+
+#DATASET 5 - STRESS PERIOD 290
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_290.ref 1.0 (FREE)   -1          #STRESS PERIOD 290
+
+#DATASET 5 - STRESS PERIOD 291
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_291.ref 1.0 (FREE)   -1          #STRESS PERIOD 291
+
+#DATASET 5 - STRESS PERIOD 292
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_292.ref 1.0 (FREE)   -1          #STRESS PERIOD 292
+
+#DATASET 5 - STRESS PERIOD 293
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_293.ref 1.0 (FREE)   -1          #STRESS PERIOD 293
+
+#DATASET 5 - STRESS PERIOD 294
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_294.ref 1.0 (FREE)   -1          #STRESS PERIOD 294
+
+#DATASET 5 - STRESS PERIOD 295
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_295.ref 1.0 (FREE)   -1          #STRESS PERIOD 295
+
+#DATASET 5 - STRESS PERIOD 296
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_296.ref 1.0 (FREE)   -1          #STRESS PERIOD 296
+
+#DATASET 5 - STRESS PERIOD 297
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_297.ref 1.0 (FREE)   -1          #STRESS PERIOD 297
+
+#DATASET 5 - STRESS PERIOD 298
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_298.ref 1.0 (FREE)   -1          #STRESS PERIOD 298
+
+#DATASET 5 - STRESS PERIOD 299
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_299.ref 1.0 (FREE)   -1          #STRESS PERIOD 299
+
+#DATASET 5 - STRESS PERIOD 300
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_300.ref 1.0 (FREE)   -1          #STRESS PERIOD 300
+
+#DATASET 5 - STRESS PERIOD 301
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_301.ref 1.0 (FREE)   -1          #STRESS PERIOD 301
+
+#DATASET 5 - STRESS PERIOD 302
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_302.ref 1.0 (FREE)   -1          #STRESS PERIOD 302
+
+#DATASET 5 - STRESS PERIOD 303
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_303.ref 1.0 (FREE)   -1          #STRESS PERIOD 303
+
+#DATASET 5 - STRESS PERIOD 304
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_304.ref 1.0 (FREE)   -1          #STRESS PERIOD 304
+
+#DATASET 5 - STRESS PERIOD 305
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_305.ref 1.0 (FREE)   -1          #STRESS PERIOD 305
+
+#DATASET 5 - STRESS PERIOD 306
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_306.ref 1.0 (FREE)   -1          #STRESS PERIOD 306
+
+#DATASET 5 - STRESS PERIOD 307
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_307.ref 1.0 (FREE)   -1          #STRESS PERIOD 307
+
+#DATASET 5 - STRESS PERIOD 308
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_308.ref 1.0 (FREE)   -1          #STRESS PERIOD 308
+
+#DATASET 5 - STRESS PERIOD 309
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_309.ref 1.0 (FREE)   -1          #STRESS PERIOD 309
+
+#DATASET 5 - STRESS PERIOD 310
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_310.ref 1.0 (FREE)   -1          #STRESS PERIOD 310
+
+#DATASET 5 - STRESS PERIOD 311
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_311.ref 1.0 (FREE)   -1          #STRESS PERIOD 311
+
+#DATASET 5 - STRESS PERIOD 312
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_312.ref 1.0 (FREE)   -1          #STRESS PERIOD 312
+
+#DATASET 5 - STRESS PERIOD 313
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_313.ref 1.0 (FREE)   -1          #STRESS PERIOD 313
+
+#DATASET 5 - STRESS PERIOD 314
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_314.ref 1.0 (FREE)   -1          #STRESS PERIOD 314
+
+#DATASET 5 - STRESS PERIOD 315
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_315.ref 1.0 (FREE)   -1          #STRESS PERIOD 315
+
+#DATASET 5 - STRESS PERIOD 316
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_316.ref 1.0 (FREE)   -1          #STRESS PERIOD 316
+
+#DATASET 5 - STRESS PERIOD 317
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_317.ref 1.0 (FREE)   -1          #STRESS PERIOD 317
+
+#DATASET 5 - STRESS PERIOD 318
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_318.ref 1.0 (FREE)   -1          #STRESS PERIOD 318
+
+#DATASET 5 - STRESS PERIOD 319
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_319.ref 1.0 (FREE)   -1          #STRESS PERIOD 319
+
+#DATASET 5 - STRESS PERIOD 320
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_320.ref 1.0 (FREE)   -1          #STRESS PERIOD 320
+
+#DATASET 5 - STRESS PERIOD 321
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_321.ref 1.0 (FREE)   -1          #STRESS PERIOD 321
+
+#DATASET 5 - STRESS PERIOD 322
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_322.ref 1.0 (FREE)   -1          #STRESS PERIOD 322
+
+#DATASET 5 - STRESS PERIOD 323
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_323.ref 1.0 (FREE)   -1          #STRESS PERIOD 323
+
+#DATASET 5 - STRESS PERIOD 324
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_324.ref 1.0 (FREE)   -1          #STRESS PERIOD 324
+
+#DATASET 5 - STRESS PERIOD 325
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_325.ref 1.0 (FREE)   -1          #STRESS PERIOD 325
+
+#DATASET 5 - STRESS PERIOD 326
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_326.ref 1.0 (FREE)   -1          #STRESS PERIOD 326
+
+#DATASET 5 - STRESS PERIOD 327
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_327.ref 1.0 (FREE)   -1          #STRESS PERIOD 327
+
+#DATASET 5 - STRESS PERIOD 328
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_328.ref 1.0 (FREE)   -1          #STRESS PERIOD 328
+
+#DATASET 5 - STRESS PERIOD 329
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_329.ref 1.0 (FREE)   -1          #STRESS PERIOD 329
+
+#DATASET 5 - STRESS PERIOD 330
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_330.ref 1.0 (FREE)   -1          #STRESS PERIOD 330
+
+#DATASET 5 - STRESS PERIOD 331
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_331.ref 1.0 (FREE)   -1          #STRESS PERIOD 331
+
+#DATASET 5 - STRESS PERIOD 332
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_332.ref 1.0 (FREE)   -1          #STRESS PERIOD 332
+
+#DATASET 5 - STRESS PERIOD 333
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_333.ref 1.0 (FREE)   -1          #STRESS PERIOD 333
+
+#DATASET 5 - STRESS PERIOD 334
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_334.ref 1.0 (FREE)   -1          #STRESS PERIOD 334
+
+#DATASET 5 - STRESS PERIOD 335
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_335.ref 1.0 (FREE)   -1          #STRESS PERIOD 335
+
+#DATASET 5 - STRESS PERIOD 336
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_336.ref 1.0 (FREE)   -1          #STRESS PERIOD 336
+
+#DATASET 5 - STRESS PERIOD 337
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_337.ref 1.0 (FREE)   -1          #STRESS PERIOD 337
+
+#DATASET 5 - STRESS PERIOD 338
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_338.ref 1.0 (FREE)   -1          #STRESS PERIOD 338
+
+#DATASET 5 - STRESS PERIOD 339
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_339.ref 1.0 (FREE)   -1          #STRESS PERIOD 339
+
+#DATASET 5 - STRESS PERIOD 340
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_340.ref 1.0 (FREE)   -1          #STRESS PERIOD 340
+
+#DATASET 5 - STRESS PERIOD 341
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_341.ref 1.0 (FREE)   -1          #STRESS PERIOD 341
+
+#DATASET 5 - STRESS PERIOD 342
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_342.ref 1.0 (FREE)   -1          #STRESS PERIOD 342
+
+#DATASET 5 - STRESS PERIOD 343
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_343.ref 1.0 (FREE)   -1          #STRESS PERIOD 343
+
+#DATASET 5 - STRESS PERIOD 344
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_344.ref 1.0 (FREE)   -1          #STRESS PERIOD 344
+
+#DATASET 5 - STRESS PERIOD 345
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_345.ref 1.0 (FREE)   -1          #STRESS PERIOD 345
+
+#DATASET 5 - STRESS PERIOD 346
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_346.ref 1.0 (FREE)   -1          #STRESS PERIOD 346
+
+#DATASET 5 - STRESS PERIOD 347
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_347.ref 1.0 (FREE)   -1          #STRESS PERIOD 347
+
+#DATASET 5 - STRESS PERIOD 348
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_348.ref 1.0 (FREE)   -1          #STRESS PERIOD 348
+
+#DATASET 5 - STRESS PERIOD 349
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_349.ref 1.0 (FREE)   -1          #STRESS PERIOD 349
+
+#DATASET 5 - STRESS PERIOD 350
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_350.ref 1.0 (FREE)   -1          #STRESS PERIOD 350
+
+#DATASET 5 - STRESS PERIOD 351
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_351.ref 1.0 (FREE)   -1          #STRESS PERIOD 351
+
+#DATASET 5 - STRESS PERIOD 352
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_352.ref 1.0 (FREE)   -1          #STRESS PERIOD 352
+
+#DATASET 5 - STRESS PERIOD 353
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_353.ref 1.0 (FREE)   -1          #STRESS PERIOD 353
+
+#DATASET 5 - STRESS PERIOD 354
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_354.ref 1.0 (FREE)   -1          #STRESS PERIOD 354
+
+#DATASET 5 - STRESS PERIOD 355
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_355.ref 1.0 (FREE)   -1          #STRESS PERIOD 355
+
+#DATASET 5 - STRESS PERIOD 356
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_356.ref 1.0 (FREE)   -1          #STRESS PERIOD 356
+
+#DATASET 5 - STRESS PERIOD 357
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_357.ref 1.0 (FREE)   -1          #STRESS PERIOD 357
+
+#DATASET 5 - STRESS PERIOD 358
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_358.ref 1.0 (FREE)   -1          #STRESS PERIOD 358
+
+#DATASET 5 - STRESS PERIOD 359
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_359.ref 1.0 (FREE)   -1          #STRESS PERIOD 359
+
+#DATASET 5 - STRESS PERIOD 360
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_360.ref 1.0 (FREE)   -1          #STRESS PERIOD 360
+
+#DATASET 5 - STRESS PERIOD 361
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_361.ref 1.0 (FREE)   -1          #STRESS PERIOD 361
+
+#DATASET 5 - STRESS PERIOD 362
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_362.ref 1.0 (FREE)   -1          #STRESS PERIOD 362
+
+#DATASET 5 - STRESS PERIOD 363
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_363.ref 1.0 (FREE)   -1          #STRESS PERIOD 363
+
+#DATASET 5 - STRESS PERIOD 364
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_364.ref 1.0 (FREE)   -1          #STRESS PERIOD 364
+
+#DATASET 5 - STRESS PERIOD 365
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_365.ref 1.0 (FREE)   -1          #STRESS PERIOD 365
+
+#DATASET 5 - STRESS PERIOD 366
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_366.ref 1.0 (FREE)   -1          #STRESS PERIOD 366
+
+#DATASET 5 - STRESS PERIOD 367
+# ITMP IRDBND IRDRAI IRDEVP IRDLIN IRDGEO IRDSTR IRDSTG IPTFLG
+     1      0     -1      0      0      0      0      0      0
+# DATASET 7B - RAINFALL DATA
+OPEN/CLOSE ref/Rainfall_367.ref 1.0 (FREE)   -1          #STRESS PERIOD 367
+
