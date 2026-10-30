@@ -84,11 +84,17 @@ class ModflowGwflak(MFPackage):
         water mover (mvr) package.  when the mover option is specified, additional
         memory is allocated within the package to store the available, provided, and
         received water.
-    dev_force_fallback : keyword
-        keyword that solves every active lake with the substitution fallback under the
-        implicit formulation, instead of only those lakes that are too poorly
-        conditioned to solve as a matrix unknown.  this development option is not
-        supported.
+    dev_force_legacy : keyword
+        keyword that solves every active lake with the default (legacy) substitution
+        solver under the implicit formulation, instead of only those lakes that are too
+        poorly conditioned to solve as a matrix unknown.  cannot be specified with
+        dev_force_legacy_lake.  this development option exists to test that path and is
+        not supported.
+    dev_force_legacy_lake : integer
+        integer lake number that is solved with the default (legacy) substitution
+        solver under the implicit formulation, while the other lakes are solved as
+        matrix unknowns.  cannot be specified with dev_force_legacy.  this development
+        option exists to test that path and is not supported.
     dev_groundwater_head_conductance : keyword
         keyword that calculates the conductance for horizontal connections using the
         groundwater head instead of the lake stage.  this development option is not
@@ -114,13 +120,16 @@ class ModflowGwflak(MFPackage):
         the implicit option is active because the implicit formulation solves the lake
         stage through its lakebed seepage; the program will terminate with an error if
         a lake with no groundwater connections is specified with the implicit option.
-        if a lake stage becomes too poorly conditioned to solve as a matrix unknown,
-        which can happen for a weakly connected or disconnected lake, that lake is
-        solved automatically by the default substitution solver instead, so the
-        implicit formulation remains as robust as the default formulation. the newton
-        formulation is recommended for lakes that may become perched (disconnected from
-        the aquifer), because results obtained with the standard rewetting (rewet)
-        capability can otherwise differ between the two approaches.
+        the implicit formulation does not yet include the density terms of the buoyancy
+        (buy) package, and the program will terminate with an error if the implicit
+        option is specified and the buy package is active. if a lake stage becomes too
+        poorly conditioned to solve as a matrix unknown, which can happen for a weakly
+        connected or disconnected lake, that lake is solved automatically by the
+        default substitution solver instead, so the implicit formulation remains as
+        robust as the default formulation. the newton formulation is recommended for
+        lakes that may become perched (disconnected from the aquifer), because results
+        obtained with the standard rewetting (rewet) capability can otherwise differ
+        between the two approaches.
     maximum_iterations : integer
         integer value that defines the maximum number of newton-raphson iterations
         allowed for a lake. by default, maximum_iterations is equal to 100.
@@ -154,6 +163,9 @@ class ModflowGwflak(MFPackage):
         and 100.0 when using length units (length_units) of feet, meters, or
         centimeters in the simulation, respectively. length_conversion does not need to
         be specified if no lake outlets are specified or length_units are meters.
+    dev_no_final_check : keyword
+        flag disabling the final convergence check of the change in lake stages. by
+        default this check is enabled.
     nlakes : integer
         value specifying the number of lakes that will be simulated for all stress
         periods.
@@ -297,26 +309,26 @@ class ModflowGwflak(MFPackage):
                 is defined as a specified flow.  MANNING--character keyword to indicate the
                 outlet is defined using Manning's equation. WEIR--character keyword to indicate
                 the outlet is defined using a sharp weir equation.
-        * invert : string
+        * invert : double precision
                 real or character value that defines the invert elevation for the lake outlet.
                 A specified INVERT value is only used for active lakes if COUTTYPE for lake
                 outlet OUTLETNO is not SPECIFIED. If the Options block includes a
                 TIMESERIESFILE entry (see the 'Time-Variable Input' section), values can be
                 obtained from a time series by entering the time-series name in place of a
                 numeric value.
-        * width : string
+        * width : double precision
                 real or character value that defines the width of the lake outlet. A specified
                 WIDTH value is only used for active lakes if COUTTYPE for lake outlet OUTLETNO
                 is not SPECIFIED. If the Options block includes a TIMESERIESFILE entry (see the
                 'Time-Variable Input' section), values can be obtained from a time series by
                 entering the time-series name in place of a numeric value.
-        * rough : string
+        * rough : double precision
                 real value that defines the roughness coefficient for the lake outlet. Any
                 value can be specified if COUTTYPE is not MANNING. If the Options block
                 includes a TIMESERIESFILE entry (see the 'Time-Variable Input' section), values
                 can be obtained from a time series by entering the time-series name in place of
                 a numeric value.
-        * slope : string
+        * slope : double precision
                 real or character value that defines the bed slope for the lake outlet. A
                 specified SLOPE value is only used for active lakes if COUTTYPE for lake outlet
                 OUTLETNO is MANNING. If the Options block includes a TIMESERIESFILE entry (see
@@ -336,32 +348,32 @@ class ModflowGwflak(MFPackage):
                 status, stage, rainfall, evaporation, runoff, inflow, withdrawal, and
                 auxiliary.  keywords for outlet settings include rate, invert, width, slope,
                 and rough.
-                * stage : string
+                * stage : double precision
                             real or character value that defines the stage for the lake. the specified
                             stage is only applied if the lake is a constant stage lake. if the options
                             block includes a timeseriesfile entry (see the 'time-variable input' section),
                             values can be obtained from a time series by entering the time-series name in
                             place of a numeric value.
-                * invert : string
+                * invert : double precision
                             real or character value that defines the invert elevation for the lake outlet.
                             a specified invert value is only used for active lakes if couttype for lake
                             outlet outletno is not specified. if the options block includes a
                             timeseriesfile entry (see the 'time-variable input' section), values can be
                             obtained from a time series by entering the time-series name in place of a
                             numeric value.
-                * width : string
+                * width : double precision
                             real or character value that defines the width of the lake outlet. a specified
                             width value is only used for active lakes if couttype for lake outlet outletno
                             is not specified. if the options block includes a timeseriesfile entry (see the
                             'time-variable input' section), values can be obtained from a time series by
                             entering the time-series name in place of a numeric value.
-                * rough : string
+                * rough : double precision
                             real value that defines the roughness coefficient for the lake outlet. any
                             value can be specified if couttype is not manning. if the options block
                             includes a timeseriesfile entry (see the 'time-variable input' section), values
                             can be obtained from a time series by entering the time-series name in place of
                             a numeric value.
-                * slope : string
+                * slope : double precision
                             real or character value that defines the bed slope for the lake outlet. a
                             specified slope value is only used for active lakes if couttype for lake outlet
                             outletno is manning. if the options block includes a timeseriesfile entry (see
@@ -370,38 +382,38 @@ class ModflowGwflak(MFPackage):
                 * status : string
                             keyword option to define lake status.  status can be active, inactive, or
                             constant. by default, status is active.
-                * rainfall : string
+                * rainfall : double precision
                             real or character value that defines the rainfall rate :math:`(lt^{-1})` for
                             the lake. value must be greater than or equal to zero. if the options block
                             includes a timeseriesfile entry (see the 'time-variable input' section), values
                             can be obtained from a time series by entering the time-series name in place of
                             a numeric value.
-                * evaporation : string
+                * evaporation : double precision
                             real or character value that defines the maximum evaporation rate
                             :math:`(lt^{-1})` for the lake. value must be greater than or equal to zero. if
                             the options block includes a timeseriesfile entry (see the 'time-variable
                             input' section), values can be obtained from a time series by entering the
                             time-series name in place of a numeric value.
-                * runoff : string
+                * runoff : double precision
                             real or character value that defines the runoff rate :math:`(l^3 t^{-1})` for
                             the lake. value must be greater than or equal to zero. if the options block
                             includes a timeseriesfile entry (see the 'time-variable input' section), values
                             can be obtained from a time series by entering the time-series name in place of
                             a numeric value.
-                * inflow : string
+                * inflow : double precision
                             real or character value that defines the volumetric inflow rate :math:`(l^3
                             t^{-1})` for the lake. value must be greater than or equal to zero. if the
                             options block includes a timeseriesfile entry (see the 'time-variable input'
                             section), values can be obtained from a time series by entering the time-series
                             name in place of a numeric value. by default, inflow rates are zero for each
                             lake.
-                * withdrawal : string
+                * withdrawal : double precision
                             real or character value that defines the maximum withdrawal rate :math:`(l^3
                             t^{-1})` for the lake. value must be greater than or equal to zero. if the
                             options block includes a timeseriesfile entry (see the 'time-variable input'
                             section), values can be obtained from a time series by entering the time-series
                             name in place of a numeric value.
-                * rate : string
+                * rate : double precision
                             real or character value that defines the extraction rate for the lake outflow.
                             a positive value indicates inflow and a negative value indicates outflow from
                             the lake. rate only applies to outlets associated with active lakes (status is
@@ -485,6 +497,7 @@ class ModflowGwflak(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -499,6 +512,7 @@ class ModflowGwflak(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -506,6 +520,7 @@ class ModflowGwflak(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -519,6 +534,7 @@ class ModflowGwflak(MFPackage):
         [
             "block options",
             "name stage",
+            "mf6internal options_stage",
             "type keyword",
             "shape",
             "in_record true",
@@ -540,6 +556,7 @@ class ModflowGwflak(MFPackage):
         [
             "block options",
             "name budget_filerecord",
+            "mf6internal budfilerec",
             "type record budget fileout budgetfile",
             "shape",
             "reader urword",
@@ -580,6 +597,7 @@ class ModflowGwflak(MFPackage):
         [
             "block options",
             "name budgetcsv_filerecord",
+            "mf6internal budcsvfilerec",
             "type record budgetcsv fileout budgetcsvfile",
             "shape",
             "reader urword",
@@ -610,6 +628,7 @@ class ModflowGwflak(MFPackage):
         [
             "block options",
             "name package_convergence_filerecord",
+            "mf6internal pkgconvfilerec",
             "type record package_convergence fileout package_convergence_filename",
             "shape",
             "reader urword",
@@ -625,6 +644,7 @@ class ModflowGwflak(MFPackage):
             "reader urword",
             "tagged true",
             "optional false",
+            "mf6internal pkgconv",
         ],
         [
             "block options",
@@ -635,6 +655,7 @@ class ModflowGwflak(MFPackage):
             "reader urword",
             "tagged false",
             "optional false",
+            "mf6internal pkgconvfname",
         ],
         [
             "block options",
@@ -661,6 +682,7 @@ class ModflowGwflak(MFPackage):
         [
             "block options",
             "name filein",
+            "mf6internal options_filein",
             "type keyword",
             "shape",
             "in_record true",
@@ -720,14 +742,24 @@ class ModflowGwflak(MFPackage):
         ],
         [
             "block options",
-            "name dev_force_fallback",
+            "name dev_force_legacy",
+            "mf6internal iforceleg",
             "type keyword",
             "reader urword",
             "optional true",
         ],
         [
             "block options",
+            "name dev_force_legacy_lake",
+            "mf6internal iforceleglak",
+            "type integer",
+            "reader urword",
+            "optional true",
+        ],
+        [
+            "block options",
             "name dev_groundwater_head_conductance",
+            "mf6internal igwhcopt",
             "type keyword",
             "reader urword",
             "optional true",
@@ -735,6 +767,7 @@ class ModflowGwflak(MFPackage):
         [
             "block options",
             "name dev_maximum_outlet_depth",
+            "mf6internal outdmax",
             "type double precision",
             "reader urword",
             "optional true",
@@ -745,10 +778,12 @@ class ModflowGwflak(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal surfdep",
         ],
         [
             "block options",
             "name implicit",
+            "mf6internal iimplicit",
             "type keyword",
             "reader urword",
             "optional true",
@@ -759,6 +794,7 @@ class ModflowGwflak(MFPackage):
             "type integer",
             "reader urword",
             "optional true",
+            "mf6internal maxlakit",
         ],
         [
             "block options",
@@ -766,6 +802,7 @@ class ModflowGwflak(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal dmaxchg",
         ],
         [
             "block options",
@@ -773,6 +810,7 @@ class ModflowGwflak(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal convtime",
         ],
         [
             "block options",
@@ -780,6 +818,15 @@ class ModflowGwflak(MFPackage):
             "type double precision",
             "reader urword",
             "optional true",
+            "mf6internal convlength",
+        ],
+        [
+            "block options",
+            "name dev_no_final_check",
+            "type keyword",
+            "reader urword",
+            "optional true",
+            "mf6internal iconvchk",
         ],
         [
             "block dimensions",
@@ -806,7 +853,7 @@ class ModflowGwflak(MFPackage):
             "block packagedata",
             "name packagedata",
             "type recarray ifno strt nlakeconn aux boundname",
-            "shape (maxbound)",
+            "shape (nlakes)",
             "reader urword",
         ],
         [
@@ -818,6 +865,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -874,6 +922,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal conndata_ifno",
         ],
         [
             "block connectiondata",
@@ -954,6 +1003,7 @@ class ModflowGwflak(MFPackage):
             "type recarray ifno tab6 filein tab6_filename",
             "shape (ntables)",
             "reader urword",
+            "optional true",
         ],
         [
             "block tables",
@@ -964,6 +1014,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal tables_ifno",
         ],
         [
             "block tables",
@@ -978,6 +1029,7 @@ class ModflowGwflak(MFPackage):
         [
             "block tables",
             "name filein",
+            "mf6internal tables_filein",
             "type keyword",
             "shape",
             "in_record true",
@@ -988,6 +1040,7 @@ class ModflowGwflak(MFPackage):
         [
             "block tables",
             "name tab6_filename",
+            "mf6internal laktab6_filename",
             "type string",
             "preserve_case true",
             "in_record true",
@@ -1001,6 +1054,7 @@ class ModflowGwflak(MFPackage):
             "type recarray outletno lakein lakeout couttype invert width rough slope",
             "shape (noutlets)",
             "reader urword",
+            "optional true",
         ],
         [
             "block outlets",
@@ -1011,6 +1065,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal outlets_outletno",
         ],
         [
             "block outlets",
@@ -1050,6 +1105,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal outlets_invert",
         ],
         [
             "block outlets",
@@ -1060,6 +1116,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal outlets_width",
         ],
         [
             "block outlets",
@@ -1070,6 +1127,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal outlets_rough",
         ],
         [
             "block outlets",
@@ -1080,6 +1138,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "time_series true",
+            "mf6internal outlets_slope",
         ],
         [
             "block period",
@@ -1109,6 +1168,7 @@ class ModflowGwflak(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal ifno",
         ],
         [
             "block period",
@@ -1131,8 +1191,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name stage",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (nlakes)",
             "tagged true",
             "in_record true",
             "time_series true",
@@ -1141,8 +1202,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name rainfall",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (nlakes)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1151,8 +1213,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name evaporation",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (nlakes)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1161,8 +1224,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name runoff",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (nlakes)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1171,8 +1235,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name inflow",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (nlakes)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1181,8 +1246,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name withdrawal",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (nlakes)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1191,8 +1257,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name rate",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (noutlets)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1201,8 +1268,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name invert",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (noutlets)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1211,8 +1279,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name rough",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (noutlets)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1221,8 +1290,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name width",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (noutlets)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1231,8 +1301,9 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name slope",
-            "type string",
+            "type double precision",
             "shape",
+            "mf6dimension (noutlets)",
             "tagged true",
             "in_record true",
             "reader urword",
@@ -1241,6 +1312,7 @@ class ModflowGwflak(MFPackage):
         [
             "block period",
             "name auxiliaryrecord",
+            "mf6internal auxrecord",
             "type record auxiliary auxname auxval",
             "shape",
             "tagged",
@@ -1254,6 +1326,7 @@ class ModflowGwflak(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",
@@ -1293,7 +1366,8 @@ class ModflowGwflak(MFPackage):
         timeseries=None,
         observations=None,
         mover=None,
-        dev_force_fallback=None,
+        dev_force_legacy=None,
+        dev_force_legacy_lake=None,
         dev_groundwater_head_conductance=None,
         dev_maximum_outlet_depth=None,
         surfdep=None,
@@ -1302,6 +1376,7 @@ class ModflowGwflak(MFPackage):
         maximum_stage_change=None,
         time_conversion=None,
         length_conversion=None,
+        dev_no_final_check=None,
         nlakes=None,
         noutlets=None,
         ntables=None,
@@ -1349,8 +1424,9 @@ class ModflowGwflak(MFPackage):
             "obs", observations, "continuous", self._obs_filerecord
         )
         self.mover = self.build_mfdata("mover", mover)
-        self.dev_force_fallback = self.build_mfdata(
-            "dev_force_fallback", dev_force_fallback
+        self.dev_force_legacy = self.build_mfdata("dev_force_legacy", dev_force_legacy)
+        self.dev_force_legacy_lake = self.build_mfdata(
+            "dev_force_legacy_lake", dev_force_legacy_lake
         )
         self.dev_groundwater_head_conductance = self.build_mfdata(
             "dev_groundwater_head_conductance", dev_groundwater_head_conductance
@@ -1369,6 +1445,9 @@ class ModflowGwflak(MFPackage):
         self.time_conversion = self.build_mfdata("time_conversion", time_conversion)
         self.length_conversion = self.build_mfdata(
             "length_conversion", length_conversion
+        )
+        self.dev_no_final_check = self.build_mfdata(
+            "dev_no_final_check", dev_no_final_check
         )
         self.nlakes = self.build_mfdata("nlakes", nlakes)
         self.noutlets = self.build_mfdata("noutlets", noutlets)

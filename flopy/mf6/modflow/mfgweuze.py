@@ -124,7 +124,7 @@ class ModflowGweuze(MFPackage):
                 infiltration, uzet, and auxiliary.  these settings are used to assign the
                 temperature associated with the corresponding flow terms.  temperatures cannot
                 be specified for all flow terms.
-                * temperature : string
+                * temperature : double precision
                             real or character value that defines the temperature for the unsaturated zone
                             flow cell. the specified temperature is only applied if the unsaturated zone
                             flow cell is a constant temperature cell. if the options block includes a
@@ -138,13 +138,13 @@ class ModflowGweuze(MFPackage):
                             energy fluxes into or out of the uzf cell and the inactive value will be
                             written for the uzf cell temperature.  if a uzf cell is constant, then the
                             temperature for the uzf cell will be fixed at the user specified value.
-                * infiltration : string
+                * infiltration : double precision
                             real or character value that defines the temperature of the infiltration
                             :math:`(e.g.,:^{circ}c:or:^{circ}f)` for the uzf cell. if the options block
                             includes a timeseriesfile entry (see the 'time-variable input' section), values
                             can be obtained from a time series by entering the time-series name in place of
                             a numeric value.
-                * uzet : string
+                * uzet : double precision
                             real or character value that states what fraction of the simulated unsaturated
                             zone evapotranspiration is associated with evaporation.  the evaporative losses
                             from the unsaturated zone moisture content will have an evaporative cooling
@@ -205,6 +205,7 @@ class ModflowGweuze(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal flow_pkg_name",
         ],
         [
             "block options",
@@ -221,6 +222,7 @@ class ModflowGweuze(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal fp_aux_name",
         ],
         [
             "block options",
@@ -236,6 +238,7 @@ class ModflowGweuze(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -243,6 +246,7 @@ class ModflowGweuze(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprconc",
         ],
         [
             "block options",
@@ -250,6 +254,7 @@ class ModflowGweuze(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -257,6 +262,7 @@ class ModflowGweuze(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -266,6 +272,7 @@ class ModflowGweuze(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal temp_filerec",
         ],
         [
             "block options",
@@ -296,6 +303,7 @@ class ModflowGweuze(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -336,6 +344,7 @@ class ModflowGweuze(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -438,12 +447,13 @@ class ModflowGweuze(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_nonexpanding",
         ],
         [
             "block packagedata",
             "name packagedata",
             "type recarray uzfno strt aux boundname",
-            "shape (maxbound)",
+            "shape (nuzfcells)",
             "reader urword",
         ],
         [
@@ -455,6 +465,7 @@ class ModflowGweuze(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -508,6 +519,7 @@ class ModflowGweuze(MFPackage):
         [
             "block period",
             "name uzfno",
+            "mf6internal ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -536,7 +548,7 @@ class ModflowGweuze(MFPackage):
         [
             "block period",
             "name temperature",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -546,7 +558,7 @@ class ModflowGweuze(MFPackage):
         [
             "block period",
             "name infiltration",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -556,7 +568,7 @@ class ModflowGweuze(MFPackage):
         [
             "block period",
             "name uzet",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -579,6 +591,7 @@ class ModflowGweuze(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",

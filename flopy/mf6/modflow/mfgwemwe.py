@@ -131,7 +131,7 @@ class ModflowGwemwe(MFPackage):
                 aquifer well package supports a 'withdrawal' flow term.  if this withdrawal
                 term is active, then water will be withdrawn from the well at the calculated
                 temperature of the well.
-                * temperature : string
+                * temperature : double precision
                             real or character value that defines the temperature for the well. the
                             specified temperature is only applied if the well is a constant temperature
                             well. if the options block includes a timeseriesfile entry (see the 'time-
@@ -144,7 +144,7 @@ class ModflowGwemwe(MFPackage):
                             mass fluxes into or out of the well and the inactive value will be written for
                             the well temperature.  if a well is constant, then the temperature for the well
                             will be fixed at the user specified value.
-                * rate : string
+                * rate : double precision
                             real or character value that defines the injection temperature
                             :math:`(e.g.,:^{circ}c:or:^{circ}f)` for the well. if the options block
                             includes a timeseriesfile entry (see the 'time-variable input' section), values
@@ -202,6 +202,7 @@ class ModflowGwemwe(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal flow_pkg_name",
         ],
         [
             "block options",
@@ -218,6 +219,7 @@ class ModflowGwemwe(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal fp_aux_name",
         ],
         [
             "block options",
@@ -233,6 +235,7 @@ class ModflowGwemwe(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -240,6 +243,7 @@ class ModflowGwemwe(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprconc",
         ],
         [
             "block options",
@@ -247,6 +251,7 @@ class ModflowGwemwe(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -254,6 +259,7 @@ class ModflowGwemwe(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -263,6 +269,7 @@ class ModflowGwemwe(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal temp_filerec",
         ],
         [
             "block options",
@@ -293,6 +300,7 @@ class ModflowGwemwe(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -333,6 +341,7 @@ class ModflowGwemwe(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -435,12 +444,13 @@ class ModflowGwemwe(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_nonexpanding",
         ],
         [
             "block packagedata",
             "name packagedata",
             "type recarray mawno strt ktf fthk aux boundname",
-            "shape (maxbound)",
+            "shape (nmawwells)",
             "reader urword",
         ],
         [
@@ -452,6 +462,7 @@ class ModflowGwemwe(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -523,6 +534,7 @@ class ModflowGwemwe(MFPackage):
         [
             "block period",
             "name mawno",
+            "mf6internal ifno",
             "type integer",
             "shape",
             "tagged false",
@@ -551,7 +563,7 @@ class ModflowGwemwe(MFPackage):
         [
             "block period",
             "name temperature",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -561,7 +573,7 @@ class ModflowGwemwe(MFPackage):
         [
             "block period",
             "name rate",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -584,6 +596,7 @@ class ModflowGwemwe(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",
