@@ -22,7 +22,8 @@ class ModflowUtlts(MFPackage):
     time_series_namerecord : (names, time_series_names)
         xxx
         * names : keyword
-                xxx
+                keyword to specify the names of the time series. The 'NAME' keyword can be used
+                as a substitute for 'NAMES'.
         * time_series_names : [string]
                 Name by which a package references a particular time-array series. The name
                 must be unique among all time-array series used in a package.
@@ -34,12 +35,13 @@ class ModflowUtlts(MFPackage):
         * interpolation_method : [string]
                 Interpolation method, which is either STEPWISE or LINEAR.
 
-    interpolation_methodrecord_single : record
+    interpolation_methodrecord_single : (method, interpolation_method_single)
         xxx
-    method : keyword
-         xxx
-    interpolation_method_single : string
-        interpolation method, which is either stepwise or linear.
+        * method : keyword
+                 xxx
+        * interpolation_method_single : string
+                Interpolation method, which is either STEPWISE or LINEAR.
+
     sfacrecord : (sfacs, sfacval)
         xxx
         * sfacs : keyword
@@ -48,14 +50,14 @@ class ModflowUtlts(MFPackage):
                 Scale factor, which will multiply all array values in time series. SFAC is an
                 optional attribute; if omitted, SFAC = 1.0.
 
-    sfacrecord_single : (sfacval)
+    sfacrecord_single : (sfac, sfacval)
         xxx
+        * sfac : keyword
+                 xxx
         * sfacval : [double precision]
                 Scale factor, which will multiply all array values in time series. SFAC is an
                 optional attribute; if omitted, SFAC = 1.0.
 
-    sfac : keyword
-         xxx
     timeseries : [(ts_time, ts_array)]
         xxx
         * ts_time : double precision
@@ -166,6 +168,7 @@ class ModflowUtlts(MFPackage):
             "shape",
             "reader urword",
             "optional false",
+            "in_record true",
         ],
         [
             "block attributes",
@@ -176,6 +179,7 @@ class ModflowUtlts(MFPackage):
             "tagged false",
             "reader urword",
             "optional false",
+            "in_record true",
         ],
         [
             "block attributes",
@@ -219,9 +223,9 @@ class ModflowUtlts(MFPackage):
             "name sfac",
             "type keyword",
             "shape",
-            "tagged false",
             "reader urword",
             "optional false",
+            "in_record true",
         ],
         [
             "block timeseries",

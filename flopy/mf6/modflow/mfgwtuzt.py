@@ -125,7 +125,7 @@ class ModflowGwtuzt(MFPackage):
                 infiltration, uzet, and auxiliary.  these settings are used to assign the
                 concentration of associated with the corresponding flow terms.  concentrations
                 cannot be specified for all flow terms.
-                * concentration : string
+                * concentration : double precision
                             real or character value that defines the concentration for the unsaturated zone
                             flow cell. the specified concentration is only applied if the unsaturated zone
                             flow cell is a constant concentration cell. if the options block includes a
@@ -139,13 +139,13 @@ class ModflowGwtuzt(MFPackage):
                             solute mass fluxes into or out of the uzf cell and the inactive value will be
                             written for the uzf cell concentration.  if a uzf cell is constant, then the
                             concentration for the uzf cell will be fixed at the user specified value.
-                * infiltration : string
+                * infiltration : double precision
                             real or character value that defines the infiltration solute concentration
                             :math:`(ml^{-3})` for the uzf cell. if the options block includes a
                             timeseriesfile entry (see the 'time-variable input' section), values can be
                             obtained from a time series by entering the time-series name in place of a
                             numeric value.
-                * uzet : string
+                * uzet : double precision
                             real or character value that defines the concentration of unsaturated zone
                             evapotranspiration water :math:`(ml^{-3})` for the uzf cell. if this
                             concentration value is larger than the simulated concentration in the uzf cell,
@@ -205,6 +205,7 @@ class ModflowGwtuzt(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal flow_pkg_name",
         ],
         [
             "block options",
@@ -221,6 +222,7 @@ class ModflowGwtuzt(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal fp_aux_name",
         ],
         [
             "block options",
@@ -236,6 +238,7 @@ class ModflowGwtuzt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -243,6 +246,7 @@ class ModflowGwtuzt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprconc",
         ],
         [
             "block options",
@@ -250,6 +254,7 @@ class ModflowGwtuzt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -257,6 +262,7 @@ class ModflowGwtuzt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -266,6 +272,7 @@ class ModflowGwtuzt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal conc_filerec",
         ],
         [
             "block options",
@@ -296,6 +303,7 @@ class ModflowGwtuzt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -336,6 +344,7 @@ class ModflowGwtuzt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -438,12 +447,13 @@ class ModflowGwtuzt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_nonexpanding",
         ],
         [
             "block packagedata",
             "name packagedata",
             "type recarray ifno strt aux boundname",
-            "shape (maxbound)",
+            "shape (nuzfcells)",
             "reader urword",
         ],
         [
@@ -455,6 +465,7 @@ class ModflowGwtuzt(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -536,7 +547,7 @@ class ModflowGwtuzt(MFPackage):
         [
             "block period",
             "name concentration",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -546,7 +557,7 @@ class ModflowGwtuzt(MFPackage):
         [
             "block period",
             "name infiltration",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -556,7 +567,7 @@ class ModflowGwtuzt(MFPackage):
         [
             "block period",
             "name uzet",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -579,6 +590,7 @@ class ModflowGwtuzt(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",

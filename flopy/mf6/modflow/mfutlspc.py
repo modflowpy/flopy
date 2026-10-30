@@ -39,12 +39,12 @@ class ModflowUtlspc(MFPackage):
                 line of information that is parsed into a keyword and values.  keyword values
                 that can be used to start the spcsetting string include: concentration and
                 temperature.
-                * concentration : string
+                * concentration : double precision
                             is the boundary concentration. if the options block includes a timeseriesfile
                             entry (see the 'time-variable input' section), values can be obtained from a
                             time series by entering the time-series name in place of a numeric value. by
                             default, the concentration for each boundary feature is zero.
-                * temperature : string
+                * temperature : double precision
                             is the user-supplied boundary temperature. if the options block includes a
                             timeseriesfile entry (see the 'time-variable input' section), values can be
                             obtained from a time series by entering the time-series name in place of a
@@ -165,24 +165,22 @@ class ModflowUtlspc(MFPackage):
         [
             "block period",
             "name concentration",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
-            "mf6internal concentration_in",
         ],
         [
             "block period",
             "name temperature",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
             "reader urword",
             "time_series true",
-            "mf6internal temperature_in",
         ],
     ]
 

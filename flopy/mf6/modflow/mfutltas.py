@@ -118,7 +118,7 @@ class ModflowUtltas(MFPackage):
             "block attributes",
             "name interpolation_method",
             "type string",
-            "valid stepwise linear linearend",
+            "valid stepwise linear",
             "shape",
             "tagged false",
             "reader urword",
