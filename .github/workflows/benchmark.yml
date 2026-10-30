@@ -82,6 +82,7 @@ jobs:
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
         with:
+          python-version: "3.11"
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install FloPy
