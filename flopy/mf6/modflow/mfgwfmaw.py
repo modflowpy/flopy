@@ -473,6 +473,7 @@ class ModflowGwfmaw(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -487,6 +488,7 @@ class ModflowGwfmaw(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -494,6 +496,7 @@ class ModflowGwfmaw(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -528,6 +531,7 @@ class ModflowGwfmaw(MFPackage):
         [
             "block options",
             "name budget_filerecord",
+            "mf6internal budfilerec",
             "type record budget fileout budgetfile",
             "shape",
             "reader urword",
@@ -568,6 +572,7 @@ class ModflowGwfmaw(MFPackage):
         [
             "block options",
             "name budgetcsv_filerecord",
+            "mf6internal budcsvfilerec",
             "type record budgetcsv fileout budgetcsvfile",
             "shape",
             "reader urword",
@@ -615,6 +620,7 @@ class ModflowGwfmaw(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal inonvert",
         ],
         [
             "block options",
@@ -640,6 +646,7 @@ class ModflowGwfmaw(MFPackage):
         [
             "block options",
             "name mfrcsv_filerecord",
+            "mf6internal mfrcsvfilerec",
             "type record maw_flow_reduce_csv fileout mfrcsvfile",
             "shape",
             "reader urword",
@@ -649,6 +656,7 @@ class ModflowGwfmaw(MFPackage):
         [
             "block options",
             "name maw_flow_reduce_csv",
+            "mf6internal maw_flw_red_csv",
             "type keyword",
             "shape",
             "in_record true",
@@ -755,11 +763,13 @@ class ModflowGwfmaw(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ieffradopt",
         ],
         [
             "block dimensions",
             "name nmawwells",
             "type integer",
+            "mf6internal maxbound",
             "reader urword",
             "optional false",
         ],
@@ -779,6 +789,7 @@ class ModflowGwfmaw(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -805,6 +816,7 @@ class ModflowGwfmaw(MFPackage):
             "shape",
             "tagged false",
             "in_record true",
+            "time_series true",
             "reader urword",
         ],
         [
@@ -861,6 +873,7 @@ class ModflowGwfmaw(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal conndata_ifno",
         ],
         [
             "block connectiondata",
@@ -932,6 +945,7 @@ class ModflowGwfmaw(MFPackage):
             "tagged false",
             "in_record true",
             "reader urword",
+            "mf6internal angledata_ifno",
             "numeric_index true",
         ],
         [
@@ -942,6 +956,7 @@ class ModflowGwfmaw(MFPackage):
             "tagged false",
             "in_record true",
             "reader urword",
+            "mf6internal angledata_icon",
             "numeric_index true",
         ],
         [
@@ -963,6 +978,7 @@ class ModflowGwfmaw(MFPackage):
             "in_record true",
             "reader urword",
             "optional true",
+            "mf6internal connlen",
         ],
         [
             "block period",
@@ -1014,6 +1030,7 @@ class ModflowGwfmaw(MFPackage):
         [
             "block period",
             "name flowing_wellrecord",
+            "mf6internal flwwellrecord",
             "type record flowing_well fwelev fwcond fwrlen",
             "shape",
             "tagged",
@@ -1122,6 +1139,7 @@ class ModflowGwfmaw(MFPackage):
         [
             "block period",
             "name rate_scalingrecord",
+            "mf6internal ratescalingrec",
             "type record rate_scaling pump_elevation scaling_length",
             "shape",
             "tagged",
@@ -1170,6 +1188,7 @@ class ModflowGwfmaw(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",

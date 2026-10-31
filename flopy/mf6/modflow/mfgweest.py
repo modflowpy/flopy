@@ -159,6 +159,7 @@ class ModflowGweest(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
         ],
         [
             "block griddata",
@@ -167,6 +168,7 @@ class ModflowGweest(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -176,6 +178,7 @@ class ModflowGweest(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "optional true",
         ],
         [
@@ -185,6 +188,7 @@ class ModflowGweest(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "mf6internal cps",
         ],
         [
@@ -194,6 +198,7 @@ class ModflowGweest(MFPackage):
             "shape (nodes)",
             "reader readarray",
             "layered true",
+            "netcdf true",
             "mf6internal rhos",
         ],
     ]

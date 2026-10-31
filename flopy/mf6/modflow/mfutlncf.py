@@ -21,7 +21,12 @@ class ModflowUtlncf(MFPackage):
         processing purposes only.
     wkt : [string]
         is the coordinate reference system (crs) well-known text string in wkt1 format
-        (ogc 01-009). written as the 'wkt' attribute on the projection variable.
+        (ogc 01-009). written as the 'wkt' attribute on the projection variable. for
+        supported projected crs types, individual cf-standard numeric grid_mapping
+        parameters are also written to the projection variable, for tools that read
+        these directly rather than parsing 'wkt'/'crs_wkt' text. for a
+        netcdf_structured export with a rotated grid (angrot not 0.0), wkt1 cannot
+        represent the rotation; provide 'crs_wkt' instead for correct grid positioning.
         ignored when latitude and longitude griddata arrays have been provided. to also
         embed the crs in the binary grid file, provide the same string as the 'crs'
         option in the discretization input; the discretization 'crs' option
@@ -29,13 +34,23 @@ class ModflowUtlncf(MFPackage):
         (e.g. 'epsg:26918').
     crs_wkt : [string]
         is the coordinate reference system (crs) well-known text string in wkt2 format
-        (iso 19162:2019), as required by cf-1.11. written as the 'crs_wkt' attribute on
+        (iso 19162:2019), as required by cf-1.13. written as the 'crs_wkt' attribute on
         the projection variable. when omitted, the 'wkt' value is written to 'crs_wkt'
         as a compatibility alias. ignored when latitude and longitude griddata arrays
         have been provided. to also embed the crs in the binary grid file, provide the
         same string as the 'crs' option in the discretization input; the discretization
         'crs' option additionally accepts other pyproj-compatible identifiers such as
-        an epsg code (e.g. 'epsg:26918').
+        an epsg code (e.g. 'epsg:26918'). for a netcdf_structured export with a rotated
+        grid (angrot not 0.0), a valid wkt2 projcrs string is required here to
+        correctly position the grid: it is wrapped in a derived crs that encodes the
+        rotation, resolved by any crs-aware consumer through ordinary reprojection;
+        without it the 'x'/'y' coordinate values remain grid-local rather than real-
+        world. for grid mappings transverse_mercator, lambert_conformal_conic (two-
+        standard-parallel variant only), and albers_conical_equal_area, individual cf-
+        standard numeric grid_mapping parameters (e.g. 'false_easting',
+        'scale_factor_at_central_meridian') are also written to the projection
+        variable, for tools -- such as arcgis's classic netcdf connector -- that read
+        these directly rather than parsing 'wkt'/'crs_wkt' text.
     deflate : integer
         is the variable deflate level (0=min, 9=max) in the netcdf file. defining this
         parameter activates per-variable compression at the level specified. use with
@@ -52,9 +67,8 @@ class ModflowUtlncf(MFPackage):
         parameter (netcdf_mesh2d) or the chunk_z, chunk_y, and chunk_x parameter set
         (netcdf_structured) to have an effect.
     chunk_face : integer
-        is the keyword used to provide a data chunk size for the face dimension in a
-        netcdf_mesh2d output file. must be used in combination with the the chunk_time
-        parameter to have an effect.
+        is the chunk size for the face dimension in a netcdf_mesh2d output file. must
+        be used in combination with the chunk_time parameter to have an effect.
     chunk_z : integer
         is the chunk size for the layer (vertical) dimension in a netcdf_structured
         output file. must be used in combination with the chunk_time, chunk_x, and
@@ -74,11 +88,14 @@ class ModflowUtlncf(MFPackage):
     ncpl : integer
         is the number of cells in a projected plane layer.
     latitude : [double precision]
-        cell center latitude array. only supported for netcdf_structured export type.
-        providing latitude and longitude arrays enables geographic-coordinate output as
-        a special case for external tooling that requires it; the preferred approach is
-        to use the 'wkt' and 'crs_wkt' options instead. when latitude and longitude
-        arrays are provided, any 'wkt' or 'crs_wkt' option values are ignored.
+        cell center latitude array. only supported for netcdf_structured export type;
+        ignored, with a warning, for netcdf_mesh2d. providing latitude and longitude
+        arrays enables geographic-coordinate output for external tooling that requires
+        it, and is the more reliable option for a grid with non-uniform row or column
+        spacing, or a rotated grid, since some tools cannot otherwise correctly
+        position such a grid from 'wkt'/'crs_wkt' alone. for other grids,
+        'wkt'/'crs_wkt' is the simpler choice. when latitude and longitude arrays are
+        provided, any 'wkt' or 'crs_wkt' option values are ignored.
     longitude : [double precision]
         cell center longitude array. only supported for netcdf_structured export type.
         see the latitude description for usage notes.

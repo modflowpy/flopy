@@ -201,7 +201,6 @@ class ModflowNam(MFPackage):
             "preserve_case true",
             "type string",
             "reader urword",
-            "optional",
         ],
         [
             "block models",
