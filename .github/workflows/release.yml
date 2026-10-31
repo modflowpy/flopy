@@ -27,7 +27,7 @@ jobs:
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           enable-cache: false
 
       - name: Install FloPy
@@ -214,7 +214,7 @@ jobs:
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           enable-cache: false
 
       - name: Build package
@@ -248,7 +248,7 @@ jobs:
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
         with:
-          python-version: "3.11"
+          python-version: "3.12"
           enable-cache: false
 
       - name: Install FloPy
