@@ -499,6 +499,50 @@ def test_subdir(function_tmpdir):
     )
 
 
+@pytest.mark.parametrize("sep", ["win", "posix"])
+def test_load_subdir_ext_files_with_any_sep(function_tmpdir, sep):
+    if sep == "win" and platform.system() != "Windows":
+        pytest.skip("backslash is not a path separator on this OS")
+
+    # model in a subdirectory with external array and list files
+    sim = MFSimulation(sim_ws=function_tmpdir)
+    ModflowTdis(sim)
+    ims = ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname="gwf", model_rel_path="level2")
+    sim.register_ims_package(ims, [gwf.name])
+    botm = np.array([[[-1.0, -2.0, -3.0], [-4.0, -5.0, -6.0]]])
+    ModflowGwfdis(gwf, nlay=1, nrow=2, ncol=3, top=10.0, botm=botm)
+    spd = [[(0, 0, 0), 1.0], [(0, 1, 2), 0.0]]
+    ModflowGwfchd(gwf, stress_period_data={0: spd})
+    sim.set_all_data_external(external_data_folder="dat")
+    sim.write_simulation()
+
+    # move external files to level2/dat and reference them relative to the
+    # simulation folder with the given separator, e.g. "level2/dat/botm.txt"
+    # as written by other tools such as iMOD Python
+    ext_dir = function_tmpdir / "level2" / "dat"
+    for ext_file in (function_tmpdir / "dat").glob("*"):
+        ext_file.rename(ext_dir / ext_file.name)
+    s = "\\" if sep == "win" else "/"
+    for pkg_file in (function_tmpdir / "level2").glob("gwf.*"):
+        lines = pkg_file.read_text().splitlines(keepends=True)
+        with open(pkg_file, "w") as f:
+            for l in lines:
+                tokens = l.split()
+                if tokens and tokens[0].lower() in ("open/close", "open\\close"):
+                    name = Path(to_posix_sep(tokens[1].strip("'"))).name
+                    tokens[:2] = ["open/close", s.join(["level2", "dat", name])]
+                    l = f"    {' '.join(tokens)}\n"
+                f.write(l)
+
+    # external file paths must resolve to the files written above
+    sim_r = MFSimulation.load(sim_ws=function_tmpdir)
+    gwf_r = sim_r.get_model("gwf")
+    np.testing.assert_allclose(gwf_r.dis.botm.array, botm)
+    spd_r = gwf_r.chd.stress_period_data.get_data(0)
+    assert [tuple(r) for r in spd_r] == [tuple(r) for r in spd]
+
+
 @requires_exe("mf6")
 @pytest.mark.parametrize("layered", [True, False])
 def test_binary_write(function_tmpdir, layered):

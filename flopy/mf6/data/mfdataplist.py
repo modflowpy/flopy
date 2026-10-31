@@ -5,6 +5,7 @@ import os
 import sys
 import warnings
 from collections.abc import Iterable
+from pathlib import PureWindowsPath
 
 import numpy as np
 import pandas
@@ -1480,11 +1481,10 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 # include model relative path in external file path
                 # only if model relative path is not already in external
                 # file path i.e. when reading!
-                fp_rp_l = fp_relative.split(os.path.sep)
-                rp_l_r = rel_path.split(os.path.sep)[::-1]
-                for i, rp in enumerate(rp_l_r):
-                    if rp != fp_rp_l[len(rp_l_r) - i - 1]:
-                        fp_relative = os.path.join(rp, fp_relative)
+                fp_parts = PureWindowsPath(fp_relative).parts
+                rp_parts = PureWindowsPath(rel_path).parts
+                if fp_parts[: len(rp_parts)] != rp_parts:
+                    fp_relative = os.path.join(rel_path, fp_relative)
             fp = self._simulation_data.mfpath.resolve_path(fp_relative, model_name)
         else:
             if fp_relative is not None:
@@ -1794,11 +1794,10 @@ class MFPandasList(mfdata.MFMultiDimVar, DataListInterface):
                 # include model relative path in external file path
                 # only if model relative path is not already in external
                 #  file path i.e. when reading!
-                fp_rp_l = fp_relative.split(os.path.sep)
-                rp_l_r = rel_path.split(os.path.sep)[::-1]
-                for i, rp in enumerate(rp_l_r):
-                    if rp != fp_rp_l[len(rp_l_r) - i - 1]:
-                        fp_relative = os.path.join(rp, fp_relative)
+                fp_parts = PureWindowsPath(fp_relative).parts
+                rp_parts = PureWindowsPath(rel_path).parts
+                if fp_parts[: len(rp_parts)] != rp_parts:
+                    fp_relative = os.path.join(rel_path, fp_relative)
             return self._simulation_data.mfpath.resolve_path(
                 fp_relative, self._model_or_sim.name
             )
