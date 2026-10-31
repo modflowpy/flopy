@@ -212,6 +212,7 @@ class Modflow(BaseModel):
             "riv": flopy.modflow.ModflowRiv,
             "str": flopy.modflow.ModflowStr,
             "swi2": flopy.modflow.ModflowSwi2,
+            "swr": flopy.modflow.ModflowSwr1,
             "pcg": flopy.modflow.ModflowPcg,
             "pcgn": flopy.modflow.ModflowPcgn,
             "nwt": flopy.modflow.ModflowNwt,
