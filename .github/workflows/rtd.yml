@@ -87,9 +87,9 @@ jobs:
           echo $GITHUB_EVENT_NAME
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.10.2
+        uses: prefix-dev/setup-pixi@v0.11.2
         with:
-          pixi-version: v0.70.1
+          pixi-version: v0.82.1
           manifest-path: modflow6/pixi.toml
 
       - name: Install Python dependencies
@@ -97,14 +97,6 @@ jobs:
         run: |
           pixi run -e rtd install
           pixi run -e rtd pip install "../flopy[optional]"
-
-      - name: Workaround OpenGL issue on Linux
-        if: runner.os == 'Linux'
-        working-directory: modflow6
-        run: |
-          # referenced from https://github.com/pyvista/pyvista/blob/main/.github/workflows/vtk-pre-test.yml#L53
-          pixi run -e rtd pip uninstall vtk
-          pixi run -e rtd pip install --extra-index-url https://wheels.vtk.org trame vtk-osmesa
 
       - name: Install fonts on Linux
         if: runner.os == 'Linux'

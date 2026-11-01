@@ -125,7 +125,7 @@ class ModflowGwtlkt(MFPackage):
                 the lake package supports a 'withdrawal' flow term.  if this withdrawal term is
                 active, then water will be withdrawn from the lake at the calculated
                 concentration of the lake.
-                * concentration : string
+                * concentration : double precision
                             real or character value that defines the concentration for the lake. the
                             specified concentration is only applied if the lake is a constant concentration
                             lake. if the options block includes a timeseriesfile entry (see the 'time-
@@ -138,12 +138,12 @@ class ModflowGwtlkt(MFPackage):
                             mass fluxes into or out of the lake and the inactive value will be written for
                             the lake concentration.  if a lake is constant, then the concentration for the
                             lake will be fixed at the user specified value.
-                * rainfall : string
+                * rainfall : double precision
                             real or character value that defines the rainfall solute concentration
                             :math:`(ml^{-3})` for the lake. if the options block includes a timeseriesfile
                             entry (see the 'time-variable input' section), values can be obtained from a
                             time series by entering the time-series name in place of a numeric value.
-                * evaporation : string
+                * evaporation : double precision
                             real or character value that defines the concentration of evaporated water
                             :math:`(ml^{-3})` for the lake. if this concentration value is larger than the
                             simulated concentration in the lake, then the evaporated water will be removed
@@ -151,13 +151,13 @@ class ModflowGwtlkt(MFPackage):
                             timeseriesfile entry (see the 'time-variable input' section), values can be
                             obtained from a time series by entering the time-series name in place of a
                             numeric value.
-                * runoff : string
+                * runoff : double precision
                             real or character value that defines the concentration of runoff
                             :math:`(ml^{-3})` for the lake. value must be greater than or equal to zero. if
                             the options block includes a timeseriesfile entry (see the 'time-variable
                             input' section), values can be obtained from a time series by entering the
                             time-series name in place of a numeric value.
-                * ext_inflow : string
+                * ext_inflow : double precision
                             real or character value that defines the concentration of external inflow
                             :math:`(ml^{-3})` for the lake. value must be greater than or equal to zero. if
                             the options block includes a timeseriesfile entry (see the 'time-variable
@@ -215,6 +215,7 @@ class ModflowGwtlkt(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal flow_pkg_name",
         ],
         [
             "block options",
@@ -231,6 +232,7 @@ class ModflowGwtlkt(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal fp_aux_name",
         ],
         [
             "block options",
@@ -246,6 +248,7 @@ class ModflowGwtlkt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -253,6 +256,7 @@ class ModflowGwtlkt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprconc",
         ],
         [
             "block options",
@@ -260,6 +264,7 @@ class ModflowGwtlkt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -267,6 +272,7 @@ class ModflowGwtlkt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -276,6 +282,7 @@ class ModflowGwtlkt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal conc_filerec",
         ],
         [
             "block options",
@@ -306,6 +313,7 @@ class ModflowGwtlkt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -346,6 +354,7 @@ class ModflowGwtlkt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -448,12 +457,13 @@ class ModflowGwtlkt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_nonexpanding",
         ],
         [
             "block packagedata",
             "name packagedata",
             "type recarray ifno strt aux boundname",
-            "shape (maxbound)",
+            "shape (nlakes)",
             "reader urword",
         ],
         [
@@ -465,6 +475,7 @@ class ModflowGwtlkt(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -546,7 +557,7 @@ class ModflowGwtlkt(MFPackage):
         [
             "block period",
             "name concentration",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -556,7 +567,7 @@ class ModflowGwtlkt(MFPackage):
         [
             "block period",
             "name rainfall",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -566,7 +577,7 @@ class ModflowGwtlkt(MFPackage):
         [
             "block period",
             "name evaporation",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -576,7 +587,7 @@ class ModflowGwtlkt(MFPackage):
         [
             "block period",
             "name runoff",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -586,7 +597,7 @@ class ModflowGwtlkt(MFPackage):
         [
             "block period",
             "name ext-inflow",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -609,6 +620,7 @@ class ModflowGwtlkt(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",

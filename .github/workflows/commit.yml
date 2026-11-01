@@ -71,7 +71,7 @@ jobs:
         shell: bash
     timeout-minutes: 10
     env:
-      PYTHON_VERSION: '3.11'
+      PYTHON_VERSION: '3.12'
 
     steps:
       - name: Checkout repo
@@ -80,6 +80,7 @@ jobs:
       - name: Setup Python
         uses: astral-sh/setup-uv@v7
         with:
+          python-version: ${{ env.PYTHON_VERSION }}
           cache-dependency-glob: "**/pyproject.toml"
 
       - name: Install Python dependencies
@@ -115,7 +116,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest, macos-latest, windows-latest ]
-        python-version: [ "3.11", "3.12", "3.13", "3.14" ]
+        python-version: [ "3.12", "3.13", "3.14" ]
     defaults:
       run:
         shell: bash -l {0}
@@ -150,9 +151,9 @@ jobs:
           version: 13
 
       - name: Setup pixi
-        uses: prefix-dev/setup-pixi@v0.10.2
+        uses: prefix-dev/setup-pixi@v0.11.2
         with:
-          pixi-version: v0.70.1
+          pixi-version: v0.82.1
           manifest-path: modflow6/pixi.toml
 
       - name: Install dependencies

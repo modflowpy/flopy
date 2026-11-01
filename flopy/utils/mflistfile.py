@@ -16,6 +16,24 @@ import pandas as pd
 from ..utils.flopy_io import get_ts_sp
 from ..utils.utils_def import totim_to_datetime
 
+# Fortran E/ES edit descriptors without an exponent width drop the "E"
+# when the exponent has three digits, e.g. 8.5159E-100 -> 8.5159-100
+_MISSING_E = re.compile(r"^([+-]?\d*\.?\d+)([+-]\d{3})$")
+
+
+def _parse_float(s):
+    """Parse a float from a list file, tolerating a missing "E" and NaN."""
+    s = s.strip()
+    try:
+        return float(s)
+    except ValueError:
+        m = _MISSING_E.match(s)
+        if m:
+            return float(f"{m.group(1)}E{m.group(2)}")
+        if "NAN" in s.upper():
+            return np.nan
+    return None
+
 
 class ListBudget:
     """
@@ -612,20 +630,23 @@ class ListBudget:
     def _get_index(self, maxentries):
         # --parse through the file looking for matches and parsing ts and sp
         idxs = []
-        l_count = 1
+        l_count = 0
         while True:
             seekpoint = self.f.tell()
             line = self.f.readline()
+            l_count += 1
             if line == "":
                 break
             if self.budgetkey in line:
                 for _ in range(self.tssp_lines):
                     line = self.f.readline()
+                    l_count += 1
                 try:
                     ts, sp = get_ts_sp(line)
-                except:
+                except Exception:
                     print(
-                        "unable to cast ts,sp on line number", l_count, " line: ", line
+                        "could not parse time step and stress period "
+                        f"on line {l_count}: {line.strip()!r}"
                     )
                     break
 
@@ -666,14 +687,13 @@ class ListBudget:
             raise Exception(f"entries already set:{self.entries}")
         if not self.idx_map:
             raise Exception("must call build_index before call set_entries")
+        ts, sp, seekpoint = self.idx_map[0]
         try:
-            incdict, cumdict = self._get_sp(
-                self.idx_map[0][0], self.idx_map[0][1], self.idx_map[0][2]
-            )
-        except:
-            raise Exception(
-                "unable to read budget information from first entry in list file"
-            )
+            incdict, cumdict = self._get_sp(ts, sp, seekpoint)
+        except Exception as e:
+            raise ValueError(
+                f"unable to read first budget in list file {self.file_name}: {e}"
+            ) from e
         self.entries = incdict.keys()
         null_entries = {}
         incdict = {}
@@ -741,17 +761,24 @@ class ListBudget:
 
         return
 
+    def _sp_failed(self, msg):
+        # entries are read from the first budget, so until they are set
+        # there are no null entries to fall back on
+        if not self.entries:
+            raise ValueError(msg)
+        print(msg)
+        return self.null_entries
+
     def _get_sp(self, ts, sp, seekpoint):
         self.f.seek(seekpoint)
         # --read to the start of the "in" budget information
         while True:
             line = self.f.readline()
             if line == "":
-                print(
-                    "end of file found while seeking budget "
-                    f"information for ts,sp: {ts} {sp}"
+                return self._sp_failed(
+                    "end of file found while reading budget "
+                    f"at time step {ts}, stress period {sp}"
                 )
-                return self.null_entries
 
             # --if there are two '=' in this line, then it is a budget line
             if len(re.findall(r"=", line)) == 2:
@@ -763,27 +790,19 @@ class ListBudget:
         entrydict = {}
         while True:
             if line == "":
-                print(
-                    "end of file found while seeking budget "
-                    f"information for ts,sp: {ts} {sp}"
+                return self._sp_failed(
+                    "end of file found while reading budget "
+                    f"at time step {ts}, stress period {sp}"
                 )
-                return self.null_entries
             if len(re.findall(r"=", line)) == 2:
                 try:
                     entry, flux, cumu = self._parse_budget_line(line)
                 except Exception:
-                    print("error parsing budget line in ts,sp", ts, sp)
-                    return self.null_entries
-                if flux is None:
-                    print(
-                        "error casting in flux for", entry, " to float in ts,sp", ts, sp
+                    return self._sp_failed(
+                        "could not parse budget line at time step "
+                        f"{ts}, stress period {sp}: {line.strip()!r}"
                     )
-                    return self.null_entries
-                if cumu is None:
-                    print(
-                        "error casting in cumu for", entry, " to float in ts,sp", ts, sp
-                    )
-                    return self.null_entries
+                label = entry
                 if entry.endswith(tag.upper()):
                     if " - " in entry.upper():
                         key = entry.replace(" ", "")
@@ -800,6 +819,12 @@ class ListBudget:
                     else:
                         entrydict[entry] = 0
                     key = f"{entry}_{tag}"
+                    label = f"{label} ({tag})"
+                if flux is None or cumu is None:
+                    return self._sp_failed(
+                        f"could not parse value for {label} at time step {ts}, "
+                        f"stress period {sp}: {line.strip()!r}"
+                    )
                 incdict[key] = flux
                 cumdict[key] = cumu
             else:
@@ -825,17 +850,8 @@ class ListBudget:
         idx = line2.index("=") + 1
         fx_str = line2[idx:].split()[0].strip()
 
-        flux, cumu = None, None
-        try:
-            cumu = float(cu_str)
-        except:
-            if "NAN" in cu_str.strip().upper():
-                cumu = np.nan
-        try:
-            flux = float(fx_str)
-        except:
-            if "NAN" in fx_str.strip().upper():
-                flux = np.nan
+        cumu = _parse_float(cu_str)
+        flux = _parse_float(fx_str)
         return entry, flux, cumu
 
     def _get_totim(self, ts, sp, seekpoint):
@@ -847,8 +863,8 @@ class ListBudget:
             ihead += 1
             if line == "":
                 print(
-                    "end of file found while seeking budget "
-                    f"information for ts,sp: {ts} {sp}"
+                    "end of file found while reading time summary "
+                    f"at time step {ts}, stress period {sp}"
                 )
                 return np.nan, np.nan, np.nan
             elif (
@@ -864,28 +880,37 @@ class ListBudget:
             translen = self._parse_time_line(line)
             line = self.f.readline()
             if translen is None:
-                print("error parsing translen for ts,sp", ts, sp)
+                print(
+                    f"could not parse transport step length at time step {ts}, "
+                    f"stress period {sp}"
+                )
                 return np.nan, np.nan, np.nan
 
         tslen = self._parse_time_line(line)
         if tslen is None:
-            print("error parsing tslen for ts,sp", ts, sp)
+            print(
+                f"could not parse time step length at time step {ts}, "
+                f"stress period {sp}"
+            )
             return np.nan, np.nan, np.nan
 
         sptim = self._parse_time_line(self.f.readline())
         if sptim is None:
-            print("error parsing sptim for ts,sp", ts, sp)
+            print(
+                f"could not parse stress period time at time step {ts}, "
+                f"stress period {sp}"
+            )
             return np.nan, np.nan, np.nan
 
         totim = self._parse_time_line(self.f.readline())
         if totim is None:
-            print("error parsing totim for ts,sp", ts, sp)
+            print(f"could not parse total time at time step {ts}, stress period {sp}")
             return np.nan, np.nan, np.nan
         return tslen, sptim, totim
 
     def _parse_time_line(self, line):
         if line == "":
-            print("end of file found while parsing time information")
+            print("end of file found while reading time summary")
             return None
         try:
             time_str = line[self.time_line_idx :]
@@ -901,7 +926,7 @@ class ListBudget:
                 idx = 0
             tval = float(raw[idx])
         except:
-            print("error parsing tslen information: ", time_str)
+            print(f"could not parse time value: {line.strip()!r}")
             return None
         return tval
 

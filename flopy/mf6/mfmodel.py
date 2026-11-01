@@ -2006,7 +2006,6 @@ class MFModel(ModelInterface):
 
             return path, self.structure.nam_spec
 
-        package_extension = package.package_type
         if set_package_name:
             # produce a default package name
             if (
@@ -2021,16 +2020,6 @@ class MFModel(ModelInterface):
                         not in self._package_container.package_name_dict
                     ):
                         package.package_name = package_name
-                        suffix = package_name.split("_")
-                        if (
-                            len(suffix) > 1
-                            and datautil.DatumUtil.is_int(suffix[-1])
-                            and suffix[-1] != "0"
-                        ):
-                            # update file extension to make unique
-                            package_extension = (
-                                f"{package_extension}_{suffix[-1]}"
-                            )
                         break
             else:
                 package.package_name = package.package_type

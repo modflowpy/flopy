@@ -1,4 +1,4 @@
 # flopy version file automatically created using
-# update_version.py on September 03, 2026 13:56:50
+# update_version.py on October 31, 2026 23:46:14
 
-__version__ = "3.11.0"
+__version__ = "3.12.0"

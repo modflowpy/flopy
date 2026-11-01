@@ -1,5 +1,6 @@
 import warnings
 from os import PathLike
+from pathlib import Path
 from typing import Union
 
 import numpy as np
@@ -828,21 +829,21 @@ class Raster:
 
         return array
 
-    def write(self, name):
+    def write(self, name: Union[str, PathLike]):
         """
         Method to write raster data to a .tif
         file
 
         Parameters
         ----------
-        name : str
+        name : PathLike
             output raster .tif file name
 
         """
         rasterio = import_optional_dependency("rasterio")
 
-        if not name.endswith(".tif"):
-            name += ".tif"
+        if not str(name).endswith(".tif"):
+            name = Path(f"{name!s}.tif")
 
         with rasterio.open(name, "w", **self._meta) as foo:
             for band, arr in self.__arr_dict.items():

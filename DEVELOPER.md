@@ -33,6 +33,7 @@ This document describes how to set up a FloPy development environment, run the e
     - [Snapshot testing](#snapshot-testing)
   - [Branching model](#branching-model)
   - [Deprecation policy](#deprecation-policy)
+  - [Releasing](#releasing)
   - [Miscellaneous](#miscellaneous)
     - [Locating the root](#locating-the-root)
     - [Dependency analysis](#dependency-analysis)
@@ -60,9 +61,9 @@ git config blame.ignoreRevsFile .git-blame-ignore-revs
 
 ### Python
 
-This project has historically aimed to support a wide range of [Python versions](https://devguide.python.org/versions/). In current and future development this window may narrow to follow [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) instead.
+This project has historically aimed to support a wide range of [Python versions](https://devguide.python.org/versions/). Development now follows the [SPEC 0](https://scientific-python.org/specs/spec-0000/#support-window) support window instead.
 
-Install Python >=3.11 via [standalone download](https://www.python.org/downloads/), [uv](https://docs.astral.sh/uv/), or a conda-like distribution like [Anaconda](https://www.anaconda.com/products/individual), [miniconda](https://docs.conda.io/en/latest/miniconda.html) or [miniforge](https://github.com/conda-forge/miniforge) .
+Install Python >=3.12 via [standalone download](https://www.python.org/downloads/), [uv](https://docs.astral.sh/uv/), or a conda-like distribution like [Anaconda](https://www.anaconda.com/products/individual), [miniconda](https://docs.conda.io/en/latest/miniconda.html) or [miniforge](https://github.com/conda-forge/miniforge) .
 
 Then install FloPy and core dependencies from the project root path:
 
@@ -458,6 +459,10 @@ This project loosely follows [NEP 23](https://numpy.org/neps/nep-0023-backwards-
 - Deprecation warning messages should include the deprecation version number (the release in which the deprecation message first appears) to permit timely follow-through later.
 
 See the linked article for more detail.
+
+## Releasing
+
+The release procedure is documented separately in [docs/make_release.md](docs/make_release.md). FloPy releases are automated from a pushed `v<x.y.z>` branch, publish to PyPI with [trusted publishing](https://docs.pypi.org/trusted-publishers/) from a `release` environment, and reach conda-forge through the autotick bot. There are also a few manual steps (updating citations, reviewing deprecations, regenerating the MF6 module); see the release guide for the full sequence and the caveats.
 
 ## Miscellaneous
 

@@ -60,7 +60,7 @@ class ModflowGwfmvr(MFPackage):
                 provided by the user, then packages are assigned a default value, which is the
                 package acronym followed by a hyphen and the package number.  For example, the
                 first Drain Package is named DRN-1.  The second Drain Package is named DRN-2,
-                and so forth.
+                and so forth.  Each package may be listed only once in the PACKAGES block.
 
     perioddata : [(mname1, pname1, id1, mname2, pname2, id2, mvrtype, value)]
         * mname1 : string

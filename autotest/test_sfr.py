@@ -935,3 +935,26 @@ def test_mf2005(function_tmpdir, namfile):
             np.array_equal(str2.segment_data[0][name], m.str.segment_data[0][name])
             is True
         )
+
+
+def test_single_reach_sfr_pkg(function_tmpdir):
+    """Test for a single segment/reach SFR package"""
+    sfrfiletxt = (
+        "1 1 0 0 86400.00000000 0.00010000 0 0\n"
+        "1 5 1 1 1 100.0\n"
+        "1 0 0\n"
+        "1 1 0 0 100.0 0 0 0.3 0.025\n"
+        "1.0 1.0 87.5 10.0\n"
+        "1.0 1.0 86.5 10.0\n"
+    )
+    sfrfile = io.StringIO(sfrfiletxt)
+    m = Modflow("junk", model_ws=function_tmpdir)
+    sfr = ModflowSfr2.load(sfrfile, model=m)
+    assert len(sfr.segment_data[0]) == 1
+    assert len(sfr.reach_data) == 1
+
+    sfrfile2 = function_tmpdir / "junk.sfr"
+    sfr.write_file()
+    sfr = ModflowSfr2.load(sfrfile2, model=m)
+    assert len(sfr.segment_data[0]) == 1
+    assert len(sfr.reach_data) == 1

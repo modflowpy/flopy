@@ -977,6 +977,77 @@ def test_export_huge_shapefile(function_tmpdir):
     gdf.to_file(function_tmpdir / "huge.shp")
 
 
+@requires_pkg("geopandas")
+def test_to_geodataframe_incomplete_stress_period_data():
+    sim = flopy.mf6.MFSimulation()
+    tdis = flopy.mf6.ModflowTdis(
+        sim,
+        nper=2,
+        perioddata=[(1, 1, 1), (1, 1, 1)],
+    )
+    ims = flopy.mf6.ModflowIms(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="dev_gdf")
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf, nlay=1, nrow=10, ncol=11, delc=100, delr=100, top=100, botm=0, idomain=1
+    )
+
+    npf = flopy.mf6.ModflowGwfnpf(
+        gwf,
+        k=10,
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=99)
+
+    chd_rec = [(0, i, 0, 95) for i in range(10)]
+    chd = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: chd_rec})
+
+    ghb_rec = [(0, i, 10, 85.0, 10.0) for i in range(10)]
+    ghb = flopy.mf6.ModflowGwfghb(gwf, stress_period_data={0: ghb_rec, 1: ghb_rec})
+
+    rch_rec = np.full((10, 11), 0.0005)
+    rch_rec[:, 0] = 0
+    rch_rec[:, -1] = 0
+    rch = flopy.mf6.ModflowGwfrcha(gwf, recharge={0: rch_rec})
+
+    wel_rec = [
+        (0, 4, 5, -1500.0),
+    ]
+    wel = flopy.mf6.ModflowGwfwel(gwf, stress_period_data={0: wel_rec})
+
+    recharge = rch.recharge.array[0].ravel()
+    gdf = rch.to_geodataframe(kper=1)
+
+    np.testing.assert_allclose(
+        recharge,
+        gdf["rcha_recharge_1"].values,
+        err_msg="GeoDataFrame does not match recharge values from package",
+    )
+
+    wel_data = wel.stress_period_data.to_array(kper=0, mask=True)["q"].ravel()
+    gdf = wel.to_geodataframe(kper=1)
+    np.testing.assert_allclose(
+        wel_data,
+        gdf["wel_q_0_1"].values,
+        err_msg="GeoDataFrame does not match pumping values from wel package",
+    )
+
+    gdf = gwf.to_geodataframe(kper=1)
+
+    np.testing.assert_allclose(
+        recharge,
+        gdf["rcha_recharge_1"].values,
+        err_msg="GeoDataFrame from gwf does not match recharge values from package",
+    )
+
+    np.testing.assert_allclose(
+        wel_data,
+        gdf["wel_q_0_1"].values,
+        err_msg="GeoDataFrame from gwf does not match pumping values from wel package",
+    )
+
+
 @requires_pkg("netCDF4", "pyproj")
 def test_polygon_from_ij(function_tmpdir):
     """test creation of a polygon from an i, j location using get_vertices()."""

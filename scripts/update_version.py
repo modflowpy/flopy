@@ -1,5 +1,6 @@
 import argparse
 import re
+import sys
 import textwrap
 from datetime import datetime
 from pathlib import Path
@@ -9,12 +10,13 @@ from filelock import FileLock
 from packaging.version import Version
 
 _epilog = """\
-Update version information stored in version.txt in the project root,
-as well as several other files in the repository. If --version is not
-provided, the version number will not be changed. A file lock is held
-to synchronize file access. The version tag must comply with standard
-'<major>.<minor>.<patch>' format conventions for semantic versioning.
-To show the version without changing anything, use --get (short -g).
+Update version information stored in version.txt in the project root, as
+well as several other files in the repository, and print the new version.
+If none of --version, --release or --post-release is provided, the version
+number is not changed. A file lock is held to synchronize file access. The
+version tag must comply with standard '<major>.<minor>.<patch>' format
+conventions for semantic versioning. To print the version without changing
+anything, add --dry-run.
 """
 _project_name = "flopy"
 _project_root_path = Path(__file__).parent.parent
@@ -39,10 +41,27 @@ def split_nonnumeric(s):
 _current_version = Version(_version_txt_path.read_text().strip())
 
 
+def release_version() -> Version:
+    """Current version with any development segment (e.g. '.dev0') removed."""
+    return Version(_current_version.base_version)
+
+
+def post_release_version() -> Version:
+    """Development version for the next cycle, following a release.
+
+    Targets the next anticipated minor version, with the development segment
+    set to the micro (patch) number of the version just released: e.g. after
+    3.9.2 comes 3.10.0.dev2, and after 3.11.0 comes 3.12.0.dev0. The counter
+    marks how many releases into the series development has resumed.
+    """
+    v = Version(_current_version.base_version)
+    return Version(f"{v.major}.{v.minor + 1}.0.dev{v.micro}")
+
+
 def update_version_txt(version: Version):
     with open(_version_txt_path, "w") as f:
         f.write(str(version))
-    print(f"Updated {_version_txt_path} to version {version}")
+    print(f"Updated {_version_txt_path} to version {version}", file=sys.stderr)
 
 
 def update_version_py(timestamp: datetime, version: Version):
@@ -53,7 +72,7 @@ def update_version_py(timestamp: datetime, version: Version):
         )
         f.write(f'__version__ = "{version}"\n')
         f.close()
-    print(f"Updated {_version_py_path} to version {version}")
+    print(f"Updated {_version_py_path} to version {version}", file=sys.stderr)
 
 
 def get_software_citation(timestamp: datetime, version: Version):
@@ -131,7 +150,7 @@ def update_readme_markdown(timestamp: datetime, version: Version):
 
             f.write(f"{line}\n")
 
-    print(f"Updated {fpth} to version {version}")
+    print(f"Updated {fpth} to version {version}", file=sys.stderr)
 
 
 def update_citation_cff(timestamp: datetime, version: Version):
@@ -149,7 +168,7 @@ def update_citation_cff(timestamp: datetime, version: Version):
             citation, f, allow_unicode=True, default_flow_style=False, sort_keys=False
         )
 
-    print(f"Updated {fpth} to version {version}")
+    print(f"Updated {fpth} to version {version}", file=sys.stderr)
 
 
 def update_pypi_release(timestamp: datetime, version: Version):
@@ -166,7 +185,7 @@ def update_pypi_release(timestamp: datetime, version: Version):
         f.write(f"{line}\n")
 
     f.close()
-    print(f"Updated {fpth} to version {version}")
+    print(f"Updated {fpth} to version {version}", file=sys.stderr)
 
 
 def update_version(
@@ -180,7 +199,7 @@ def update_version(
         version = (
             version
             if version
-            else Version(previous.major, previous.minor, previous.micro)
+            else Version(f"{previous.major}.{previous.minor}.{previous.micro}")
         )
 
         with lock:
@@ -209,18 +228,42 @@ if __name__ == "__main__":
         help="Specify the release version",
     )
     parser.add_argument(
-        "-g",
-        "--get",
+        "-r",
+        "--release",
         required=False,
         action="store_true",
-        help="Just get the current version number, no updates (defaults false)",
+        help=(
+            "Use the current development version with its development segment "
+            "(e.g. '.dev0') removed"
+        ),
+    )
+    parser.add_argument(
+        "-p",
+        "--post-release",
+        required=False,
+        action="store_true",
+        help=(
+            "Use the development version for the next cycle: the next minor "
+            "version, with a development segment set to the released patch number"
+        ),
+    )
+    parser.add_argument(
+        "--dry-run",
+        required=False,
+        action="store_true",
+        help="Print the version that would be written, and exit without writing",
     )
     args = parser.parse_args()
 
-    if args.get:
-        print(_current_version)
+    if args.post_release:
+        version = post_release_version()
+    elif args.release:
+        version = release_version()
+    elif args.version:
+        version = Version(args.version)
     else:
-        update_version(
-            timestamp=datetime.now(),
-            version=(Version(args.version) if args.version else _current_version),
-        )
+        version = _current_version
+
+    if not args.dry_run:
+        update_version(timestamp=datetime.now(), version=version)
+    print(version)

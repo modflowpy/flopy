@@ -175,6 +175,98 @@ def test_model_with_lak_sfr_mvr(function_tmpdir):
 
 
 @requires_exe("mf6")
+def test_hfb_model_splitter(function_tmpdir):
+    nlay, nrow, ncol = 3, 10, 10
+
+    sim = flopy.mf6.MFSimulation(sim_name="hfb", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(
+        sim, complexity="simple", outer_dvclose=1e-9, inner_dvclose=1e-10
+    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="hfb", save_flows=True)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=100.0,
+        delc=100.0,
+        top=30.0,
+        botm=[20.0, 10.0, 0.0],
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=25.0)
+    chd = [[(0, i, 0), 25.0] for i in range(nrow)]
+    chd += [[(0, i, ncol - 1), 20.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd)
+
+    # four barriers forming a plus on the corner shared by the cells
+    # (4, 4), (4, 5), (5, 4), and (5, 5): two between east west neighbors
+    # and two between north south neighbors
+    hfb = [
+        [(0, 4, 4), (0, 4, 5), 1e-5],  # east west, north of the corner
+        [(0, 5, 4), (0, 5, 5), 1e-5],  # east west, south of the corner
+        [(0, 4, 4), (0, 5, 4), 1e-5],  # north south, west of the corner
+        [(0, 4, 5), (0, 5, 5), 1e-5],  # north south, east of the corner
+    ]
+    # a barrier on a vertical connection, which the splitter never divides
+    # because both of its cells are in the same stack
+    hfb += [[(0, i, j), (1, i, j), 1e-5] for i in range(3) for j in range(7, 10)]
+    flopy.mf6.ModflowGwfhfb(gwf, stress_period_data={0: hfb})
+    flopy.mf6.ModflowGwfoc(gwf, head_filerecord="hfb.hds", saverecord=[("HEAD", "ALL")])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    # split away from every barrier
+    array = np.zeros((nrow, ncol), dtype=int)
+    array[:, 7:] = 1
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    heads = {}
+    nbarrier = 0
+    for mkey in (0, 1):
+        ml = new_sim.get_model(f"hfb_{mkey}")
+        pkg = ml.get_package("hfb")
+        if pkg is None:
+            raise AssertionError(f"Model {mkey} has no HFB package")
+
+        nbarrier += len(pkg.stress_period_data.get_data(0))
+        heads[mkey] = ml.output.head().get_alldata()[-1]
+
+    if nbarrier != len(hfb):
+        raise AssertionError(
+            f"Split models have {nbarrier} barriers, expected {len(hfb)}"
+        )
+
+    new_heads = mfsplit.reconstruct_array(heads)
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, atol=1e-6, err_msg=err_msg)
+
+    # a barrier cannot be split, both of its cells must be in one model.
+    # splitting on the column the plus straddles cuts its east west barriers
+    # and splitting on the row cuts its north south barriers
+    for axis in (0, 1):
+        sim = MFSimulation.load(sim_ws=function_tmpdir)
+        array = np.zeros((nrow, ncol), dtype=int)
+        if axis == 0:
+            array[5:, :] = 1
+        else:
+            array[:, 5:] = 1
+
+        mfsplit = Mf6Splitter(sim)
+        with pytest.raises(AssertionError, match="split along faults"):
+            mfsplit.split_model(array)
+
+
+@requires_exe("mf6")
 @requires_pkg("pymetis")
 @pytest.mark.slow
 def test_metis_splitting_with_lak_sfr(function_tmpdir):
@@ -199,6 +291,14 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
             "optimize_splitting_mask is not correcting for lakes properly"
         )
 
+    counts = [np.count_nonzero(array == i) for i in np.unique(array)]
+    ratio = np.max(counts) / np.mean(counts)
+    if ratio > 1.05:
+        raise AssertionError(
+            "load balancing ratio is higher than expected, LAK_EDGE_WEIGHTS "
+            "may be too low or not properly applied"
+        )
+
     new_sim = mfsplit.split_model(array)
     new_sim.set_sim_path(function_tmpdir / "split_model")
     new_sim.write_simulation()
@@ -220,8 +320,75 @@ def test_metis_splitting_with_lak_sfr(function_tmpdir):
 
 @requires_exe("mf6")
 @requires_pkg("pymetis")
+def test_metis_splitting_with_hfb(function_tmpdir):
+    import pymetis
+
+    nlay, nrow, ncol = 1, 20, 20
+
+    sim = flopy.mf6.MFSimulation(sim_name="hfb", sim_ws=function_tmpdir, exe_name="mf6")
+    flopy.mf6.ModflowTdis(sim)
+    flopy.mf6.ModflowIms(
+        sim, complexity="simple", outer_dvclose=1e-9, inner_dvclose=1e-10
+    )
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="hfb", save_flows=True)
+    flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=100.0,
+        delc=100.0,
+        top=10.0,
+        botm=[0.0],
+    )
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=10.0)
+    chd = [[(0, i, 0), 10.0] for i in range(nrow)]
+    chd += [[(0, i, ncol - 1), 1.0] for i in range(nrow)]
+    flopy.mf6.ModflowGwfchd(gwf, stress_period_data=chd)
+
+    # two barriers that a partition would otherwise be free to cut
+    hfb = [[(0, i, 6), (0, i, 7), 1e-5] for i in range(nrow)]
+    hfb += [[(0, 9, j), (0, 10, j), 1e-5] for j in range(ncol)]
+    flopy.mf6.ModflowGwfhfb(gwf, stress_period_data={0: hfb})
+    flopy.mf6.ModflowGwfoc(gwf, head_filerecord="hfb.hds", saverecord=[("HEAD", "ALL")])
+    sim.write_simulation()
+    sim.run_simulation()
+
+    original_heads = gwf.output.head().get_alldata()[-1]
+
+    mfsplit = Mf6Splitter(sim)
+    array = mfsplit.optimize_splitting_mask(
+        nparts=4, options=pymetis.Options(seed=42, contig=1)
+    )
+
+    # a barrier must lie within one model, not on a model boundary
+    membership = array.ravel()
+    for recarray in gwf.get_package("hfb").stress_period_data.data.values():
+        _, nodes1 = mfsplit._cellid_to_layer_node(recarray.cellid1)
+        _, nodes2 = mfsplit._cellid_to_layer_node(recarray.cellid2)
+        if not np.array_equal(membership[nodes1], membership[nodes2]):
+            raise AssertionError("A horizontal flow barrier was split")
+
+    new_sim = mfsplit.split_model(array)
+    new_sim.set_sim_path(function_tmpdir / "split_model")
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    heads = {}
+    for mkey in np.unique(membership):
+        ml = new_sim.get_model(f"hfb_{mkey}")
+        heads[mkey] = ml.output.head().get_alldata()[-1]
+
+    new_heads = mfsplit.reconstruct_array(heads)
+
+    err_msg = "Heads from original and split models do not match"
+    np.testing.assert_allclose(new_heads, original_heads, atol=1e-6, err_msg=err_msg)
+
+
+@requires_exe("mf6")
+@requires_pkg("pymetis")
 @requires_pkg("h5py")
-@requires_pkg("scikit-learn", name_map={"scikit-learn": "sklearn"})
 def test_save_load_node_mapping_structured(function_tmpdir):
     import pymetis
 
@@ -245,19 +412,20 @@ def test_save_load_node_mapping_structured(function_tmpdir):
     new_sim.set_sim_path(new_sim_path)
     new_sim.write_simulation()
     new_sim.run_simulation()
-    original_node_map = mfsplit._node_map
+    original_node_map = mfsplit._node_map_arr
 
     mfsplit.save_node_mapping(hdf_file)
 
     new_sim2 = MFSimulation.load(sim_ws=new_sim_path)
 
     mfsplit2 = Mf6Splitter.load_node_mapping(hdf_file)
-    saved_node_map = mfsplit2._node_map
+    saved_node_map = mfsplit2._node_map_arr
 
-    for k, v1 in original_node_map.items():
-        v2 = saved_node_map[k]
-        if not v1 == v2:
-            raise AssertionError("Node map read/write not returning proper values")
+    np.testing.assert_allclose(
+        original_node_map,
+        saved_node_map,
+        err_msg="Node map read/write not returning proper values",
+    )
 
     array_dict = {}
     for model in range(nparts):
@@ -267,6 +435,7 @@ def test_save_load_node_mapping_structured(function_tmpdir):
 
     new_heads = mfsplit2.reconstruct_array(array_dict)
     err_msg = "Heads from original and split models do not match"
+    original_heads[sim.get_model().modelgrid.idomain == 0] = 0
     np.testing.assert_allclose(new_heads, original_heads, err_msg=err_msg)
 
 
@@ -374,11 +543,6 @@ def test_save_node_mapping_with_boundnames(function_tmpdir):
     array[:, 5:] = 1
     mfsplit = Mf6Splitter(sim)
     mfsplit.split_model(array)
-
-    non_int_keys = [
-        k for k in mfsplit._node_map if not isinstance(k, (int, np.integer))
-    ]
-    assert not non_int_keys, f"boundnames leaked into _node_map: {non_int_keys}"
 
     hdf_file = function_tmpdir / "node_map.hdf5"
     mfsplit.save_node_mapping(hdf_file)
@@ -1772,3 +1936,364 @@ def test_ats(function_tmpdir):
     new_sim.write_simulation()
     success, _ = new_sim.run_simulation()
     assert success
+
+
+@requires_exe("mf6")
+def test_reconstruct_recarray(function_tmpdir):
+    sim_path = get_example_data_path() / "mf6-freyberg"
+    split_path = function_tmpdir / "split_model"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    sim.set_sim_path(function_tmpdir)
+    sim.write_simulation()
+    sim.run_simulation()
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+
+    array = np.ones((modelgrid.nrow, modelgrid.ncol), dtype=int)
+    ncol = 1
+    for row in range(modelgrid.nrow):
+        if row != 0 and row % 2 == 0:
+            ncol += 1
+        array[row, ncol:] = 2
+
+    mfsplit = Mf6Splitter(sim)
+    new_sim = mfsplit.split_model(array)
+
+    new_sim.set_sim_path(split_path)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    ml0 = new_sim.get_model("freyberg_1")
+    ml1 = new_sim.get_model("freyberg_2")
+
+    pkgs = ["wel", "riv", "chd"]
+    d = {}
+
+    for pkg in pkgs:
+        vpak = gwf.get_package(pkg)
+        vrecarray = vpak.stress_period_data.data[0]
+        vrecarray.sort(axis=0)
+        rarrays = {}
+        for ix, model in enumerate([ml0, ml1]):
+            pak = model.get_package(pkg)
+            try:
+                rarrays[ix + 1] = pak.stress_period_data.data[0]
+            except (TypeError, AttributeError):
+                pass
+        recarray = mfsplit.reconstruct_recarray(rarrays)
+        recarray.sort(axis=0)
+
+        for ix, rec in enumerate(recarray):
+            vrec = vrecarray[ix]
+            for name in recarray.dtype.names:
+                assert rec[name] == vrec[name], "Recarray reconstruction failed"
+
+
+@requires_exe("mf6")
+def test_fjf_obs_structured(function_tmpdir):
+    sim_ws = function_tmpdir
+    split_ws = function_tmpdir / "split_model"
+
+    nlay = 1
+    nrow = 10
+    ncol = 10
+    delc = np.full((nrow,), 10)
+    delr = np.full((ncol,), 10)
+    top = np.full((nrow, ncol), 50)
+    botm = np.full((nlay, nrow, ncol), 0)
+    idomain = np.ones(botm.shape, dtype=int)
+
+    sim = flopy.mf6.MFSimulation(sim_ws=sim_ws)
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    tdis = flopy.mf6.ModflowTdis(sim)
+
+    gwf = flopy.mf6.ModflowGwf(sim)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delc=delc,
+        delr=delr,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+    npf = flopy.mf6.ModflowGwfnpf(gwf, k=5, k33=1)
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top - 5)
+
+    chd_rec = [(0, i, 0, 45) for i in range(nrow)]
+    ghb_rec = [(0, i, 9, 35, 25) for i in range(nrow)]
+    chd = flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data={0: chd_rec}, pname="chd_left"
+    )
+    ghb = flopy.mf6.ModflowGwfghb(
+        gwf, stress_period_data={0: ghb_rec}, pname="ghb_right"
+    )
+
+    obs = flopy.mf6.ModflowUtlobs(
+        gwf,
+        continuous={
+            "obs.csv": [
+                ("faceflow1", "flow-ja-face", (0, 3, 3), (0, 3, 4)),
+                ("h1", "head", (0, 3, 4)),
+                ("faceflow2", "flow-ja-face", (0, 6, 6), (0, 6, 7)),
+                ("h2", "head", (0, 6, 7)),
+            ]
+        },
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    array = np.zeros(top.shape, dtype=int)
+    array[:, (ncol // 2) :] = 1
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array, sim_ws=split_ws)
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+    assert success, "split model run failed, obs remapping may have failed"
+
+    for mdl in range(2):
+        obs_ra = new_sim.get_model(f"{gwf.name}_{mdl}").obs.continuous.data[
+            f"obs_{mdl}.csv"
+        ]
+        assert len(obs_ra) == 2, "number remapped of observation records incorrect"
+        id2 = obs_ra[obs_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+        assert isinstance(id2, tuple), "obs id2 datatype is incorrect"
+
+        if mdl == 0:
+            v_ra = obs.continuous.data["obs.csv"]
+            v_id = v_ra[v_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+
+            assert id2 == v_id, "id2 cellid not properly set"
+
+
+@requires_exe("mf6")
+def test_fjf_obs_vertex(function_tmpdir):
+    sim_ws = get_example_data_path() / "mf6" / "test003_gwfs_disv"
+    split_ws = function_tmpdir / "split_model"
+
+    sim = flopy.mf6.MFSimulation.load(sim_ws=sim_ws)
+    sim.set_sim_path(function_tmpdir)
+
+    gwf = sim.get_model()
+    modelgrid = gwf.modelgrid
+    ncpl = modelgrid.ncpl
+
+    obs = flopy.mf6.ModflowUtlobs(
+        gwf,
+        continuous={
+            "obs.csv": [
+                ("faceflow1", "flow-ja-face", (0, 24), (0, 34)),
+                ("h1", "head", (0, 34)),
+                ("faceflow2", "flow-ja-face", (0, 64), (0, 74)),
+                ("h2", "head", (0, 74)),
+            ]
+        },
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    array = np.zeros((ncpl,), dtype=int)
+    array[(ncpl // 2) :] = 1
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array, sim_ws=split_ws)
+    new_sim.write_simulation()
+    success, _ = new_sim.run_simulation()
+    assert success, "split model run failed, obs remapping may have failed"
+
+    for mdl in range(2):
+        obs_ra = new_sim.get_model(f"{gwf.name}_{mdl}").obs.continuous.data[
+            f"obs_{mdl}.csv"
+        ]
+        assert len(obs_ra) == 2, "number remapped of observation records incorrect"
+        id2 = obs_ra[obs_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+        assert isinstance(id2, tuple), "obs id2 datatype is incorrect"
+
+        if mdl == 0:
+            v_ra = obs.continuous.data["obs.csv"]
+            v_id = v_ra[v_ra.obsname == f"faceflow{mdl + 1}"].id2[0]
+
+            assert id2 == v_id, "id2 cellid not properly set"
+
+
+def test_sfr_none_cells(function_tmpdir):
+    sim_ws = function_tmpdir / "sfr_none_test"
+    split_ws = sim_ws / "split_model"
+
+    # build the model
+    sim = flopy.mf6.MFSimulation(sim_ws=sim_ws)
+    tdis = flopy.mf6.ModflowTdis(sim, perioddata=[(365.0, 365, 1.0)])
+    ims = flopy.mf6.ModflowIms(sim, complexity="SIMPLE")
+    gwf = flopy.mf6.ModflowGwf(sim)
+
+    nlay, nrow, ncol = (1, 10, 10)
+    delc = np.full((nrow,), 100)
+    delr = np.full((ncol,), 100)
+    top = np.ones((nrow, ncol)) * np.linspace(100, 97, 10)
+    botm = np.zeros((nlay, nrow, ncol))
+    idomain = np.ones(botm.shape, dtype=int)
+
+    dis = flopy.mf6.ModflowGwfdis(
+        gwf,
+        nlay=nlay,
+        nrow=nrow,
+        ncol=ncol,
+        delr=delr,
+        delc=delc,
+        top=top,
+        botm=botm,
+        idomain=idomain,
+    )
+
+    npf = flopy.mf6.ModflowGwfnpf(gwf, icelltype=1, k=5.0, k33=1.0)
+
+    sto = flopy.mf6.ModflowGwfsto(
+        gwf,
+        iconvert=1,
+        ss=1e-06,
+        sy=0.12,
+        steady_state=[False],
+        transient=[
+            True,
+        ],
+    )
+
+    ic = flopy.mf6.ModflowGwfic(gwf, strt=top - 10)
+
+    recs = [(0, i, 0, 90.0) for i in range(nrow)]
+    chd_l = flopy.mf6.ModflowGwfchd(gwf, stress_period_data={0: recs}, pname="chd_l")
+
+    recs = [(0, i, 9, 85.0, 100 * 100 * 0.01) for i in range(nrow)]
+    ghb_l = flopy.mf6.ModflowGwfghb(gwf, stress_period_data={0: recs}, pname="ghb_r")
+
+    sfr_con = [
+        (0, -1),
+        (1, 0, -2),
+        (2, 1, -3),
+        (3, 2, 10, -4),
+        (4, 3, -5),
+        (5, 4, -6),
+        (6, 5, -7),
+        (7, 6, 12, -8),
+        (8, 7, -9),
+        (9, 8),
+        (10, 11, -3),
+        (11, -10),
+        (12, 13, -7),
+        (13, 14, -12),
+        (14, -13),
+    ]
+
+    packagedata = []
+    rgrd = np.round((top[0, 0] - top[0, 1]) / 100.0, 4)
+    for c, cons in enumerate(sfr_con):
+        ncon = len(cons) - 1
+        if c < 10:
+            rec = (
+                c,
+                (0, 4, c),
+                100,
+                5,
+                rgrd,
+                top[4, c] - 4,
+                1.0,
+                0.005,
+                0.025,
+                ncon,
+                1,
+                0,
+            )
+        elif c < 12:
+            rec = (
+                c,
+                (-1, -1, -1),
+                100,
+                5,
+                rgrd,
+                top[4, 3],
+                1.0,
+                0.005,
+                0.025,
+                ncon,
+                1,
+                0,
+            )
+        else:
+            rec = (
+                c,
+                (-1, -1, -1),
+                100,
+                5,
+                rgrd,
+                top[4, 7],
+                1.0,
+                0.005,
+                0.025,
+                ncon,
+                1,
+                0,
+            )
+        packagedata.append(rec)
+
+    nreaches = len(packagedata)
+
+    perioddata = [(0, "inflow", 100), (11, "inflow", 50), (14, "inflow", 75)]
+
+    sfr = flopy.mf6.ModflowGwfsfr(
+        gwf,
+        nreaches=nreaches,
+        packagedata=packagedata,
+        connectiondata=sfr_con,
+        perioddata={0: perioddata},
+    )
+
+    sim.write_simulation()
+    sim.run_simulation()
+
+    # split the model so each section has a connected segment
+    # (multiple reaches) of SFR NONE cells
+    arr = np.zeros(top.shape, dtype=int)
+    arr[:, (ncol // 2) :] = 1
+
+    mfs = Mf6Splitter(sim)
+    new_sim = mfs.split_model(arr, sim_ws=split_ws)
+    new_sim.write_simulation()
+    new_sim.run_simulation()
+
+    valid_nreach = [7, 8]
+    sfr_none_cells = [2, 3]
+    for ix in range(2):
+        nreach = valid_nreach[ix]
+        none_cells = sfr_none_cells[ix]
+        recarray = new_sim.get_model(f"model_{ix}").sfr.packagedata.array
+        assert len(recarray) == nreach, "Wrong number of SFR reaches assigned to model"
+
+        none_cnt = 0
+        for cid in recarray.cellid:
+            if cid == (-1, -1, -1):
+                none_cnt += 1
+        assert none_cnt == none_cells, "Splitter not correctly assigning SFR None cells"
+
+
+@requires_pkg("pymetis")
+def test_optimal_mask_force_lak_rebalancing():
+    sim_path = get_example_data_path() / "mf6" / "test045_lake2tr"
+
+    sim = MFSimulation.load(sim_ws=sim_path)
+    mfsplit = Mf6Splitter(sim)
+    array = mfsplit.optimize_splitting_mask(nparts=15)
+
+    counts = [np.count_nonzero(array == i) for i in np.unique(array)]
+    ratio = np.max(counts) / np.mean(counts)
+    if ratio > 1.75:
+        raise AssertionError(
+            "load balancing ratio is higher than expected, lak remapping "
+            "rebalancing adjustments should be checked"
+        )

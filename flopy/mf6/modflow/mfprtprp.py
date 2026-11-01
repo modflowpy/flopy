@@ -181,10 +181,14 @@ class ModflowPrtprp(MFPackage):
                 releasetimes block or configured via release_time_frequency, only one particle
                 is released at that time. coincidence is evaluated up to the tolerance
                 specified in release_time_tolerance, or :math:`epsilon times 10^{11}` by
-                default, where :math:`epsilon` is machine precision. if no release times are
-                configured via this setting, the releasetimes block, or the
-                release_time_frequency option, a single release time is configured at the
-                beginning of the first time step of the simulation's first stress period.
+                default, where :math:`epsilon` is machine precision. when such a coincidence
+                occurs, the release is reported under the earlier of the two time steps, i.e.
+                whichever time step the coincident release time falls in per the usual
+                convention that a time exactly on a time step boundary belongs to the earlier
+                time step, not the later one. if no release times are configured via this
+                setting, the releasetimes block, or the release_time_frequency option, a single
+                release time is configured at the beginning of the first time step of the
+                simulation's first stress period.
                 * all : keyword
                             keyword to indicate release at the start of all time steps in the period.
                 * first : keyword

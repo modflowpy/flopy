@@ -33,12 +33,12 @@ class ModflowGwtfmi(MFPackage):
         convergence tolerances.
     packagedata : [(flowtype, filein, fname)]
         * flowtype : string
-                is the word GWFBUDGET, GWFHEAD, GWFMOVER or the name of an advanced GWF stress
-                package.  If GWFBUDGET is specified, then the corresponding file must be a
-                budget file. If GWFHEAD is specified, the file must be a head file.  If GWFGRID
-                is specified, the file must be a binary grid file.  If an advanced GWF stress
-                package name appears then the corresponding file must be the budget file saved
-                by a LAK, SFR, MAW or UZF Package.
+                is the word GWFBUDGET, GWFHEAD, GWFGRID, GWFMOVER or the name of an advanced
+                GWF stress package.  If GWFBUDGET is specified, then the corresponding file
+                must be a budget file. If GWFHEAD is specified, the file must be a head file.
+                If GWFGRID is specified, the file must be a binary grid file.  If an advanced
+                GWF stress package name appears then the corresponding file must be the budget
+                file saved by a LAK, SFR, MAW or UZF Package.
         * filein : keyword
                 keyword to specify that an input filename is expected next.
         * fname : string

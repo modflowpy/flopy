@@ -125,7 +125,7 @@ class ModflowGwtmwt(MFPackage):
                 supports a 'withdrawal' flow term.  if this withdrawal term is active, then
                 water will be withdrawn from the well at the calculated concentration of the
                 well.
-                * concentration : string
+                * concentration : double precision
                             real or character value that defines the concentration for the well. the
                             specified concentration is only applied if the well is a constant concentration
                             well. if the options block includes a timeseriesfile entry (see the 'time-
@@ -138,7 +138,7 @@ class ModflowGwtmwt(MFPackage):
                             mass fluxes into or out of the well and the inactive value will be written for
                             the well concentration.  if a well is constant, then the concentration for the
                             well will be fixed at the user specified value.
-                * rate : string
+                * rate : double precision
                             real or character value that defines the injection solute concentration
                             :math:`(ml^{-3})` for the well. if the options block includes a timeseriesfile
                             entry (see the 'time-variable input' section), values can be obtained from a
@@ -195,6 +195,7 @@ class ModflowGwtmwt(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal flow_pkg_name",
         ],
         [
             "block options",
@@ -211,6 +212,7 @@ class ModflowGwtmwt(MFPackage):
             "shape",
             "reader urword",
             "optional true",
+            "mf6internal fp_aux_name",
         ],
         [
             "block options",
@@ -226,6 +228,7 @@ class ModflowGwtmwt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprpak",
         ],
         [
             "block options",
@@ -233,6 +236,7 @@ class ModflowGwtmwt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprconc",
         ],
         [
             "block options",
@@ -240,6 +244,7 @@ class ModflowGwtmwt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal iprflow",
         ],
         [
             "block options",
@@ -247,6 +252,7 @@ class ModflowGwtmwt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal ipakcb",
         ],
         [
             "block options",
@@ -256,6 +262,7 @@ class ModflowGwtmwt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal conc_filerec",
         ],
         [
             "block options",
@@ -286,6 +293,7 @@ class ModflowGwtmwt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budfilerec",
         ],
         [
             "block options",
@@ -326,6 +334,7 @@ class ModflowGwtmwt(MFPackage):
             "reader urword",
             "tagged true",
             "optional true",
+            "mf6internal budcsvfilerec",
         ],
         [
             "block options",
@@ -428,12 +437,13 @@ class ModflowGwtmwt(MFPackage):
             "type keyword",
             "reader urword",
             "optional true",
+            "mf6internal dev_nonexpanding",
         ],
         [
             "block packagedata",
             "name packagedata",
             "type recarray ifno strt aux boundname",
-            "shape (maxbound)",
+            "shape (nmawwells)",
             "reader urword",
         ],
         [
@@ -445,6 +455,7 @@ class ModflowGwtmwt(MFPackage):
             "in_record true",
             "reader urword",
             "numeric_index true",
+            "mf6internal packagedata_ifno",
         ],
         [
             "block packagedata",
@@ -526,7 +537,7 @@ class ModflowGwtmwt(MFPackage):
         [
             "block period",
             "name concentration",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -536,7 +547,7 @@ class ModflowGwtmwt(MFPackage):
         [
             "block period",
             "name rate",
-            "type string",
+            "type double precision",
             "shape",
             "tagged true",
             "in_record true",
@@ -559,6 +570,7 @@ class ModflowGwtmwt(MFPackage):
             "shape",
             "in_record true",
             "reader urword",
+            "mf6internal period_auxiliary",
         ],
         [
             "block period",

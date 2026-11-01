@@ -458,10 +458,13 @@ class ModflowSfr2(Package):
                 self.reach_data[n] = reach_data[n]
 
         # assign node numbers if there are none (structured grid)
-        if np.diff(self.reach_data.node).max() == 0 and self.parent.has_package("DIS"):
-            # first make kij list
-            lrc = np.array(self.reach_data)[["k", "i", "j"]].tolist()
-            self.reach_data["node"] = self.parent.dis.get_node(lrc)
+        diff = np.diff(self.reach_data.node)
+        if len(diff) > 0:
+            if diff.max() == 0 and self.parent.has_package("DIS"):
+                # first make kij list
+                lrc = np.array(self.reach_data)[["k", "i", "j"]].tolist()
+                self.reach_data["node"] = self.parent.dis.get_node(lrc)
+
         # assign unique ID and outreach columns to each reach
         self.reach_data.sort(order=["iseg", "ireach"])
         new_cols = {
@@ -493,27 +496,30 @@ class ModflowSfr2(Package):
                 for n in segment_data[i].dtype.names:
                     self.segment_data[i][n] = segment_data[i][n]
         # compute outreaches if nseg and outseg columns have non-default values
-        if (
-            np.diff(self.reach_data.iseg).max() != 0
-            and np.max(list(set(self.graph.keys()))) != 0
-            and np.max(list(set(self.graph.values()))) != 0
-        ):
-            if len(self.graph) == 1:
-                self.segment_data[0]["nseg"] = 1
-                self.reach_data["iseg"] = 1
+        diff = np.diff(self.reach_data.iseg)
+        if len(diff) > 0:
+            if (
+                diff.max() != 0
+                and np.max(list(set(self.graph.keys()))) != 0
+                and np.max(list(set(self.graph.values()))) != 0
+            ):
+                if len(self.graph) == 1:
+                    self.segment_data[0]["nseg"] = 1
+                    self.reach_data["iseg"] = 1
 
-            consistent_seg_numbers = (
-                len(set(self.reach_data.iseg).difference(set(self.graph.keys()))) == 0
-            )
-            if not consistent_seg_numbers:
-                warnings.warn(
-                    "Inconsistent segment numbers of reach_data and segment_data"
+                consistent_seg_numbers = (
+                    len(set(self.reach_data.iseg).difference(set(self.graph.keys())))
+                    == 0
                 )
+                if not consistent_seg_numbers:
+                    warnings.warn(
+                        "Inconsistent segment numbers of reach_data and segment_data"
+                    )
 
-            # first convert any not_a_segment_values to 0
-            for v in self.not_a_segment_values:
-                self.segment_data[0].outseg[self.segment_data[0].outseg == v] = 0
-            self.set_outreaches()
+                # first convert any not_a_segment_values to 0
+                for v in self.not_a_segment_values:
+                    self.segment_data[0].outseg[self.segment_data[0].outseg == v] = 0
+                self.set_outreaches()
         self.channel_geometry_data = channel_geometry_data
         self.channel_flow_data = channel_flow_data
 

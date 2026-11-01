@@ -77,7 +77,7 @@ def shared_face(ivlist1, ivlist2):
         iv1 = ivlist1[i]
         iv2 = ivlist1[i + 1]
         for i2 in range(len(ivlist2) - 1):
-            if ivlist2[i2 : i2 + 1] == [iv2, iv1]:
+            if ivlist2[i2 : i2 + 2] == [iv2, iv1]:
                 return True
     return False
 
