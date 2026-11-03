@@ -18,6 +18,10 @@ EXCLUDE = [
 # using pyvista/setup-headless-display-action
 if is_in_ci() and system() != "Linux":
     EXCLUDE.append("vtk_pathlines")
+# pymetis has no windows wheels on PyPI, and the examples workflow installs
+# with uv. the conda-based docs workflow still runs this notebook on windows.
+if is_in_ci() and system() == "Windows":
+    EXCLUDE.append("mf6_parallel_model_splitting")
 
 
 def get_notebooks(pattern=None, exclude=None):
