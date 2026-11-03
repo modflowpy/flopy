@@ -42,9 +42,8 @@ codegen = [
 optional = [
     "affine",
     "descartes",
-    "fiona",
     "geojson",
-    "geopandas",
+    "geopandas >=1.0",
     "GitPython",
     "imageio",
     "netcdf4",
