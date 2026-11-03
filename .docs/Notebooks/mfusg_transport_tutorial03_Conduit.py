@@ -60,7 +60,7 @@ mf = MfUsg(
     structured=True,
     model_ws=model_ws,
     modelname="Ex3_CLN_Conduit",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 # +

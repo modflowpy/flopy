@@ -56,7 +56,7 @@ mf = MfUsg(
     structured=False,
     model_ws=model_ws,
     modelname="Ex5_Henry",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 # +

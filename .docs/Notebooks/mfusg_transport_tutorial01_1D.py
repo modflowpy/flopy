@@ -54,7 +54,7 @@ mf = MfUsg(
     structured=True,
     model_ws=model_ws,
     modelname="ex1-1d",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 

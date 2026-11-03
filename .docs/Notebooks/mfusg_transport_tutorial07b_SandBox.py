@@ -71,7 +71,7 @@ mf = MfUsg(
     structured=False,
     model_ws=model_ws,
     modelname="Ex7_SandBox",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 # +
