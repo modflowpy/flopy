@@ -70,7 +70,7 @@ mf = MfUsg(
     structured=False,
     model_ws=model_ws,
     modelname="Ex7_MD",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 # +

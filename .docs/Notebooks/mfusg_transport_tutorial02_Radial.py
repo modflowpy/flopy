@@ -56,7 +56,7 @@ mf = MfUsg(
     structured=True,
     model_ws=model_ws,
     modelname="Ex2_Radial",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 # +

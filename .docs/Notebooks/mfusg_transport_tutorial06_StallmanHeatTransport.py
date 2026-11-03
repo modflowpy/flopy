@@ -56,7 +56,7 @@ mf = MfUsg(
     structured=False,
     model_ws=model_ws,
     modelname="Ex6_Stallman",
-    exe_name="mfusg_gsi",
+    exe_name="mfusgt",
 )
 # -
 # +
@@ -325,7 +325,7 @@ vartype = [
 hdr = np.fromfile(f"{mf.model_ws}/{mf.name}.con", vartype)
 
 tmpr_data = hdr[np.char.strip(hdr["text"].astype(str)) == "TMPR"]
-conc_data = hdr[np.char.strip(hdr["text"].astype(str)) == "CONC"]
+conc_data = hdr[np.char.startswith(np.char.strip(hdr["text"].astype(str)), "CONC")]
 simtemp = tmpr_data[(tmpr_data["kper"] == 601) & (tmpr_data["kstp"] == 6)]["data"]
 simconc = conc_data[(conc_data["kper"] == 601) & (conc_data["kstp"] == 6)]["data"]
 
