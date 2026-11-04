@@ -159,6 +159,7 @@ jobs:
     runs-on: ubuntu-latest
     if:
       github.repository_owner == 'modflowpy' &&
+      github.actor != 'dependabot[bot]' &&
       (
           github.event_name == 'push' ||
           github.event_name == 'workflow_dispatch'
