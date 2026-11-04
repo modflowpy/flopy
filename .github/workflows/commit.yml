@@ -122,6 +122,18 @@ jobs:
         shell: bash -l {0}
     timeout-minutes: 60
     steps:
+      - name: Free disk space (Ubuntu)
+        if: runner.os == 'Linux'
+        uses: jlumbroso/free-disk-space@main
+        with:
+          preinstalled-runtimes: true
+          android: true
+          dotnet: true
+          haskell: true
+          large-packages: true
+          docker-images: true
+          swap-storage: true
+
       - name: Checkout repo
         uses: actions/checkout@v7
         with:
