@@ -1,0 +1,17 @@
+# SWR1 test problem 5 from the MODFLOW-NWT 1.3.0 distribution (USGS)
+LIST           7 SWRSample05.lst
+BAS6           1 SWRSample05.bas
+DIS           29 SWRSample05.dis
+UPW           11 SWRSample05.upw
+OC            22 SWRSample05.oc
+NWT           19 SWRSample05.nwt
+UZF           18 SWRSample05.uzf
+GHB           16 SWRSample05.ghb
+SWR           61 SWRSample05.swr
+DATA         201 ref/ConstantStage.dat
+DATA         102 SWRSample05_Stage.csv
+DATA(BINARY) 101 SWRSample05_GroupFlow.flow
+DATA(BINARY) 103 SWRSample05_QAQ.bin
+DATA(BINARY) 111 SWRSample05.hds
+DATA         301 SWRSample05.riv
+DATA         302 SWRSample05.cnv

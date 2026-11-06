@@ -1,0 +1,1859 @@
+# MODFLOW2005 UZF Input File 
+#CONSTANT     0.15              1.000 (FREE)       1     #THTI after THTS
+#NUZTOP IUZFOPT IRUNFLG IETFLG IUZCB1 IUZFCB2 [NTRAIL2 NSETS2] NUZGAG SURFDEP
+      1       2       1      1     0        0       20     20       0    0.50
+INTERNAL     1        (FREE)     -1                     #IUZFBND
+0 1 1 1 1 1
+0 1 1 1 1 1
+0 1 1 1 0 1
+0 1 1 1 0 1
+0 1 1 1 1 1
+0 1 1 1 1 1
+INTERNAL     1        (FREE)     -1                     #IRUNBND
+ 000000 100007 100008 100014 100015 100015
+ 000000 100007 100008 100014 100015 100015
+ 000000 100011 100011 100014 000000 100016
+ 000000 100009 100010 100014 000000 100018
+ 000000 100009 100010 100017 100017 100018
+ 000000 100009 100010 100019 100019 100018
+CONSTANT     3.500             1.000 (FREE)      -1     #EPS
+CONSTANT     0.25              1.000 (FREE)       1     #THTS
+CONSTANT     0.15              1.000 (FREE)       1     #THTI after THTS
+1                                                       #NUZF1
+OPEN/CLOSE ref/Rainfall_001.ref 1.00 (FREE)   -1          #FINF  STRESS PERIOD 001
+1                                                       #NUZF2
+CONSTANT  2.6249E-03  1.000 (FREE)                1     #PET
+1                                                       #NUZF3
+CONSTANT 0.25 1.000  (FREE)                       1     #ET Ext Depth
+1                                                       #NUZF4
+CONSTANT 0.05 1.000 (FREE)                        1     #Ext Water Content	
+1                                                        #NUZF1 STRESS PERIOD 002
+OPEN/CLOSE ref/Rainfall_002.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 002
+-1                                                       #NUZF2 STRESS PERIOD 002
+-1                                                       #NUZF3 STRESS PERIOD 002
+-1                                                       #NUZF4 STRESS PERIOD 002
+1                                                        #NUZF1 STRESS PERIOD 003
+OPEN/CLOSE ref/Rainfall_003.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 003
+-1                                                       #NUZF2 STRESS PERIOD 003
+-1                                                       #NUZF3 STRESS PERIOD 003
+-1                                                       #NUZF4 STRESS PERIOD 003
+1                                                        #NUZF1 STRESS PERIOD 004
+OPEN/CLOSE ref/Rainfall_004.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 004
+-1                                                       #NUZF2 STRESS PERIOD 004
+-1                                                       #NUZF3 STRESS PERIOD 004
+-1                                                       #NUZF4 STRESS PERIOD 004
+1                                                        #NUZF1 STRESS PERIOD 005
+OPEN/CLOSE ref/Rainfall_005.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 005
+-1                                                       #NUZF2 STRESS PERIOD 005
+-1                                                       #NUZF3 STRESS PERIOD 005
+-1                                                       #NUZF4 STRESS PERIOD 005
+1                                                        #NUZF1 STRESS PERIOD 006
+OPEN/CLOSE ref/Rainfall_006.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 006
+-1                                                       #NUZF2 STRESS PERIOD 006
+-1                                                       #NUZF3 STRESS PERIOD 006
+-1                                                       #NUZF4 STRESS PERIOD 006
+1                                                        #NUZF1 STRESS PERIOD 007
+OPEN/CLOSE ref/Rainfall_007.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 007
+-1                                                       #NUZF2 STRESS PERIOD 007
+-1                                                       #NUZF3 STRESS PERIOD 007
+-1                                                       #NUZF4 STRESS PERIOD 007
+1                                                        #NUZF1 STRESS PERIOD 008
+OPEN/CLOSE ref/Rainfall_008.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 008
+-1                                                       #NUZF2 STRESS PERIOD 008
+-1                                                       #NUZF3 STRESS PERIOD 008
+-1                                                       #NUZF4 STRESS PERIOD 008
+1                                                        #NUZF1 STRESS PERIOD 009
+OPEN/CLOSE ref/Rainfall_009.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 009
+-1                                                       #NUZF2 STRESS PERIOD 009
+-1                                                       #NUZF3 STRESS PERIOD 009
+-1                                                       #NUZF4 STRESS PERIOD 009
+1                                                        #NUZF1 STRESS PERIOD 010
+OPEN/CLOSE ref/Rainfall_010.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 010
+-1                                                       #NUZF2 STRESS PERIOD 010
+-1                                                       #NUZF3 STRESS PERIOD 010
+-1                                                       #NUZF4 STRESS PERIOD 010
+1                                                        #NUZF1 STRESS PERIOD 011
+OPEN/CLOSE ref/Rainfall_011.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 011
+-1                                                       #NUZF2 STRESS PERIOD 011
+-1                                                       #NUZF3 STRESS PERIOD 011
+-1                                                       #NUZF4 STRESS PERIOD 011
+1                                                        #NUZF1 STRESS PERIOD 012
+OPEN/CLOSE ref/Rainfall_012.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 012
+-1                                                       #NUZF2 STRESS PERIOD 012
+-1                                                       #NUZF3 STRESS PERIOD 012
+-1                                                       #NUZF4 STRESS PERIOD 012
+1                                                        #NUZF1 STRESS PERIOD 013
+OPEN/CLOSE ref/Rainfall_013.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 013
+-1                                                       #NUZF2 STRESS PERIOD 013
+-1                                                       #NUZF3 STRESS PERIOD 013
+-1                                                       #NUZF4 STRESS PERIOD 013
+1                                                        #NUZF1 STRESS PERIOD 014
+OPEN/CLOSE ref/Rainfall_014.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 014
+-1                                                       #NUZF2 STRESS PERIOD 014
+-1                                                       #NUZF3 STRESS PERIOD 014
+-1                                                       #NUZF4 STRESS PERIOD 014
+1                                                        #NUZF1 STRESS PERIOD 015
+OPEN/CLOSE ref/Rainfall_015.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 015
+-1                                                       #NUZF2 STRESS PERIOD 015
+-1                                                       #NUZF3 STRESS PERIOD 015
+-1                                                       #NUZF4 STRESS PERIOD 015
+1                                                        #NUZF1 STRESS PERIOD 016
+OPEN/CLOSE ref/Rainfall_016.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 016
+-1                                                       #NUZF2 STRESS PERIOD 016
+-1                                                       #NUZF3 STRESS PERIOD 016
+-1                                                       #NUZF4 STRESS PERIOD 016
+1                                                        #NUZF1 STRESS PERIOD 017
+OPEN/CLOSE ref/Rainfall_017.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 017
+-1                                                       #NUZF2 STRESS PERIOD 017
+-1                                                       #NUZF3 STRESS PERIOD 017
+-1                                                       #NUZF4 STRESS PERIOD 017
+1                                                        #NUZF1 STRESS PERIOD 018
+OPEN/CLOSE ref/Rainfall_018.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 018
+-1                                                       #NUZF2 STRESS PERIOD 018
+-1                                                       #NUZF3 STRESS PERIOD 018
+-1                                                       #NUZF4 STRESS PERIOD 018
+1                                                        #NUZF1 STRESS PERIOD 019
+OPEN/CLOSE ref/Rainfall_019.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 019
+-1                                                       #NUZF2 STRESS PERIOD 019
+-1                                                       #NUZF3 STRESS PERIOD 019
+-1                                                       #NUZF4 STRESS PERIOD 019
+1                                                        #NUZF1 STRESS PERIOD 020
+OPEN/CLOSE ref/Rainfall_020.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 020
+-1                                                       #NUZF2 STRESS PERIOD 020
+-1                                                       #NUZF3 STRESS PERIOD 020
+-1                                                       #NUZF4 STRESS PERIOD 020
+1                                                        #NUZF1 STRESS PERIOD 021
+OPEN/CLOSE ref/Rainfall_021.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 021
+-1                                                       #NUZF2 STRESS PERIOD 021
+-1                                                       #NUZF3 STRESS PERIOD 021
+-1                                                       #NUZF4 STRESS PERIOD 021
+1                                                        #NUZF1 STRESS PERIOD 022
+OPEN/CLOSE ref/Rainfall_022.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 022
+-1                                                       #NUZF2 STRESS PERIOD 022
+-1                                                       #NUZF3 STRESS PERIOD 022
+-1                                                       #NUZF4 STRESS PERIOD 022
+1                                                        #NUZF1 STRESS PERIOD 023
+OPEN/CLOSE ref/Rainfall_023.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 023
+-1                                                       #NUZF2 STRESS PERIOD 023
+-1                                                       #NUZF3 STRESS PERIOD 023
+-1                                                       #NUZF4 STRESS PERIOD 023
+1                                                        #NUZF1 STRESS PERIOD 024
+OPEN/CLOSE ref/Rainfall_024.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 024
+-1                                                       #NUZF2 STRESS PERIOD 024
+-1                                                       #NUZF3 STRESS PERIOD 024
+-1                                                       #NUZF4 STRESS PERIOD 024
+1                                                        #NUZF1 STRESS PERIOD 025
+OPEN/CLOSE ref/Rainfall_025.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 025
+-1                                                       #NUZF2 STRESS PERIOD 025
+-1                                                       #NUZF3 STRESS PERIOD 025
+-1                                                       #NUZF4 STRESS PERIOD 025
+1                                                        #NUZF1 STRESS PERIOD 026
+OPEN/CLOSE ref/Rainfall_026.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 026
+-1                                                       #NUZF2 STRESS PERIOD 026
+-1                                                       #NUZF3 STRESS PERIOD 026
+-1                                                       #NUZF4 STRESS PERIOD 026
+1                                                        #NUZF1 STRESS PERIOD 027
+OPEN/CLOSE ref/Rainfall_027.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 027
+-1                                                       #NUZF2 STRESS PERIOD 027
+-1                                                       #NUZF3 STRESS PERIOD 027
+-1                                                       #NUZF4 STRESS PERIOD 027
+1                                                        #NUZF1 STRESS PERIOD 028
+OPEN/CLOSE ref/Rainfall_028.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 028
+-1                                                       #NUZF2 STRESS PERIOD 028
+-1                                                       #NUZF3 STRESS PERIOD 028
+-1                                                       #NUZF4 STRESS PERIOD 028
+1                                                        #NUZF1 STRESS PERIOD 029
+OPEN/CLOSE ref/Rainfall_029.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 029
+-1                                                       #NUZF2 STRESS PERIOD 029
+-1                                                       #NUZF3 STRESS PERIOD 029
+-1                                                       #NUZF4 STRESS PERIOD 029
+1                                                        #NUZF1 STRESS PERIOD 030
+OPEN/CLOSE ref/Rainfall_030.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 030
+-1                                                       #NUZF2 STRESS PERIOD 030
+-1                                                       #NUZF3 STRESS PERIOD 030
+-1                                                       #NUZF4 STRESS PERIOD 030
+1                                                        #NUZF1 STRESS PERIOD 031
+OPEN/CLOSE ref/Rainfall_031.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 031
+-1                                                       #NUZF2 STRESS PERIOD 031
+-1                                                       #NUZF3 STRESS PERIOD 031
+-1                                                       #NUZF4 STRESS PERIOD 031
+1                                                        #NUZF1 STRESS PERIOD 032
+OPEN/CLOSE ref/Rainfall_032.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 032
+-1                                                       #NUZF2 STRESS PERIOD 032
+-1                                                       #NUZF3 STRESS PERIOD 032
+-1                                                       #NUZF4 STRESS PERIOD 032
+1                                                        #NUZF1 STRESS PERIOD 033
+OPEN/CLOSE ref/Rainfall_033.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 033
+-1                                                       #NUZF2 STRESS PERIOD 033
+-1                                                       #NUZF3 STRESS PERIOD 033
+-1                                                       #NUZF4 STRESS PERIOD 033
+1                                                        #NUZF1 STRESS PERIOD 034
+OPEN/CLOSE ref/Rainfall_034.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 034
+-1                                                       #NUZF2 STRESS PERIOD 034
+-1                                                       #NUZF3 STRESS PERIOD 034
+-1                                                       #NUZF4 STRESS PERIOD 034
+1                                                        #NUZF1 STRESS PERIOD 035
+OPEN/CLOSE ref/Rainfall_035.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 035
+-1                                                       #NUZF2 STRESS PERIOD 035
+-1                                                       #NUZF3 STRESS PERIOD 035
+-1                                                       #NUZF4 STRESS PERIOD 035
+1                                                        #NUZF1 STRESS PERIOD 036
+OPEN/CLOSE ref/Rainfall_036.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 036
+-1                                                       #NUZF2 STRESS PERIOD 036
+-1                                                       #NUZF3 STRESS PERIOD 036
+-1                                                       #NUZF4 STRESS PERIOD 036
+1                                                        #NUZF1 STRESS PERIOD 037
+OPEN/CLOSE ref/Rainfall_037.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 037
+-1                                                       #NUZF2 STRESS PERIOD 037
+-1                                                       #NUZF3 STRESS PERIOD 037
+-1                                                       #NUZF4 STRESS PERIOD 037
+1                                                        #NUZF1 STRESS PERIOD 038
+OPEN/CLOSE ref/Rainfall_038.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 038
+-1                                                       #NUZF2 STRESS PERIOD 038
+-1                                                       #NUZF3 STRESS PERIOD 038
+-1                                                       #NUZF4 STRESS PERIOD 038
+1                                                        #NUZF1 STRESS PERIOD 039
+OPEN/CLOSE ref/Rainfall_039.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 039
+-1                                                       #NUZF2 STRESS PERIOD 039
+-1                                                       #NUZF3 STRESS PERIOD 039
+-1                                                       #NUZF4 STRESS PERIOD 039
+1                                                        #NUZF1 STRESS PERIOD 040
+OPEN/CLOSE ref/Rainfall_040.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 040
+-1                                                       #NUZF2 STRESS PERIOD 040
+-1                                                       #NUZF3 STRESS PERIOD 040
+-1                                                       #NUZF4 STRESS PERIOD 040
+1                                                        #NUZF1 STRESS PERIOD 041
+OPEN/CLOSE ref/Rainfall_041.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 041
+-1                                                       #NUZF2 STRESS PERIOD 041
+-1                                                       #NUZF3 STRESS PERIOD 041
+-1                                                       #NUZF4 STRESS PERIOD 041
+1                                                        #NUZF1 STRESS PERIOD 042
+OPEN/CLOSE ref/Rainfall_042.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 042
+-1                                                       #NUZF2 STRESS PERIOD 042
+-1                                                       #NUZF3 STRESS PERIOD 042
+-1                                                       #NUZF4 STRESS PERIOD 042
+1                                                        #NUZF1 STRESS PERIOD 043
+OPEN/CLOSE ref/Rainfall_043.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 043
+-1                                                       #NUZF2 STRESS PERIOD 043
+-1                                                       #NUZF3 STRESS PERIOD 043
+-1                                                       #NUZF4 STRESS PERIOD 043
+1                                                        #NUZF1 STRESS PERIOD 044
+OPEN/CLOSE ref/Rainfall_044.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 044
+-1                                                       #NUZF2 STRESS PERIOD 044
+-1                                                       #NUZF3 STRESS PERIOD 044
+-1                                                       #NUZF4 STRESS PERIOD 044
+1                                                        #NUZF1 STRESS PERIOD 045
+OPEN/CLOSE ref/Rainfall_045.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 045
+-1                                                       #NUZF2 STRESS PERIOD 045
+-1                                                       #NUZF3 STRESS PERIOD 045
+-1                                                       #NUZF4 STRESS PERIOD 045
+1                                                        #NUZF1 STRESS PERIOD 046
+OPEN/CLOSE ref/Rainfall_046.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 046
+-1                                                       #NUZF2 STRESS PERIOD 046
+-1                                                       #NUZF3 STRESS PERIOD 046
+-1                                                       #NUZF4 STRESS PERIOD 046
+1                                                        #NUZF1 STRESS PERIOD 047
+OPEN/CLOSE ref/Rainfall_047.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 047
+-1                                                       #NUZF2 STRESS PERIOD 047
+-1                                                       #NUZF3 STRESS PERIOD 047
+-1                                                       #NUZF4 STRESS PERIOD 047
+1                                                        #NUZF1 STRESS PERIOD 048
+OPEN/CLOSE ref/Rainfall_048.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 048
+-1                                                       #NUZF2 STRESS PERIOD 048
+-1                                                       #NUZF3 STRESS PERIOD 048
+-1                                                       #NUZF4 STRESS PERIOD 048
+1                                                        #NUZF1 STRESS PERIOD 049
+OPEN/CLOSE ref/Rainfall_049.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 049
+-1                                                       #NUZF2 STRESS PERIOD 049
+-1                                                       #NUZF3 STRESS PERIOD 049
+-1                                                       #NUZF4 STRESS PERIOD 049
+1                                                        #NUZF1 STRESS PERIOD 050
+OPEN/CLOSE ref/Rainfall_050.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 050
+-1                                                       #NUZF2 STRESS PERIOD 050
+-1                                                       #NUZF3 STRESS PERIOD 050
+-1                                                       #NUZF4 STRESS PERIOD 050
+1                                                        #NUZF1 STRESS PERIOD 051
+OPEN/CLOSE ref/Rainfall_051.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 051
+-1                                                       #NUZF2 STRESS PERIOD 051
+-1                                                       #NUZF3 STRESS PERIOD 051
+-1                                                       #NUZF4 STRESS PERIOD 051
+1                                                        #NUZF1 STRESS PERIOD 052
+OPEN/CLOSE ref/Rainfall_052.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 052
+-1                                                       #NUZF2 STRESS PERIOD 052
+-1                                                       #NUZF3 STRESS PERIOD 052
+-1                                                       #NUZF4 STRESS PERIOD 052
+1                                                        #NUZF1 STRESS PERIOD 053
+OPEN/CLOSE ref/Rainfall_053.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 053
+-1                                                       #NUZF2 STRESS PERIOD 053
+-1                                                       #NUZF3 STRESS PERIOD 053
+-1                                                       #NUZF4 STRESS PERIOD 053
+1                                                        #NUZF1 STRESS PERIOD 054
+OPEN/CLOSE ref/Rainfall_054.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 054
+-1                                                       #NUZF2 STRESS PERIOD 054
+-1                                                       #NUZF3 STRESS PERIOD 054
+-1                                                       #NUZF4 STRESS PERIOD 054
+1                                                        #NUZF1 STRESS PERIOD 055
+OPEN/CLOSE ref/Rainfall_055.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 055
+-1                                                       #NUZF2 STRESS PERIOD 055
+-1                                                       #NUZF3 STRESS PERIOD 055
+-1                                                       #NUZF4 STRESS PERIOD 055
+1                                                        #NUZF1 STRESS PERIOD 056
+OPEN/CLOSE ref/Rainfall_056.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 056
+-1                                                       #NUZF2 STRESS PERIOD 056
+-1                                                       #NUZF3 STRESS PERIOD 056
+-1                                                       #NUZF4 STRESS PERIOD 056
+1                                                        #NUZF1 STRESS PERIOD 057
+OPEN/CLOSE ref/Rainfall_057.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 057
+-1                                                       #NUZF2 STRESS PERIOD 057
+-1                                                       #NUZF3 STRESS PERIOD 057
+-1                                                       #NUZF4 STRESS PERIOD 057
+1                                                        #NUZF1 STRESS PERIOD 058
+OPEN/CLOSE ref/Rainfall_058.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 058
+-1                                                       #NUZF2 STRESS PERIOD 058
+-1                                                       #NUZF3 STRESS PERIOD 058
+-1                                                       #NUZF4 STRESS PERIOD 058
+1                                                        #NUZF1 STRESS PERIOD 059
+OPEN/CLOSE ref/Rainfall_059.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 059
+-1                                                       #NUZF2 STRESS PERIOD 059
+-1                                                       #NUZF3 STRESS PERIOD 059
+-1                                                       #NUZF4 STRESS PERIOD 059
+1                                                        #NUZF1 STRESS PERIOD 060
+OPEN/CLOSE ref/Rainfall_060.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 060
+-1                                                       #NUZF2 STRESS PERIOD 060
+-1                                                       #NUZF3 STRESS PERIOD 060
+-1                                                       #NUZF4 STRESS PERIOD 060
+1                                                        #NUZF1 STRESS PERIOD 061
+OPEN/CLOSE ref/Rainfall_061.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 061
+-1                                                       #NUZF2 STRESS PERIOD 061
+-1                                                       #NUZF3 STRESS PERIOD 061
+-1                                                       #NUZF4 STRESS PERIOD 061
+1                                                        #NUZF1 STRESS PERIOD 062
+OPEN/CLOSE ref/Rainfall_062.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 062
+-1                                                       #NUZF2 STRESS PERIOD 062
+-1                                                       #NUZF3 STRESS PERIOD 062
+-1                                                       #NUZF4 STRESS PERIOD 062
+1                                                        #NUZF1 STRESS PERIOD 063
+OPEN/CLOSE ref/Rainfall_063.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 063
+-1                                                       #NUZF2 STRESS PERIOD 063
+-1                                                       #NUZF3 STRESS PERIOD 063
+-1                                                       #NUZF4 STRESS PERIOD 063
+1                                                        #NUZF1 STRESS PERIOD 064
+OPEN/CLOSE ref/Rainfall_064.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 064
+-1                                                       #NUZF2 STRESS PERIOD 064
+-1                                                       #NUZF3 STRESS PERIOD 064
+-1                                                       #NUZF4 STRESS PERIOD 064
+1                                                        #NUZF1 STRESS PERIOD 065
+OPEN/CLOSE ref/Rainfall_065.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 065
+-1                                                       #NUZF2 STRESS PERIOD 065
+-1                                                       #NUZF3 STRESS PERIOD 065
+-1                                                       #NUZF4 STRESS PERIOD 065
+1                                                        #NUZF1 STRESS PERIOD 066
+OPEN/CLOSE ref/Rainfall_066.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 066
+-1                                                       #NUZF2 STRESS PERIOD 066
+-1                                                       #NUZF3 STRESS PERIOD 066
+-1                                                       #NUZF4 STRESS PERIOD 066
+1                                                        #NUZF1 STRESS PERIOD 067
+OPEN/CLOSE ref/Rainfall_067.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 067
+-1                                                       #NUZF2 STRESS PERIOD 067
+-1                                                       #NUZF3 STRESS PERIOD 067
+-1                                                       #NUZF4 STRESS PERIOD 067
+1                                                        #NUZF1 STRESS PERIOD 068
+OPEN/CLOSE ref/Rainfall_068.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 068
+-1                                                       #NUZF2 STRESS PERIOD 068
+-1                                                       #NUZF3 STRESS PERIOD 068
+-1                                                       #NUZF4 STRESS PERIOD 068
+1                                                        #NUZF1 STRESS PERIOD 069
+OPEN/CLOSE ref/Rainfall_069.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 069
+-1                                                       #NUZF2 STRESS PERIOD 069
+-1                                                       #NUZF3 STRESS PERIOD 069
+-1                                                       #NUZF4 STRESS PERIOD 069
+1                                                        #NUZF1 STRESS PERIOD 070
+OPEN/CLOSE ref/Rainfall_070.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 070
+-1                                                       #NUZF2 STRESS PERIOD 070
+-1                                                       #NUZF3 STRESS PERIOD 070
+-1                                                       #NUZF4 STRESS PERIOD 070
+1                                                        #NUZF1 STRESS PERIOD 071
+OPEN/CLOSE ref/Rainfall_071.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 071
+-1                                                       #NUZF2 STRESS PERIOD 071
+-1                                                       #NUZF3 STRESS PERIOD 071
+-1                                                       #NUZF4 STRESS PERIOD 071
+1                                                        #NUZF1 STRESS PERIOD 072
+OPEN/CLOSE ref/Rainfall_072.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 072
+-1                                                       #NUZF2 STRESS PERIOD 072
+-1                                                       #NUZF3 STRESS PERIOD 072
+-1                                                       #NUZF4 STRESS PERIOD 072
+1                                                        #NUZF1 STRESS PERIOD 073
+OPEN/CLOSE ref/Rainfall_073.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 073
+-1                                                       #NUZF2 STRESS PERIOD 073
+-1                                                       #NUZF3 STRESS PERIOD 073
+-1                                                       #NUZF4 STRESS PERIOD 073
+1                                                        #NUZF1 STRESS PERIOD 074
+OPEN/CLOSE ref/Rainfall_074.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 074
+-1                                                       #NUZF2 STRESS PERIOD 074
+-1                                                       #NUZF3 STRESS PERIOD 074
+-1                                                       #NUZF4 STRESS PERIOD 074
+1                                                        #NUZF1 STRESS PERIOD 075
+OPEN/CLOSE ref/Rainfall_075.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 075
+-1                                                       #NUZF2 STRESS PERIOD 075
+-1                                                       #NUZF3 STRESS PERIOD 075
+-1                                                       #NUZF4 STRESS PERIOD 075
+1                                                        #NUZF1 STRESS PERIOD 076
+OPEN/CLOSE ref/Rainfall_076.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 076
+-1                                                       #NUZF2 STRESS PERIOD 076
+-1                                                       #NUZF3 STRESS PERIOD 076
+-1                                                       #NUZF4 STRESS PERIOD 076
+1                                                        #NUZF1 STRESS PERIOD 077
+OPEN/CLOSE ref/Rainfall_077.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 077
+-1                                                       #NUZF2 STRESS PERIOD 077
+-1                                                       #NUZF3 STRESS PERIOD 077
+-1                                                       #NUZF4 STRESS PERIOD 077
+1                                                        #NUZF1 STRESS PERIOD 078
+OPEN/CLOSE ref/Rainfall_078.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 078
+-1                                                       #NUZF2 STRESS PERIOD 078
+-1                                                       #NUZF3 STRESS PERIOD 078
+-1                                                       #NUZF4 STRESS PERIOD 078
+1                                                        #NUZF1 STRESS PERIOD 079
+OPEN/CLOSE ref/Rainfall_079.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 079
+-1                                                       #NUZF2 STRESS PERIOD 079
+-1                                                       #NUZF3 STRESS PERIOD 079
+-1                                                       #NUZF4 STRESS PERIOD 079
+1                                                        #NUZF1 STRESS PERIOD 080
+OPEN/CLOSE ref/Rainfall_080.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 080
+-1                                                       #NUZF2 STRESS PERIOD 080
+-1                                                       #NUZF3 STRESS PERIOD 080
+-1                                                       #NUZF4 STRESS PERIOD 080
+1                                                        #NUZF1 STRESS PERIOD 081
+OPEN/CLOSE ref/Rainfall_081.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 081
+-1                                                       #NUZF2 STRESS PERIOD 081
+-1                                                       #NUZF3 STRESS PERIOD 081
+-1                                                       #NUZF4 STRESS PERIOD 081
+1                                                        #NUZF1 STRESS PERIOD 082
+OPEN/CLOSE ref/Rainfall_082.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 082
+-1                                                       #NUZF2 STRESS PERIOD 082
+-1                                                       #NUZF3 STRESS PERIOD 082
+-1                                                       #NUZF4 STRESS PERIOD 082
+1                                                        #NUZF1 STRESS PERIOD 083
+OPEN/CLOSE ref/Rainfall_083.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 083
+-1                                                       #NUZF2 STRESS PERIOD 083
+-1                                                       #NUZF3 STRESS PERIOD 083
+-1                                                       #NUZF4 STRESS PERIOD 083
+1                                                        #NUZF1 STRESS PERIOD 084
+OPEN/CLOSE ref/Rainfall_084.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 084
+-1                                                       #NUZF2 STRESS PERIOD 084
+-1                                                       #NUZF3 STRESS PERIOD 084
+-1                                                       #NUZF4 STRESS PERIOD 084
+1                                                        #NUZF1 STRESS PERIOD 085
+OPEN/CLOSE ref/Rainfall_085.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 085
+-1                                                       #NUZF2 STRESS PERIOD 085
+-1                                                       #NUZF3 STRESS PERIOD 085
+-1                                                       #NUZF4 STRESS PERIOD 085
+1                                                        #NUZF1 STRESS PERIOD 086
+OPEN/CLOSE ref/Rainfall_086.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 086
+-1                                                       #NUZF2 STRESS PERIOD 086
+-1                                                       #NUZF3 STRESS PERIOD 086
+-1                                                       #NUZF4 STRESS PERIOD 086
+1                                                        #NUZF1 STRESS PERIOD 087
+OPEN/CLOSE ref/Rainfall_087.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 087
+-1                                                       #NUZF2 STRESS PERIOD 087
+-1                                                       #NUZF3 STRESS PERIOD 087
+-1                                                       #NUZF4 STRESS PERIOD 087
+1                                                        #NUZF1 STRESS PERIOD 088
+OPEN/CLOSE ref/Rainfall_088.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 088
+-1                                                       #NUZF2 STRESS PERIOD 088
+-1                                                       #NUZF3 STRESS PERIOD 088
+-1                                                       #NUZF4 STRESS PERIOD 088
+1                                                        #NUZF1 STRESS PERIOD 089
+OPEN/CLOSE ref/Rainfall_089.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 089
+-1                                                       #NUZF2 STRESS PERIOD 089
+-1                                                       #NUZF3 STRESS PERIOD 089
+-1                                                       #NUZF4 STRESS PERIOD 089
+1                                                        #NUZF1 STRESS PERIOD 090
+OPEN/CLOSE ref/Rainfall_090.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 090
+-1                                                       #NUZF2 STRESS PERIOD 090
+-1                                                       #NUZF3 STRESS PERIOD 090
+-1                                                       #NUZF4 STRESS PERIOD 090
+1                                                        #NUZF1 STRESS PERIOD 091
+OPEN/CLOSE ref/Rainfall_091.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 091
+-1                                                       #NUZF2 STRESS PERIOD 091
+-1                                                       #NUZF3 STRESS PERIOD 091
+-1                                                       #NUZF4 STRESS PERIOD 091
+1                                                        #NUZF1 STRESS PERIOD 092
+OPEN/CLOSE ref/Rainfall_092.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 092
+-1                                                       #NUZF2 STRESS PERIOD 092
+-1                                                       #NUZF3 STRESS PERIOD 092
+-1                                                       #NUZF4 STRESS PERIOD 092
+1                                                        #NUZF1 STRESS PERIOD 093
+OPEN/CLOSE ref/Rainfall_093.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 093
+-1                                                       #NUZF2 STRESS PERIOD 093
+-1                                                       #NUZF3 STRESS PERIOD 093
+-1                                                       #NUZF4 STRESS PERIOD 093
+1                                                        #NUZF1 STRESS PERIOD 094
+OPEN/CLOSE ref/Rainfall_094.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 094
+-1                                                       #NUZF2 STRESS PERIOD 094
+-1                                                       #NUZF3 STRESS PERIOD 094
+-1                                                       #NUZF4 STRESS PERIOD 094
+1                                                        #NUZF1 STRESS PERIOD 095
+OPEN/CLOSE ref/Rainfall_095.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 095
+-1                                                       #NUZF2 STRESS PERIOD 095
+-1                                                       #NUZF3 STRESS PERIOD 095
+-1                                                       #NUZF4 STRESS PERIOD 095
+1                                                        #NUZF1 STRESS PERIOD 096
+OPEN/CLOSE ref/Rainfall_096.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 096
+-1                                                       #NUZF2 STRESS PERIOD 096
+-1                                                       #NUZF3 STRESS PERIOD 096
+-1                                                       #NUZF4 STRESS PERIOD 096
+1                                                        #NUZF1 STRESS PERIOD 097
+OPEN/CLOSE ref/Rainfall_097.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 097
+-1                                                       #NUZF2 STRESS PERIOD 097
+-1                                                       #NUZF3 STRESS PERIOD 097
+-1                                                       #NUZF4 STRESS PERIOD 097
+1                                                        #NUZF1 STRESS PERIOD 098
+OPEN/CLOSE ref/Rainfall_098.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 098
+-1                                                       #NUZF2 STRESS PERIOD 098
+-1                                                       #NUZF3 STRESS PERIOD 098
+-1                                                       #NUZF4 STRESS PERIOD 098
+1                                                        #NUZF1 STRESS PERIOD 099
+OPEN/CLOSE ref/Rainfall_099.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 099
+-1                                                       #NUZF2 STRESS PERIOD 099
+-1                                                       #NUZF3 STRESS PERIOD 099
+-1                                                       #NUZF4 STRESS PERIOD 099
+1                                                        #NUZF1 STRESS PERIOD 100
+OPEN/CLOSE ref/Rainfall_100.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 100
+-1                                                       #NUZF2 STRESS PERIOD 100
+-1                                                       #NUZF3 STRESS PERIOD 100
+-1                                                       #NUZF4 STRESS PERIOD 100
+1                                                        #NUZF1 STRESS PERIOD 101
+OPEN/CLOSE ref/Rainfall_101.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 101
+-1                                                       #NUZF2 STRESS PERIOD 101
+-1                                                       #NUZF3 STRESS PERIOD 101
+-1                                                       #NUZF4 STRESS PERIOD 101
+1                                                        #NUZF1 STRESS PERIOD 102
+OPEN/CLOSE ref/Rainfall_102.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 102
+-1                                                       #NUZF2 STRESS PERIOD 102
+-1                                                       #NUZF3 STRESS PERIOD 102
+-1                                                       #NUZF4 STRESS PERIOD 102
+1                                                        #NUZF1 STRESS PERIOD 103
+OPEN/CLOSE ref/Rainfall_103.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 103
+-1                                                       #NUZF2 STRESS PERIOD 103
+-1                                                       #NUZF3 STRESS PERIOD 103
+-1                                                       #NUZF4 STRESS PERIOD 103
+1                                                        #NUZF1 STRESS PERIOD 104
+OPEN/CLOSE ref/Rainfall_104.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 104
+-1                                                       #NUZF2 STRESS PERIOD 104
+-1                                                       #NUZF3 STRESS PERIOD 104
+-1                                                       #NUZF4 STRESS PERIOD 104
+1                                                        #NUZF1 STRESS PERIOD 105
+OPEN/CLOSE ref/Rainfall_105.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 105
+-1                                                       #NUZF2 STRESS PERIOD 105
+-1                                                       #NUZF3 STRESS PERIOD 105
+-1                                                       #NUZF4 STRESS PERIOD 105
+1                                                        #NUZF1 STRESS PERIOD 106
+OPEN/CLOSE ref/Rainfall_106.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 106
+-1                                                       #NUZF2 STRESS PERIOD 106
+-1                                                       #NUZF3 STRESS PERIOD 106
+-1                                                       #NUZF4 STRESS PERIOD 106
+1                                                        #NUZF1 STRESS PERIOD 107
+OPEN/CLOSE ref/Rainfall_107.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 107
+-1                                                       #NUZF2 STRESS PERIOD 107
+-1                                                       #NUZF3 STRESS PERIOD 107
+-1                                                       #NUZF4 STRESS PERIOD 107
+1                                                        #NUZF1 STRESS PERIOD 108
+OPEN/CLOSE ref/Rainfall_108.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 108
+-1                                                       #NUZF2 STRESS PERIOD 108
+-1                                                       #NUZF3 STRESS PERIOD 108
+-1                                                       #NUZF4 STRESS PERIOD 108
+1                                                        #NUZF1 STRESS PERIOD 109
+OPEN/CLOSE ref/Rainfall_109.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 109
+-1                                                       #NUZF2 STRESS PERIOD 109
+-1                                                       #NUZF3 STRESS PERIOD 109
+-1                                                       #NUZF4 STRESS PERIOD 109
+1                                                        #NUZF1 STRESS PERIOD 110
+OPEN/CLOSE ref/Rainfall_110.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 110
+-1                                                       #NUZF2 STRESS PERIOD 110
+-1                                                       #NUZF3 STRESS PERIOD 110
+-1                                                       #NUZF4 STRESS PERIOD 110
+1                                                        #NUZF1 STRESS PERIOD 111
+OPEN/CLOSE ref/Rainfall_111.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 111
+-1                                                       #NUZF2 STRESS PERIOD 111
+-1                                                       #NUZF3 STRESS PERIOD 111
+-1                                                       #NUZF4 STRESS PERIOD 111
+1                                                        #NUZF1 STRESS PERIOD 112
+OPEN/CLOSE ref/Rainfall_112.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 112
+-1                                                       #NUZF2 STRESS PERIOD 112
+-1                                                       #NUZF3 STRESS PERIOD 112
+-1                                                       #NUZF4 STRESS PERIOD 112
+1                                                        #NUZF1 STRESS PERIOD 113
+OPEN/CLOSE ref/Rainfall_113.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 113
+-1                                                       #NUZF2 STRESS PERIOD 113
+-1                                                       #NUZF3 STRESS PERIOD 113
+-1                                                       #NUZF4 STRESS PERIOD 113
+1                                                        #NUZF1 STRESS PERIOD 114
+OPEN/CLOSE ref/Rainfall_114.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 114
+-1                                                       #NUZF2 STRESS PERIOD 114
+-1                                                       #NUZF3 STRESS PERIOD 114
+-1                                                       #NUZF4 STRESS PERIOD 114
+1                                                        #NUZF1 STRESS PERIOD 115
+OPEN/CLOSE ref/Rainfall_115.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 115
+-1                                                       #NUZF2 STRESS PERIOD 115
+-1                                                       #NUZF3 STRESS PERIOD 115
+-1                                                       #NUZF4 STRESS PERIOD 115
+1                                                        #NUZF1 STRESS PERIOD 116
+OPEN/CLOSE ref/Rainfall_116.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 116
+-1                                                       #NUZF2 STRESS PERIOD 116
+-1                                                       #NUZF3 STRESS PERIOD 116
+-1                                                       #NUZF4 STRESS PERIOD 116
+1                                                        #NUZF1 STRESS PERIOD 117
+OPEN/CLOSE ref/Rainfall_117.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 117
+-1                                                       #NUZF2 STRESS PERIOD 117
+-1                                                       #NUZF3 STRESS PERIOD 117
+-1                                                       #NUZF4 STRESS PERIOD 117
+1                                                        #NUZF1 STRESS PERIOD 118
+OPEN/CLOSE ref/Rainfall_118.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 118
+-1                                                       #NUZF2 STRESS PERIOD 118
+-1                                                       #NUZF3 STRESS PERIOD 118
+-1                                                       #NUZF4 STRESS PERIOD 118
+1                                                        #NUZF1 STRESS PERIOD 119
+OPEN/CLOSE ref/Rainfall_119.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 119
+-1                                                       #NUZF2 STRESS PERIOD 119
+-1                                                       #NUZF3 STRESS PERIOD 119
+-1                                                       #NUZF4 STRESS PERIOD 119
+1                                                        #NUZF1 STRESS PERIOD 120
+OPEN/CLOSE ref/Rainfall_120.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 120
+-1                                                       #NUZF2 STRESS PERIOD 120
+-1                                                       #NUZF3 STRESS PERIOD 120
+-1                                                       #NUZF4 STRESS PERIOD 120
+1                                                        #NUZF1 STRESS PERIOD 121
+OPEN/CLOSE ref/Rainfall_121.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 121
+-1                                                       #NUZF2 STRESS PERIOD 121
+-1                                                       #NUZF3 STRESS PERIOD 121
+-1                                                       #NUZF4 STRESS PERIOD 121
+1                                                        #NUZF1 STRESS PERIOD 122
+OPEN/CLOSE ref/Rainfall_122.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 122
+-1                                                       #NUZF2 STRESS PERIOD 122
+-1                                                       #NUZF3 STRESS PERIOD 122
+-1                                                       #NUZF4 STRESS PERIOD 122
+1                                                        #NUZF1 STRESS PERIOD 123
+OPEN/CLOSE ref/Rainfall_123.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 123
+-1                                                       #NUZF2 STRESS PERIOD 123
+-1                                                       #NUZF3 STRESS PERIOD 123
+-1                                                       #NUZF4 STRESS PERIOD 123
+1                                                        #NUZF1 STRESS PERIOD 124
+OPEN/CLOSE ref/Rainfall_124.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 124
+-1                                                       #NUZF2 STRESS PERIOD 124
+-1                                                       #NUZF3 STRESS PERIOD 124
+-1                                                       #NUZF4 STRESS PERIOD 124
+1                                                        #NUZF1 STRESS PERIOD 125
+OPEN/CLOSE ref/Rainfall_125.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 125
+-1                                                       #NUZF2 STRESS PERIOD 125
+-1                                                       #NUZF3 STRESS PERIOD 125
+-1                                                       #NUZF4 STRESS PERIOD 125
+1                                                        #NUZF1 STRESS PERIOD 126
+OPEN/CLOSE ref/Rainfall_126.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 126
+-1                                                       #NUZF2 STRESS PERIOD 126
+-1                                                       #NUZF3 STRESS PERIOD 126
+-1                                                       #NUZF4 STRESS PERIOD 126
+1                                                        #NUZF1 STRESS PERIOD 127
+OPEN/CLOSE ref/Rainfall_127.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 127
+-1                                                       #NUZF2 STRESS PERIOD 127
+-1                                                       #NUZF3 STRESS PERIOD 127
+-1                                                       #NUZF4 STRESS PERIOD 127
+1                                                        #NUZF1 STRESS PERIOD 128
+OPEN/CLOSE ref/Rainfall_128.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 128
+-1                                                       #NUZF2 STRESS PERIOD 128
+-1                                                       #NUZF3 STRESS PERIOD 128
+-1                                                       #NUZF4 STRESS PERIOD 128
+1                                                        #NUZF1 STRESS PERIOD 129
+OPEN/CLOSE ref/Rainfall_129.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 129
+-1                                                       #NUZF2 STRESS PERIOD 129
+-1                                                       #NUZF3 STRESS PERIOD 129
+-1                                                       #NUZF4 STRESS PERIOD 129
+1                                                        #NUZF1 STRESS PERIOD 130
+OPEN/CLOSE ref/Rainfall_130.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 130
+-1                                                       #NUZF2 STRESS PERIOD 130
+-1                                                       #NUZF3 STRESS PERIOD 130
+-1                                                       #NUZF4 STRESS PERIOD 130
+1                                                        #NUZF1 STRESS PERIOD 131
+OPEN/CLOSE ref/Rainfall_131.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 131
+-1                                                       #NUZF2 STRESS PERIOD 131
+-1                                                       #NUZF3 STRESS PERIOD 131
+-1                                                       #NUZF4 STRESS PERIOD 131
+1                                                        #NUZF1 STRESS PERIOD 132
+OPEN/CLOSE ref/Rainfall_132.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 132
+-1                                                       #NUZF2 STRESS PERIOD 132
+-1                                                       #NUZF3 STRESS PERIOD 132
+-1                                                       #NUZF4 STRESS PERIOD 132
+1                                                        #NUZF1 STRESS PERIOD 133
+OPEN/CLOSE ref/Rainfall_133.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 133
+-1                                                       #NUZF2 STRESS PERIOD 133
+-1                                                       #NUZF3 STRESS PERIOD 133
+-1                                                       #NUZF4 STRESS PERIOD 133
+1                                                        #NUZF1 STRESS PERIOD 134
+OPEN/CLOSE ref/Rainfall_134.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 134
+-1                                                       #NUZF2 STRESS PERIOD 134
+-1                                                       #NUZF3 STRESS PERIOD 134
+-1                                                       #NUZF4 STRESS PERIOD 134
+1                                                        #NUZF1 STRESS PERIOD 135
+OPEN/CLOSE ref/Rainfall_135.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 135
+-1                                                       #NUZF2 STRESS PERIOD 135
+-1                                                       #NUZF3 STRESS PERIOD 135
+-1                                                       #NUZF4 STRESS PERIOD 135
+1                                                        #NUZF1 STRESS PERIOD 136
+OPEN/CLOSE ref/Rainfall_136.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 136
+-1                                                       #NUZF2 STRESS PERIOD 136
+-1                                                       #NUZF3 STRESS PERIOD 136
+-1                                                       #NUZF4 STRESS PERIOD 136
+1                                                        #NUZF1 STRESS PERIOD 137
+OPEN/CLOSE ref/Rainfall_137.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 137
+-1                                                       #NUZF2 STRESS PERIOD 137
+-1                                                       #NUZF3 STRESS PERIOD 137
+-1                                                       #NUZF4 STRESS PERIOD 137
+1                                                        #NUZF1 STRESS PERIOD 138
+OPEN/CLOSE ref/Rainfall_138.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 138
+-1                                                       #NUZF2 STRESS PERIOD 138
+-1                                                       #NUZF3 STRESS PERIOD 138
+-1                                                       #NUZF4 STRESS PERIOD 138
+1                                                        #NUZF1 STRESS PERIOD 139
+OPEN/CLOSE ref/Rainfall_139.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 139
+-1                                                       #NUZF2 STRESS PERIOD 139
+-1                                                       #NUZF3 STRESS PERIOD 139
+-1                                                       #NUZF4 STRESS PERIOD 139
+1                                                        #NUZF1 STRESS PERIOD 140
+OPEN/CLOSE ref/Rainfall_140.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 140
+-1                                                       #NUZF2 STRESS PERIOD 140
+-1                                                       #NUZF3 STRESS PERIOD 140
+-1                                                       #NUZF4 STRESS PERIOD 140
+1                                                        #NUZF1 STRESS PERIOD 141
+OPEN/CLOSE ref/Rainfall_141.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 141
+-1                                                       #NUZF2 STRESS PERIOD 141
+-1                                                       #NUZF3 STRESS PERIOD 141
+-1                                                       #NUZF4 STRESS PERIOD 141
+1                                                        #NUZF1 STRESS PERIOD 142
+OPEN/CLOSE ref/Rainfall_142.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 142
+-1                                                       #NUZF2 STRESS PERIOD 142
+-1                                                       #NUZF3 STRESS PERIOD 142
+-1                                                       #NUZF4 STRESS PERIOD 142
+1                                                        #NUZF1 STRESS PERIOD 143
+OPEN/CLOSE ref/Rainfall_143.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 143
+-1                                                       #NUZF2 STRESS PERIOD 143
+-1                                                       #NUZF3 STRESS PERIOD 143
+-1                                                       #NUZF4 STRESS PERIOD 143
+1                                                        #NUZF1 STRESS PERIOD 144
+OPEN/CLOSE ref/Rainfall_144.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 144
+-1                                                       #NUZF2 STRESS PERIOD 144
+-1                                                       #NUZF3 STRESS PERIOD 144
+-1                                                       #NUZF4 STRESS PERIOD 144
+1                                                        #NUZF1 STRESS PERIOD 145
+OPEN/CLOSE ref/Rainfall_145.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 145
+-1                                                       #NUZF2 STRESS PERIOD 145
+-1                                                       #NUZF3 STRESS PERIOD 145
+-1                                                       #NUZF4 STRESS PERIOD 145
+1                                                        #NUZF1 STRESS PERIOD 146
+OPEN/CLOSE ref/Rainfall_146.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 146
+-1                                                       #NUZF2 STRESS PERIOD 146
+-1                                                       #NUZF3 STRESS PERIOD 146
+-1                                                       #NUZF4 STRESS PERIOD 146
+1                                                        #NUZF1 STRESS PERIOD 147
+OPEN/CLOSE ref/Rainfall_147.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 147
+-1                                                       #NUZF2 STRESS PERIOD 147
+-1                                                       #NUZF3 STRESS PERIOD 147
+-1                                                       #NUZF4 STRESS PERIOD 147
+1                                                        #NUZF1 STRESS PERIOD 148
+OPEN/CLOSE ref/Rainfall_148.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 148
+-1                                                       #NUZF2 STRESS PERIOD 148
+-1                                                       #NUZF3 STRESS PERIOD 148
+-1                                                       #NUZF4 STRESS PERIOD 148
+1                                                        #NUZF1 STRESS PERIOD 149
+OPEN/CLOSE ref/Rainfall_149.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 149
+-1                                                       #NUZF2 STRESS PERIOD 149
+-1                                                       #NUZF3 STRESS PERIOD 149
+-1                                                       #NUZF4 STRESS PERIOD 149
+1                                                        #NUZF1 STRESS PERIOD 150
+OPEN/CLOSE ref/Rainfall_150.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 150
+-1                                                       #NUZF2 STRESS PERIOD 150
+-1                                                       #NUZF3 STRESS PERIOD 150
+-1                                                       #NUZF4 STRESS PERIOD 150
+1                                                        #NUZF1 STRESS PERIOD 151
+OPEN/CLOSE ref/Rainfall_151.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 151
+-1                                                       #NUZF2 STRESS PERIOD 151
+-1                                                       #NUZF3 STRESS PERIOD 151
+-1                                                       #NUZF4 STRESS PERIOD 151
+1                                                        #NUZF1 STRESS PERIOD 152
+OPEN/CLOSE ref/Rainfall_152.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 152
+-1                                                       #NUZF2 STRESS PERIOD 152
+-1                                                       #NUZF3 STRESS PERIOD 152
+-1                                                       #NUZF4 STRESS PERIOD 152
+1                                                        #NUZF1 STRESS PERIOD 153
+OPEN/CLOSE ref/Rainfall_153.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 153
+-1                                                       #NUZF2 STRESS PERIOD 153
+-1                                                       #NUZF3 STRESS PERIOD 153
+-1                                                       #NUZF4 STRESS PERIOD 153
+1                                                        #NUZF1 STRESS PERIOD 154
+OPEN/CLOSE ref/Rainfall_154.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 154
+-1                                                       #NUZF2 STRESS PERIOD 154
+-1                                                       #NUZF3 STRESS PERIOD 154
+-1                                                       #NUZF4 STRESS PERIOD 154
+1                                                        #NUZF1 STRESS PERIOD 155
+OPEN/CLOSE ref/Rainfall_155.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 155
+-1                                                       #NUZF2 STRESS PERIOD 155
+-1                                                       #NUZF3 STRESS PERIOD 155
+-1                                                       #NUZF4 STRESS PERIOD 155
+1                                                        #NUZF1 STRESS PERIOD 156
+OPEN/CLOSE ref/Rainfall_156.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 156
+-1                                                       #NUZF2 STRESS PERIOD 156
+-1                                                       #NUZF3 STRESS PERIOD 156
+-1                                                       #NUZF4 STRESS PERIOD 156
+1                                                        #NUZF1 STRESS PERIOD 157
+OPEN/CLOSE ref/Rainfall_157.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 157
+-1                                                       #NUZF2 STRESS PERIOD 157
+-1                                                       #NUZF3 STRESS PERIOD 157
+-1                                                       #NUZF4 STRESS PERIOD 157
+1                                                        #NUZF1 STRESS PERIOD 158
+OPEN/CLOSE ref/Rainfall_158.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 158
+-1                                                       #NUZF2 STRESS PERIOD 158
+-1                                                       #NUZF3 STRESS PERIOD 158
+-1                                                       #NUZF4 STRESS PERIOD 158
+1                                                        #NUZF1 STRESS PERIOD 159
+OPEN/CLOSE ref/Rainfall_159.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 159
+-1                                                       #NUZF2 STRESS PERIOD 159
+-1                                                       #NUZF3 STRESS PERIOD 159
+-1                                                       #NUZF4 STRESS PERIOD 159
+1                                                        #NUZF1 STRESS PERIOD 160
+OPEN/CLOSE ref/Rainfall_160.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 160
+-1                                                       #NUZF2 STRESS PERIOD 160
+-1                                                       #NUZF3 STRESS PERIOD 160
+-1                                                       #NUZF4 STRESS PERIOD 160
+1                                                        #NUZF1 STRESS PERIOD 161
+OPEN/CLOSE ref/Rainfall_161.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 161
+-1                                                       #NUZF2 STRESS PERIOD 161
+-1                                                       #NUZF3 STRESS PERIOD 161
+-1                                                       #NUZF4 STRESS PERIOD 161
+1                                                        #NUZF1 STRESS PERIOD 162
+OPEN/CLOSE ref/Rainfall_162.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 162
+-1                                                       #NUZF2 STRESS PERIOD 162
+-1                                                       #NUZF3 STRESS PERIOD 162
+-1                                                       #NUZF4 STRESS PERIOD 162
+1                                                        #NUZF1 STRESS PERIOD 163
+OPEN/CLOSE ref/Rainfall_163.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 163
+-1                                                       #NUZF2 STRESS PERIOD 163
+-1                                                       #NUZF3 STRESS PERIOD 163
+-1                                                       #NUZF4 STRESS PERIOD 163
+1                                                        #NUZF1 STRESS PERIOD 164
+OPEN/CLOSE ref/Rainfall_164.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 164
+-1                                                       #NUZF2 STRESS PERIOD 164
+-1                                                       #NUZF3 STRESS PERIOD 164
+-1                                                       #NUZF4 STRESS PERIOD 164
+1                                                        #NUZF1 STRESS PERIOD 165
+OPEN/CLOSE ref/Rainfall_165.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 165
+-1                                                       #NUZF2 STRESS PERIOD 165
+-1                                                       #NUZF3 STRESS PERIOD 165
+-1                                                       #NUZF4 STRESS PERIOD 165
+1                                                        #NUZF1 STRESS PERIOD 166
+OPEN/CLOSE ref/Rainfall_166.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 166
+-1                                                       #NUZF2 STRESS PERIOD 166
+-1                                                       #NUZF3 STRESS PERIOD 166
+-1                                                       #NUZF4 STRESS PERIOD 166
+1                                                        #NUZF1 STRESS PERIOD 167
+OPEN/CLOSE ref/Rainfall_167.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 167
+-1                                                       #NUZF2 STRESS PERIOD 167
+-1                                                       #NUZF3 STRESS PERIOD 167
+-1                                                       #NUZF4 STRESS PERIOD 167
+1                                                        #NUZF1 STRESS PERIOD 168
+OPEN/CLOSE ref/Rainfall_168.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 168
+-1                                                       #NUZF2 STRESS PERIOD 168
+-1                                                       #NUZF3 STRESS PERIOD 168
+-1                                                       #NUZF4 STRESS PERIOD 168
+1                                                        #NUZF1 STRESS PERIOD 169
+OPEN/CLOSE ref/Rainfall_169.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 169
+-1                                                       #NUZF2 STRESS PERIOD 169
+-1                                                       #NUZF3 STRESS PERIOD 169
+-1                                                       #NUZF4 STRESS PERIOD 169
+1                                                        #NUZF1 STRESS PERIOD 170
+OPEN/CLOSE ref/Rainfall_170.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 170
+-1                                                       #NUZF2 STRESS PERIOD 170
+-1                                                       #NUZF3 STRESS PERIOD 170
+-1                                                       #NUZF4 STRESS PERIOD 170
+1                                                        #NUZF1 STRESS PERIOD 171
+OPEN/CLOSE ref/Rainfall_171.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 171
+-1                                                       #NUZF2 STRESS PERIOD 171
+-1                                                       #NUZF3 STRESS PERIOD 171
+-1                                                       #NUZF4 STRESS PERIOD 171
+1                                                        #NUZF1 STRESS PERIOD 172
+OPEN/CLOSE ref/Rainfall_172.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 172
+-1                                                       #NUZF2 STRESS PERIOD 172
+-1                                                       #NUZF3 STRESS PERIOD 172
+-1                                                       #NUZF4 STRESS PERIOD 172
+1                                                        #NUZF1 STRESS PERIOD 173
+OPEN/CLOSE ref/Rainfall_173.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 173
+-1                                                       #NUZF2 STRESS PERIOD 173
+-1                                                       #NUZF3 STRESS PERIOD 173
+-1                                                       #NUZF4 STRESS PERIOD 173
+1                                                        #NUZF1 STRESS PERIOD 174
+OPEN/CLOSE ref/Rainfall_174.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 174
+-1                                                       #NUZF2 STRESS PERIOD 174
+-1                                                       #NUZF3 STRESS PERIOD 174
+-1                                                       #NUZF4 STRESS PERIOD 174
+1                                                        #NUZF1 STRESS PERIOD 175
+OPEN/CLOSE ref/Rainfall_175.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 175
+-1                                                       #NUZF2 STRESS PERIOD 175
+-1                                                       #NUZF3 STRESS PERIOD 175
+-1                                                       #NUZF4 STRESS PERIOD 175
+1                                                        #NUZF1 STRESS PERIOD 176
+OPEN/CLOSE ref/Rainfall_176.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 176
+-1                                                       #NUZF2 STRESS PERIOD 176
+-1                                                       #NUZF3 STRESS PERIOD 176
+-1                                                       #NUZF4 STRESS PERIOD 176
+1                                                        #NUZF1 STRESS PERIOD 177
+OPEN/CLOSE ref/Rainfall_177.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 177
+-1                                                       #NUZF2 STRESS PERIOD 177
+-1                                                       #NUZF3 STRESS PERIOD 177
+-1                                                       #NUZF4 STRESS PERIOD 177
+1                                                        #NUZF1 STRESS PERIOD 178
+OPEN/CLOSE ref/Rainfall_178.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 178
+-1                                                       #NUZF2 STRESS PERIOD 178
+-1                                                       #NUZF3 STRESS PERIOD 178
+-1                                                       #NUZF4 STRESS PERIOD 178
+1                                                        #NUZF1 STRESS PERIOD 179
+OPEN/CLOSE ref/Rainfall_179.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 179
+-1                                                       #NUZF2 STRESS PERIOD 179
+-1                                                       #NUZF3 STRESS PERIOD 179
+-1                                                       #NUZF4 STRESS PERIOD 179
+1                                                        #NUZF1 STRESS PERIOD 180
+OPEN/CLOSE ref/Rainfall_180.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 180
+-1                                                       #NUZF2 STRESS PERIOD 180
+-1                                                       #NUZF3 STRESS PERIOD 180
+-1                                                       #NUZF4 STRESS PERIOD 180
+1                                                        #NUZF1 STRESS PERIOD 181
+OPEN/CLOSE ref/Rainfall_181.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 181
+-1                                                       #NUZF2 STRESS PERIOD 181
+-1                                                       #NUZF3 STRESS PERIOD 181
+-1                                                       #NUZF4 STRESS PERIOD 181
+1                                                        #NUZF1 STRESS PERIOD 182
+OPEN/CLOSE ref/Rainfall_182.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 182
+-1                                                       #NUZF2 STRESS PERIOD 182
+-1                                                       #NUZF3 STRESS PERIOD 182
+-1                                                       #NUZF4 STRESS PERIOD 182
+1                                                        #NUZF1 STRESS PERIOD 183
+OPEN/CLOSE ref/Rainfall_183.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 183
+-1                                                       #NUZF2 STRESS PERIOD 183
+-1                                                       #NUZF3 STRESS PERIOD 183
+-1                                                       #NUZF4 STRESS PERIOD 183
+1                                                        #NUZF1 STRESS PERIOD 184
+OPEN/CLOSE ref/Rainfall_184.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 184
+-1                                                       #NUZF2 STRESS PERIOD 184
+-1                                                       #NUZF3 STRESS PERIOD 184
+-1                                                       #NUZF4 STRESS PERIOD 184
+1                                                        #NUZF1 STRESS PERIOD 185
+OPEN/CLOSE ref/Rainfall_185.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 185
+-1                                                       #NUZF2 STRESS PERIOD 185
+-1                                                       #NUZF3 STRESS PERIOD 185
+-1                                                       #NUZF4 STRESS PERIOD 185
+1                                                        #NUZF1 STRESS PERIOD 186
+OPEN/CLOSE ref/Rainfall_186.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 186
+-1                                                       #NUZF2 STRESS PERIOD 186
+-1                                                       #NUZF3 STRESS PERIOD 186
+-1                                                       #NUZF4 STRESS PERIOD 186
+1                                                        #NUZF1 STRESS PERIOD 187
+OPEN/CLOSE ref/Rainfall_187.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 187
+-1                                                       #NUZF2 STRESS PERIOD 187
+-1                                                       #NUZF3 STRESS PERIOD 187
+-1                                                       #NUZF4 STRESS PERIOD 187
+1                                                        #NUZF1 STRESS PERIOD 188
+OPEN/CLOSE ref/Rainfall_188.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 188
+-1                                                       #NUZF2 STRESS PERIOD 188
+-1                                                       #NUZF3 STRESS PERIOD 188
+-1                                                       #NUZF4 STRESS PERIOD 188
+1                                                        #NUZF1 STRESS PERIOD 189
+OPEN/CLOSE ref/Rainfall_189.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 189
+-1                                                       #NUZF2 STRESS PERIOD 189
+-1                                                       #NUZF3 STRESS PERIOD 189
+-1                                                       #NUZF4 STRESS PERIOD 189
+1                                                        #NUZF1 STRESS PERIOD 190
+OPEN/CLOSE ref/Rainfall_190.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 190
+-1                                                       #NUZF2 STRESS PERIOD 190
+-1                                                       #NUZF3 STRESS PERIOD 190
+-1                                                       #NUZF4 STRESS PERIOD 190
+1                                                        #NUZF1 STRESS PERIOD 191
+OPEN/CLOSE ref/Rainfall_191.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 191
+-1                                                       #NUZF2 STRESS PERIOD 191
+-1                                                       #NUZF3 STRESS PERIOD 191
+-1                                                       #NUZF4 STRESS PERIOD 191
+1                                                        #NUZF1 STRESS PERIOD 192
+OPEN/CLOSE ref/Rainfall_192.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 192
+-1                                                       #NUZF2 STRESS PERIOD 192
+-1                                                       #NUZF3 STRESS PERIOD 192
+-1                                                       #NUZF4 STRESS PERIOD 192
+1                                                        #NUZF1 STRESS PERIOD 193
+OPEN/CLOSE ref/Rainfall_193.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 193
+-1                                                       #NUZF2 STRESS PERIOD 193
+-1                                                       #NUZF3 STRESS PERIOD 193
+-1                                                       #NUZF4 STRESS PERIOD 193
+1                                                        #NUZF1 STRESS PERIOD 194
+OPEN/CLOSE ref/Rainfall_194.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 194
+-1                                                       #NUZF2 STRESS PERIOD 194
+-1                                                       #NUZF3 STRESS PERIOD 194
+-1                                                       #NUZF4 STRESS PERIOD 194
+1                                                        #NUZF1 STRESS PERIOD 195
+OPEN/CLOSE ref/Rainfall_195.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 195
+-1                                                       #NUZF2 STRESS PERIOD 195
+-1                                                       #NUZF3 STRESS PERIOD 195
+-1                                                       #NUZF4 STRESS PERIOD 195
+1                                                        #NUZF1 STRESS PERIOD 196
+OPEN/CLOSE ref/Rainfall_196.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 196
+-1                                                       #NUZF2 STRESS PERIOD 196
+-1                                                       #NUZF3 STRESS PERIOD 196
+-1                                                       #NUZF4 STRESS PERIOD 196
+1                                                        #NUZF1 STRESS PERIOD 197
+OPEN/CLOSE ref/Rainfall_197.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 197
+-1                                                       #NUZF2 STRESS PERIOD 197
+-1                                                       #NUZF3 STRESS PERIOD 197
+-1                                                       #NUZF4 STRESS PERIOD 197
+1                                                        #NUZF1 STRESS PERIOD 198
+OPEN/CLOSE ref/Rainfall_198.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 198
+-1                                                       #NUZF2 STRESS PERIOD 198
+-1                                                       #NUZF3 STRESS PERIOD 198
+-1                                                       #NUZF4 STRESS PERIOD 198
+1                                                        #NUZF1 STRESS PERIOD 199
+OPEN/CLOSE ref/Rainfall_199.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 199
+-1                                                       #NUZF2 STRESS PERIOD 199
+-1                                                       #NUZF3 STRESS PERIOD 199
+-1                                                       #NUZF4 STRESS PERIOD 199
+1                                                        #NUZF1 STRESS PERIOD 200
+OPEN/CLOSE ref/Rainfall_200.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 200
+-1                                                       #NUZF2 STRESS PERIOD 200
+-1                                                       #NUZF3 STRESS PERIOD 200
+-1                                                       #NUZF4 STRESS PERIOD 200
+1                                                        #NUZF1 STRESS PERIOD 201
+OPEN/CLOSE ref/Rainfall_201.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 201
+-1                                                       #NUZF2 STRESS PERIOD 201
+-1                                                       #NUZF3 STRESS PERIOD 201
+-1                                                       #NUZF4 STRESS PERIOD 201
+1                                                        #NUZF1 STRESS PERIOD 202
+OPEN/CLOSE ref/Rainfall_202.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 202
+-1                                                       #NUZF2 STRESS PERIOD 202
+-1                                                       #NUZF3 STRESS PERIOD 202
+-1                                                       #NUZF4 STRESS PERIOD 202
+1                                                        #NUZF1 STRESS PERIOD 203
+OPEN/CLOSE ref/Rainfall_203.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 203
+-1                                                       #NUZF2 STRESS PERIOD 203
+-1                                                       #NUZF3 STRESS PERIOD 203
+-1                                                       #NUZF4 STRESS PERIOD 203
+1                                                        #NUZF1 STRESS PERIOD 204
+OPEN/CLOSE ref/Rainfall_204.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 204
+-1                                                       #NUZF2 STRESS PERIOD 204
+-1                                                       #NUZF3 STRESS PERIOD 204
+-1                                                       #NUZF4 STRESS PERIOD 204
+1                                                        #NUZF1 STRESS PERIOD 205
+OPEN/CLOSE ref/Rainfall_205.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 205
+-1                                                       #NUZF2 STRESS PERIOD 205
+-1                                                       #NUZF3 STRESS PERIOD 205
+-1                                                       #NUZF4 STRESS PERIOD 205
+1                                                        #NUZF1 STRESS PERIOD 206
+OPEN/CLOSE ref/Rainfall_206.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 206
+-1                                                       #NUZF2 STRESS PERIOD 206
+-1                                                       #NUZF3 STRESS PERIOD 206
+-1                                                       #NUZF4 STRESS PERIOD 206
+1                                                        #NUZF1 STRESS PERIOD 207
+OPEN/CLOSE ref/Rainfall_207.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 207
+-1                                                       #NUZF2 STRESS PERIOD 207
+-1                                                       #NUZF3 STRESS PERIOD 207
+-1                                                       #NUZF4 STRESS PERIOD 207
+1                                                        #NUZF1 STRESS PERIOD 208
+OPEN/CLOSE ref/Rainfall_208.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 208
+-1                                                       #NUZF2 STRESS PERIOD 208
+-1                                                       #NUZF3 STRESS PERIOD 208
+-1                                                       #NUZF4 STRESS PERIOD 208
+1                                                        #NUZF1 STRESS PERIOD 209
+OPEN/CLOSE ref/Rainfall_209.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 209
+-1                                                       #NUZF2 STRESS PERIOD 209
+-1                                                       #NUZF3 STRESS PERIOD 209
+-1                                                       #NUZF4 STRESS PERIOD 209
+1                                                        #NUZF1 STRESS PERIOD 210
+OPEN/CLOSE ref/Rainfall_210.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 210
+-1                                                       #NUZF2 STRESS PERIOD 210
+-1                                                       #NUZF3 STRESS PERIOD 210
+-1                                                       #NUZF4 STRESS PERIOD 210
+1                                                        #NUZF1 STRESS PERIOD 211
+OPEN/CLOSE ref/Rainfall_211.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 211
+-1                                                       #NUZF2 STRESS PERIOD 211
+-1                                                       #NUZF3 STRESS PERIOD 211
+-1                                                       #NUZF4 STRESS PERIOD 211
+1                                                        #NUZF1 STRESS PERIOD 212
+OPEN/CLOSE ref/Rainfall_212.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 212
+-1                                                       #NUZF2 STRESS PERIOD 212
+-1                                                       #NUZF3 STRESS PERIOD 212
+-1                                                       #NUZF4 STRESS PERIOD 212
+1                                                        #NUZF1 STRESS PERIOD 213
+OPEN/CLOSE ref/Rainfall_213.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 213
+-1                                                       #NUZF2 STRESS PERIOD 213
+-1                                                       #NUZF3 STRESS PERIOD 213
+-1                                                       #NUZF4 STRESS PERIOD 213
+1                                                        #NUZF1 STRESS PERIOD 214
+OPEN/CLOSE ref/Rainfall_214.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 214
+-1                                                       #NUZF2 STRESS PERIOD 214
+-1                                                       #NUZF3 STRESS PERIOD 214
+-1                                                       #NUZF4 STRESS PERIOD 214
+1                                                        #NUZF1 STRESS PERIOD 215
+OPEN/CLOSE ref/Rainfall_215.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 215
+-1                                                       #NUZF2 STRESS PERIOD 215
+-1                                                       #NUZF3 STRESS PERIOD 215
+-1                                                       #NUZF4 STRESS PERIOD 215
+1                                                        #NUZF1 STRESS PERIOD 216
+OPEN/CLOSE ref/Rainfall_216.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 216
+-1                                                       #NUZF2 STRESS PERIOD 216
+-1                                                       #NUZF3 STRESS PERIOD 216
+-1                                                       #NUZF4 STRESS PERIOD 216
+1                                                        #NUZF1 STRESS PERIOD 217
+OPEN/CLOSE ref/Rainfall_217.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 217
+-1                                                       #NUZF2 STRESS PERIOD 217
+-1                                                       #NUZF3 STRESS PERIOD 217
+-1                                                       #NUZF4 STRESS PERIOD 217
+1                                                        #NUZF1 STRESS PERIOD 218
+OPEN/CLOSE ref/Rainfall_218.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 218
+-1                                                       #NUZF2 STRESS PERIOD 218
+-1                                                       #NUZF3 STRESS PERIOD 218
+-1                                                       #NUZF4 STRESS PERIOD 218
+1                                                        #NUZF1 STRESS PERIOD 219
+OPEN/CLOSE ref/Rainfall_219.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 219
+-1                                                       #NUZF2 STRESS PERIOD 219
+-1                                                       #NUZF3 STRESS PERIOD 219
+-1                                                       #NUZF4 STRESS PERIOD 219
+1                                                        #NUZF1 STRESS PERIOD 220
+OPEN/CLOSE ref/Rainfall_220.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 220
+-1                                                       #NUZF2 STRESS PERIOD 220
+-1                                                       #NUZF3 STRESS PERIOD 220
+-1                                                       #NUZF4 STRESS PERIOD 220
+1                                                        #NUZF1 STRESS PERIOD 221
+OPEN/CLOSE ref/Rainfall_221.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 221
+-1                                                       #NUZF2 STRESS PERIOD 221
+-1                                                       #NUZF3 STRESS PERIOD 221
+-1                                                       #NUZF4 STRESS PERIOD 221
+1                                                        #NUZF1 STRESS PERIOD 222
+OPEN/CLOSE ref/Rainfall_222.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 222
+-1                                                       #NUZF2 STRESS PERIOD 222
+-1                                                       #NUZF3 STRESS PERIOD 222
+-1                                                       #NUZF4 STRESS PERIOD 222
+1                                                        #NUZF1 STRESS PERIOD 223
+OPEN/CLOSE ref/Rainfall_223.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 223
+-1                                                       #NUZF2 STRESS PERIOD 223
+-1                                                       #NUZF3 STRESS PERIOD 223
+-1                                                       #NUZF4 STRESS PERIOD 223
+1                                                        #NUZF1 STRESS PERIOD 224
+OPEN/CLOSE ref/Rainfall_224.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 224
+-1                                                       #NUZF2 STRESS PERIOD 224
+-1                                                       #NUZF3 STRESS PERIOD 224
+-1                                                       #NUZF4 STRESS PERIOD 224
+1                                                        #NUZF1 STRESS PERIOD 225
+OPEN/CLOSE ref/Rainfall_225.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 225
+-1                                                       #NUZF2 STRESS PERIOD 225
+-1                                                       #NUZF3 STRESS PERIOD 225
+-1                                                       #NUZF4 STRESS PERIOD 225
+1                                                        #NUZF1 STRESS PERIOD 226
+OPEN/CLOSE ref/Rainfall_226.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 226
+-1                                                       #NUZF2 STRESS PERIOD 226
+-1                                                       #NUZF3 STRESS PERIOD 226
+-1                                                       #NUZF4 STRESS PERIOD 226
+1                                                        #NUZF1 STRESS PERIOD 227
+OPEN/CLOSE ref/Rainfall_227.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 227
+-1                                                       #NUZF2 STRESS PERIOD 227
+-1                                                       #NUZF3 STRESS PERIOD 227
+-1                                                       #NUZF4 STRESS PERIOD 227
+1                                                        #NUZF1 STRESS PERIOD 228
+OPEN/CLOSE ref/Rainfall_228.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 228
+-1                                                       #NUZF2 STRESS PERIOD 228
+-1                                                       #NUZF3 STRESS PERIOD 228
+-1                                                       #NUZF4 STRESS PERIOD 228
+1                                                        #NUZF1 STRESS PERIOD 229
+OPEN/CLOSE ref/Rainfall_229.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 229
+-1                                                       #NUZF2 STRESS PERIOD 229
+-1                                                       #NUZF3 STRESS PERIOD 229
+-1                                                       #NUZF4 STRESS PERIOD 229
+1                                                        #NUZF1 STRESS PERIOD 230
+OPEN/CLOSE ref/Rainfall_230.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 230
+-1                                                       #NUZF2 STRESS PERIOD 230
+-1                                                       #NUZF3 STRESS PERIOD 230
+-1                                                       #NUZF4 STRESS PERIOD 230
+1                                                        #NUZF1 STRESS PERIOD 231
+OPEN/CLOSE ref/Rainfall_231.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 231
+-1                                                       #NUZF2 STRESS PERIOD 231
+-1                                                       #NUZF3 STRESS PERIOD 231
+-1                                                       #NUZF4 STRESS PERIOD 231
+1                                                        #NUZF1 STRESS PERIOD 232
+OPEN/CLOSE ref/Rainfall_232.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 232
+-1                                                       #NUZF2 STRESS PERIOD 232
+-1                                                       #NUZF3 STRESS PERIOD 232
+-1                                                       #NUZF4 STRESS PERIOD 232
+1                                                        #NUZF1 STRESS PERIOD 233
+OPEN/CLOSE ref/Rainfall_233.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 233
+-1                                                       #NUZF2 STRESS PERIOD 233
+-1                                                       #NUZF3 STRESS PERIOD 233
+-1                                                       #NUZF4 STRESS PERIOD 233
+1                                                        #NUZF1 STRESS PERIOD 234
+OPEN/CLOSE ref/Rainfall_234.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 234
+-1                                                       #NUZF2 STRESS PERIOD 234
+-1                                                       #NUZF3 STRESS PERIOD 234
+-1                                                       #NUZF4 STRESS PERIOD 234
+1                                                        #NUZF1 STRESS PERIOD 235
+OPEN/CLOSE ref/Rainfall_235.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 235
+-1                                                       #NUZF2 STRESS PERIOD 235
+-1                                                       #NUZF3 STRESS PERIOD 235
+-1                                                       #NUZF4 STRESS PERIOD 235
+1                                                        #NUZF1 STRESS PERIOD 236
+OPEN/CLOSE ref/Rainfall_236.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 236
+-1                                                       #NUZF2 STRESS PERIOD 236
+-1                                                       #NUZF3 STRESS PERIOD 236
+-1                                                       #NUZF4 STRESS PERIOD 236
+1                                                        #NUZF1 STRESS PERIOD 237
+OPEN/CLOSE ref/Rainfall_237.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 237
+-1                                                       #NUZF2 STRESS PERIOD 237
+-1                                                       #NUZF3 STRESS PERIOD 237
+-1                                                       #NUZF4 STRESS PERIOD 237
+1                                                        #NUZF1 STRESS PERIOD 238
+OPEN/CLOSE ref/Rainfall_238.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 238
+-1                                                       #NUZF2 STRESS PERIOD 238
+-1                                                       #NUZF3 STRESS PERIOD 238
+-1                                                       #NUZF4 STRESS PERIOD 238
+1                                                        #NUZF1 STRESS PERIOD 239
+OPEN/CLOSE ref/Rainfall_239.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 239
+-1                                                       #NUZF2 STRESS PERIOD 239
+-1                                                       #NUZF3 STRESS PERIOD 239
+-1                                                       #NUZF4 STRESS PERIOD 239
+1                                                        #NUZF1 STRESS PERIOD 240
+OPEN/CLOSE ref/Rainfall_240.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 240
+-1                                                       #NUZF2 STRESS PERIOD 240
+-1                                                       #NUZF3 STRESS PERIOD 240
+-1                                                       #NUZF4 STRESS PERIOD 240
+1                                                        #NUZF1 STRESS PERIOD 241
+OPEN/CLOSE ref/Rainfall_241.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 241
+-1                                                       #NUZF2 STRESS PERIOD 241
+-1                                                       #NUZF3 STRESS PERIOD 241
+-1                                                       #NUZF4 STRESS PERIOD 241
+1                                                        #NUZF1 STRESS PERIOD 242
+OPEN/CLOSE ref/Rainfall_242.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 242
+-1                                                       #NUZF2 STRESS PERIOD 242
+-1                                                       #NUZF3 STRESS PERIOD 242
+-1                                                       #NUZF4 STRESS PERIOD 242
+1                                                        #NUZF1 STRESS PERIOD 243
+OPEN/CLOSE ref/Rainfall_243.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 243
+-1                                                       #NUZF2 STRESS PERIOD 243
+-1                                                       #NUZF3 STRESS PERIOD 243
+-1                                                       #NUZF4 STRESS PERIOD 243
+1                                                        #NUZF1 STRESS PERIOD 244
+OPEN/CLOSE ref/Rainfall_244.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 244
+-1                                                       #NUZF2 STRESS PERIOD 244
+-1                                                       #NUZF3 STRESS PERIOD 244
+-1                                                       #NUZF4 STRESS PERIOD 244
+1                                                        #NUZF1 STRESS PERIOD 245
+OPEN/CLOSE ref/Rainfall_245.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 245
+-1                                                       #NUZF2 STRESS PERIOD 245
+-1                                                       #NUZF3 STRESS PERIOD 245
+-1                                                       #NUZF4 STRESS PERIOD 245
+1                                                        #NUZF1 STRESS PERIOD 246
+OPEN/CLOSE ref/Rainfall_246.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 246
+-1                                                       #NUZF2 STRESS PERIOD 246
+-1                                                       #NUZF3 STRESS PERIOD 246
+-1                                                       #NUZF4 STRESS PERIOD 246
+1                                                        #NUZF1 STRESS PERIOD 247
+OPEN/CLOSE ref/Rainfall_247.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 247
+-1                                                       #NUZF2 STRESS PERIOD 247
+-1                                                       #NUZF3 STRESS PERIOD 247
+-1                                                       #NUZF4 STRESS PERIOD 247
+1                                                        #NUZF1 STRESS PERIOD 248
+OPEN/CLOSE ref/Rainfall_248.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 248
+-1                                                       #NUZF2 STRESS PERIOD 248
+-1                                                       #NUZF3 STRESS PERIOD 248
+-1                                                       #NUZF4 STRESS PERIOD 248
+1                                                        #NUZF1 STRESS PERIOD 249
+OPEN/CLOSE ref/Rainfall_249.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 249
+-1                                                       #NUZF2 STRESS PERIOD 249
+-1                                                       #NUZF3 STRESS PERIOD 249
+-1                                                       #NUZF4 STRESS PERIOD 249
+1                                                        #NUZF1 STRESS PERIOD 250
+OPEN/CLOSE ref/Rainfall_250.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 250
+-1                                                       #NUZF2 STRESS PERIOD 250
+-1                                                       #NUZF3 STRESS PERIOD 250
+-1                                                       #NUZF4 STRESS PERIOD 250
+1                                                        #NUZF1 STRESS PERIOD 251
+OPEN/CLOSE ref/Rainfall_251.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 251
+-1                                                       #NUZF2 STRESS PERIOD 251
+-1                                                       #NUZF3 STRESS PERIOD 251
+-1                                                       #NUZF4 STRESS PERIOD 251
+1                                                        #NUZF1 STRESS PERIOD 252
+OPEN/CLOSE ref/Rainfall_252.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 252
+-1                                                       #NUZF2 STRESS PERIOD 252
+-1                                                       #NUZF3 STRESS PERIOD 252
+-1                                                       #NUZF4 STRESS PERIOD 252
+1                                                        #NUZF1 STRESS PERIOD 253
+OPEN/CLOSE ref/Rainfall_253.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 253
+-1                                                       #NUZF2 STRESS PERIOD 253
+-1                                                       #NUZF3 STRESS PERIOD 253
+-1                                                       #NUZF4 STRESS PERIOD 253
+1                                                        #NUZF1 STRESS PERIOD 254
+OPEN/CLOSE ref/Rainfall_254.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 254
+-1                                                       #NUZF2 STRESS PERIOD 254
+-1                                                       #NUZF3 STRESS PERIOD 254
+-1                                                       #NUZF4 STRESS PERIOD 254
+1                                                        #NUZF1 STRESS PERIOD 255
+OPEN/CLOSE ref/Rainfall_255.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 255
+-1                                                       #NUZF2 STRESS PERIOD 255
+-1                                                       #NUZF3 STRESS PERIOD 255
+-1                                                       #NUZF4 STRESS PERIOD 255
+1                                                        #NUZF1 STRESS PERIOD 256
+OPEN/CLOSE ref/Rainfall_256.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 256
+-1                                                       #NUZF2 STRESS PERIOD 256
+-1                                                       #NUZF3 STRESS PERIOD 256
+-1                                                       #NUZF4 STRESS PERIOD 256
+1                                                        #NUZF1 STRESS PERIOD 257
+OPEN/CLOSE ref/Rainfall_257.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 257
+-1                                                       #NUZF2 STRESS PERIOD 257
+-1                                                       #NUZF3 STRESS PERIOD 257
+-1                                                       #NUZF4 STRESS PERIOD 257
+1                                                        #NUZF1 STRESS PERIOD 258
+OPEN/CLOSE ref/Rainfall_258.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 258
+-1                                                       #NUZF2 STRESS PERIOD 258
+-1                                                       #NUZF3 STRESS PERIOD 258
+-1                                                       #NUZF4 STRESS PERIOD 258
+1                                                        #NUZF1 STRESS PERIOD 259
+OPEN/CLOSE ref/Rainfall_259.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 259
+-1                                                       #NUZF2 STRESS PERIOD 259
+-1                                                       #NUZF3 STRESS PERIOD 259
+-1                                                       #NUZF4 STRESS PERIOD 259
+1                                                        #NUZF1 STRESS PERIOD 260
+OPEN/CLOSE ref/Rainfall_260.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 260
+-1                                                       #NUZF2 STRESS PERIOD 260
+-1                                                       #NUZF3 STRESS PERIOD 260
+-1                                                       #NUZF4 STRESS PERIOD 260
+1                                                        #NUZF1 STRESS PERIOD 261
+OPEN/CLOSE ref/Rainfall_261.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 261
+-1                                                       #NUZF2 STRESS PERIOD 261
+-1                                                       #NUZF3 STRESS PERIOD 261
+-1                                                       #NUZF4 STRESS PERIOD 261
+1                                                        #NUZF1 STRESS PERIOD 262
+OPEN/CLOSE ref/Rainfall_262.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 262
+-1                                                       #NUZF2 STRESS PERIOD 262
+-1                                                       #NUZF3 STRESS PERIOD 262
+-1                                                       #NUZF4 STRESS PERIOD 262
+1                                                        #NUZF1 STRESS PERIOD 263
+OPEN/CLOSE ref/Rainfall_263.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 263
+-1                                                       #NUZF2 STRESS PERIOD 263
+-1                                                       #NUZF3 STRESS PERIOD 263
+-1                                                       #NUZF4 STRESS PERIOD 263
+1                                                        #NUZF1 STRESS PERIOD 264
+OPEN/CLOSE ref/Rainfall_264.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 264
+-1                                                       #NUZF2 STRESS PERIOD 264
+-1                                                       #NUZF3 STRESS PERIOD 264
+-1                                                       #NUZF4 STRESS PERIOD 264
+1                                                        #NUZF1 STRESS PERIOD 265
+OPEN/CLOSE ref/Rainfall_265.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 265
+-1                                                       #NUZF2 STRESS PERIOD 265
+-1                                                       #NUZF3 STRESS PERIOD 265
+-1                                                       #NUZF4 STRESS PERIOD 265
+1                                                        #NUZF1 STRESS PERIOD 266
+OPEN/CLOSE ref/Rainfall_266.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 266
+-1                                                       #NUZF2 STRESS PERIOD 266
+-1                                                       #NUZF3 STRESS PERIOD 266
+-1                                                       #NUZF4 STRESS PERIOD 266
+1                                                        #NUZF1 STRESS PERIOD 267
+OPEN/CLOSE ref/Rainfall_267.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 267
+-1                                                       #NUZF2 STRESS PERIOD 267
+-1                                                       #NUZF3 STRESS PERIOD 267
+-1                                                       #NUZF4 STRESS PERIOD 267
+1                                                        #NUZF1 STRESS PERIOD 268
+OPEN/CLOSE ref/Rainfall_268.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 268
+-1                                                       #NUZF2 STRESS PERIOD 268
+-1                                                       #NUZF3 STRESS PERIOD 268
+-1                                                       #NUZF4 STRESS PERIOD 268
+1                                                        #NUZF1 STRESS PERIOD 269
+OPEN/CLOSE ref/Rainfall_269.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 269
+-1                                                       #NUZF2 STRESS PERIOD 269
+-1                                                       #NUZF3 STRESS PERIOD 269
+-1                                                       #NUZF4 STRESS PERIOD 269
+1                                                        #NUZF1 STRESS PERIOD 270
+OPEN/CLOSE ref/Rainfall_270.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 270
+-1                                                       #NUZF2 STRESS PERIOD 270
+-1                                                       #NUZF3 STRESS PERIOD 270
+-1                                                       #NUZF4 STRESS PERIOD 270
+1                                                        #NUZF1 STRESS PERIOD 271
+OPEN/CLOSE ref/Rainfall_271.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 271
+-1                                                       #NUZF2 STRESS PERIOD 271
+-1                                                       #NUZF3 STRESS PERIOD 271
+-1                                                       #NUZF4 STRESS PERIOD 271
+1                                                        #NUZF1 STRESS PERIOD 272
+OPEN/CLOSE ref/Rainfall_272.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 272
+-1                                                       #NUZF2 STRESS PERIOD 272
+-1                                                       #NUZF3 STRESS PERIOD 272
+-1                                                       #NUZF4 STRESS PERIOD 272
+1                                                        #NUZF1 STRESS PERIOD 273
+OPEN/CLOSE ref/Rainfall_273.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 273
+-1                                                       #NUZF2 STRESS PERIOD 273
+-1                                                       #NUZF3 STRESS PERIOD 273
+-1                                                       #NUZF4 STRESS PERIOD 273
+1                                                        #NUZF1 STRESS PERIOD 274
+OPEN/CLOSE ref/Rainfall_274.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 274
+-1                                                       #NUZF2 STRESS PERIOD 274
+-1                                                       #NUZF3 STRESS PERIOD 274
+-1                                                       #NUZF4 STRESS PERIOD 274
+1                                                        #NUZF1 STRESS PERIOD 275
+OPEN/CLOSE ref/Rainfall_275.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 275
+-1                                                       #NUZF2 STRESS PERIOD 275
+-1                                                       #NUZF3 STRESS PERIOD 275
+-1                                                       #NUZF4 STRESS PERIOD 275
+1                                                        #NUZF1 STRESS PERIOD 276
+OPEN/CLOSE ref/Rainfall_276.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 276
+-1                                                       #NUZF2 STRESS PERIOD 276
+-1                                                       #NUZF3 STRESS PERIOD 276
+-1                                                       #NUZF4 STRESS PERIOD 276
+1                                                        #NUZF1 STRESS PERIOD 277
+OPEN/CLOSE ref/Rainfall_277.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 277
+-1                                                       #NUZF2 STRESS PERIOD 277
+-1                                                       #NUZF3 STRESS PERIOD 277
+-1                                                       #NUZF4 STRESS PERIOD 277
+1                                                        #NUZF1 STRESS PERIOD 278
+OPEN/CLOSE ref/Rainfall_278.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 278
+-1                                                       #NUZF2 STRESS PERIOD 278
+-1                                                       #NUZF3 STRESS PERIOD 278
+-1                                                       #NUZF4 STRESS PERIOD 278
+1                                                        #NUZF1 STRESS PERIOD 279
+OPEN/CLOSE ref/Rainfall_279.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 279
+-1                                                       #NUZF2 STRESS PERIOD 279
+-1                                                       #NUZF3 STRESS PERIOD 279
+-1                                                       #NUZF4 STRESS PERIOD 279
+1                                                        #NUZF1 STRESS PERIOD 280
+OPEN/CLOSE ref/Rainfall_280.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 280
+-1                                                       #NUZF2 STRESS PERIOD 280
+-1                                                       #NUZF3 STRESS PERIOD 280
+-1                                                       #NUZF4 STRESS PERIOD 280
+1                                                        #NUZF1 STRESS PERIOD 281
+OPEN/CLOSE ref/Rainfall_281.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 281
+-1                                                       #NUZF2 STRESS PERIOD 281
+-1                                                       #NUZF3 STRESS PERIOD 281
+-1                                                       #NUZF4 STRESS PERIOD 281
+1                                                        #NUZF1 STRESS PERIOD 282
+OPEN/CLOSE ref/Rainfall_282.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 282
+-1                                                       #NUZF2 STRESS PERIOD 282
+-1                                                       #NUZF3 STRESS PERIOD 282
+-1                                                       #NUZF4 STRESS PERIOD 282
+1                                                        #NUZF1 STRESS PERIOD 283
+OPEN/CLOSE ref/Rainfall_283.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 283
+-1                                                       #NUZF2 STRESS PERIOD 283
+-1                                                       #NUZF3 STRESS PERIOD 283
+-1                                                       #NUZF4 STRESS PERIOD 283
+1                                                        #NUZF1 STRESS PERIOD 284
+OPEN/CLOSE ref/Rainfall_284.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 284
+-1                                                       #NUZF2 STRESS PERIOD 284
+-1                                                       #NUZF3 STRESS PERIOD 284
+-1                                                       #NUZF4 STRESS PERIOD 284
+1                                                        #NUZF1 STRESS PERIOD 285
+OPEN/CLOSE ref/Rainfall_285.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 285
+-1                                                       #NUZF2 STRESS PERIOD 285
+-1                                                       #NUZF3 STRESS PERIOD 285
+-1                                                       #NUZF4 STRESS PERIOD 285
+1                                                        #NUZF1 STRESS PERIOD 286
+OPEN/CLOSE ref/Rainfall_286.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 286
+-1                                                       #NUZF2 STRESS PERIOD 286
+-1                                                       #NUZF3 STRESS PERIOD 286
+-1                                                       #NUZF4 STRESS PERIOD 286
+1                                                        #NUZF1 STRESS PERIOD 287
+OPEN/CLOSE ref/Rainfall_287.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 287
+-1                                                       #NUZF2 STRESS PERIOD 287
+-1                                                       #NUZF3 STRESS PERIOD 287
+-1                                                       #NUZF4 STRESS PERIOD 287
+1                                                        #NUZF1 STRESS PERIOD 288
+OPEN/CLOSE ref/Rainfall_288.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 288
+-1                                                       #NUZF2 STRESS PERIOD 288
+-1                                                       #NUZF3 STRESS PERIOD 288
+-1                                                       #NUZF4 STRESS PERIOD 288
+1                                                        #NUZF1 STRESS PERIOD 289
+OPEN/CLOSE ref/Rainfall_289.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 289
+-1                                                       #NUZF2 STRESS PERIOD 289
+-1                                                       #NUZF3 STRESS PERIOD 289
+-1                                                       #NUZF4 STRESS PERIOD 289
+1                                                        #NUZF1 STRESS PERIOD 290
+OPEN/CLOSE ref/Rainfall_290.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 290
+-1                                                       #NUZF2 STRESS PERIOD 290
+-1                                                       #NUZF3 STRESS PERIOD 290
+-1                                                       #NUZF4 STRESS PERIOD 290
+1                                                        #NUZF1 STRESS PERIOD 291
+OPEN/CLOSE ref/Rainfall_291.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 291
+-1                                                       #NUZF2 STRESS PERIOD 291
+-1                                                       #NUZF3 STRESS PERIOD 291
+-1                                                       #NUZF4 STRESS PERIOD 291
+1                                                        #NUZF1 STRESS PERIOD 292
+OPEN/CLOSE ref/Rainfall_292.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 292
+-1                                                       #NUZF2 STRESS PERIOD 292
+-1                                                       #NUZF3 STRESS PERIOD 292
+-1                                                       #NUZF4 STRESS PERIOD 292
+1                                                        #NUZF1 STRESS PERIOD 293
+OPEN/CLOSE ref/Rainfall_293.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 293
+-1                                                       #NUZF2 STRESS PERIOD 293
+-1                                                       #NUZF3 STRESS PERIOD 293
+-1                                                       #NUZF4 STRESS PERIOD 293
+1                                                        #NUZF1 STRESS PERIOD 294
+OPEN/CLOSE ref/Rainfall_294.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 294
+-1                                                       #NUZF2 STRESS PERIOD 294
+-1                                                       #NUZF3 STRESS PERIOD 294
+-1                                                       #NUZF4 STRESS PERIOD 294
+1                                                        #NUZF1 STRESS PERIOD 295
+OPEN/CLOSE ref/Rainfall_295.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 295
+-1                                                       #NUZF2 STRESS PERIOD 295
+-1                                                       #NUZF3 STRESS PERIOD 295
+-1                                                       #NUZF4 STRESS PERIOD 295
+1                                                        #NUZF1 STRESS PERIOD 296
+OPEN/CLOSE ref/Rainfall_296.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 296
+-1                                                       #NUZF2 STRESS PERIOD 296
+-1                                                       #NUZF3 STRESS PERIOD 296
+-1                                                       #NUZF4 STRESS PERIOD 296
+1                                                        #NUZF1 STRESS PERIOD 297
+OPEN/CLOSE ref/Rainfall_297.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 297
+-1                                                       #NUZF2 STRESS PERIOD 297
+-1                                                       #NUZF3 STRESS PERIOD 297
+-1                                                       #NUZF4 STRESS PERIOD 297
+1                                                        #NUZF1 STRESS PERIOD 298
+OPEN/CLOSE ref/Rainfall_298.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 298
+-1                                                       #NUZF2 STRESS PERIOD 298
+-1                                                       #NUZF3 STRESS PERIOD 298
+-1                                                       #NUZF4 STRESS PERIOD 298
+1                                                        #NUZF1 STRESS PERIOD 299
+OPEN/CLOSE ref/Rainfall_299.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 299
+-1                                                       #NUZF2 STRESS PERIOD 299
+-1                                                       #NUZF3 STRESS PERIOD 299
+-1                                                       #NUZF4 STRESS PERIOD 299
+1                                                        #NUZF1 STRESS PERIOD 300
+OPEN/CLOSE ref/Rainfall_300.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 300
+-1                                                       #NUZF2 STRESS PERIOD 300
+-1                                                       #NUZF3 STRESS PERIOD 300
+-1                                                       #NUZF4 STRESS PERIOD 300
+1                                                        #NUZF1 STRESS PERIOD 301
+OPEN/CLOSE ref/Rainfall_301.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 301
+-1                                                       #NUZF2 STRESS PERIOD 301
+-1                                                       #NUZF3 STRESS PERIOD 301
+-1                                                       #NUZF4 STRESS PERIOD 301
+1                                                        #NUZF1 STRESS PERIOD 302
+OPEN/CLOSE ref/Rainfall_302.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 302
+-1                                                       #NUZF2 STRESS PERIOD 302
+-1                                                       #NUZF3 STRESS PERIOD 302
+-1                                                       #NUZF4 STRESS PERIOD 302
+1                                                        #NUZF1 STRESS PERIOD 303
+OPEN/CLOSE ref/Rainfall_303.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 303
+-1                                                       #NUZF2 STRESS PERIOD 303
+-1                                                       #NUZF3 STRESS PERIOD 303
+-1                                                       #NUZF4 STRESS PERIOD 303
+1                                                        #NUZF1 STRESS PERIOD 304
+OPEN/CLOSE ref/Rainfall_304.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 304
+-1                                                       #NUZF2 STRESS PERIOD 304
+-1                                                       #NUZF3 STRESS PERIOD 304
+-1                                                       #NUZF4 STRESS PERIOD 304
+1                                                        #NUZF1 STRESS PERIOD 305
+OPEN/CLOSE ref/Rainfall_305.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 305
+-1                                                       #NUZF2 STRESS PERIOD 305
+-1                                                       #NUZF3 STRESS PERIOD 305
+-1                                                       #NUZF4 STRESS PERIOD 305
+1                                                        #NUZF1 STRESS PERIOD 306
+OPEN/CLOSE ref/Rainfall_306.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 306
+-1                                                       #NUZF2 STRESS PERIOD 306
+-1                                                       #NUZF3 STRESS PERIOD 306
+-1                                                       #NUZF4 STRESS PERIOD 306
+1                                                        #NUZF1 STRESS PERIOD 307
+OPEN/CLOSE ref/Rainfall_307.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 307
+-1                                                       #NUZF2 STRESS PERIOD 307
+-1                                                       #NUZF3 STRESS PERIOD 307
+-1                                                       #NUZF4 STRESS PERIOD 307
+1                                                        #NUZF1 STRESS PERIOD 308
+OPEN/CLOSE ref/Rainfall_308.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 308
+-1                                                       #NUZF2 STRESS PERIOD 308
+-1                                                       #NUZF3 STRESS PERIOD 308
+-1                                                       #NUZF4 STRESS PERIOD 308
+1                                                        #NUZF1 STRESS PERIOD 309
+OPEN/CLOSE ref/Rainfall_309.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 309
+-1                                                       #NUZF2 STRESS PERIOD 309
+-1                                                       #NUZF3 STRESS PERIOD 309
+-1                                                       #NUZF4 STRESS PERIOD 309
+1                                                        #NUZF1 STRESS PERIOD 310
+OPEN/CLOSE ref/Rainfall_310.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 310
+-1                                                       #NUZF2 STRESS PERIOD 310
+-1                                                       #NUZF3 STRESS PERIOD 310
+-1                                                       #NUZF4 STRESS PERIOD 310
+1                                                        #NUZF1 STRESS PERIOD 311
+OPEN/CLOSE ref/Rainfall_311.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 311
+-1                                                       #NUZF2 STRESS PERIOD 311
+-1                                                       #NUZF3 STRESS PERIOD 311
+-1                                                       #NUZF4 STRESS PERIOD 311
+1                                                        #NUZF1 STRESS PERIOD 312
+OPEN/CLOSE ref/Rainfall_312.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 312
+-1                                                       #NUZF2 STRESS PERIOD 312
+-1                                                       #NUZF3 STRESS PERIOD 312
+-1                                                       #NUZF4 STRESS PERIOD 312
+1                                                        #NUZF1 STRESS PERIOD 313
+OPEN/CLOSE ref/Rainfall_313.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 313
+-1                                                       #NUZF2 STRESS PERIOD 313
+-1                                                       #NUZF3 STRESS PERIOD 313
+-1                                                       #NUZF4 STRESS PERIOD 313
+1                                                        #NUZF1 STRESS PERIOD 314
+OPEN/CLOSE ref/Rainfall_314.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 314
+-1                                                       #NUZF2 STRESS PERIOD 314
+-1                                                       #NUZF3 STRESS PERIOD 314
+-1                                                       #NUZF4 STRESS PERIOD 314
+1                                                        #NUZF1 STRESS PERIOD 315
+OPEN/CLOSE ref/Rainfall_315.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 315
+-1                                                       #NUZF2 STRESS PERIOD 315
+-1                                                       #NUZF3 STRESS PERIOD 315
+-1                                                       #NUZF4 STRESS PERIOD 315
+1                                                        #NUZF1 STRESS PERIOD 316
+OPEN/CLOSE ref/Rainfall_316.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 316
+-1                                                       #NUZF2 STRESS PERIOD 316
+-1                                                       #NUZF3 STRESS PERIOD 316
+-1                                                       #NUZF4 STRESS PERIOD 316
+1                                                        #NUZF1 STRESS PERIOD 317
+OPEN/CLOSE ref/Rainfall_317.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 317
+-1                                                       #NUZF2 STRESS PERIOD 317
+-1                                                       #NUZF3 STRESS PERIOD 317
+-1                                                       #NUZF4 STRESS PERIOD 317
+1                                                        #NUZF1 STRESS PERIOD 318
+OPEN/CLOSE ref/Rainfall_318.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 318
+-1                                                       #NUZF2 STRESS PERIOD 318
+-1                                                       #NUZF3 STRESS PERIOD 318
+-1                                                       #NUZF4 STRESS PERIOD 318
+1                                                        #NUZF1 STRESS PERIOD 319
+OPEN/CLOSE ref/Rainfall_319.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 319
+-1                                                       #NUZF2 STRESS PERIOD 319
+-1                                                       #NUZF3 STRESS PERIOD 319
+-1                                                       #NUZF4 STRESS PERIOD 319
+1                                                        #NUZF1 STRESS PERIOD 320
+OPEN/CLOSE ref/Rainfall_320.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 320
+-1                                                       #NUZF2 STRESS PERIOD 320
+-1                                                       #NUZF3 STRESS PERIOD 320
+-1                                                       #NUZF4 STRESS PERIOD 320
+1                                                        #NUZF1 STRESS PERIOD 321
+OPEN/CLOSE ref/Rainfall_321.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 321
+-1                                                       #NUZF2 STRESS PERIOD 321
+-1                                                       #NUZF3 STRESS PERIOD 321
+-1                                                       #NUZF4 STRESS PERIOD 321
+1                                                        #NUZF1 STRESS PERIOD 322
+OPEN/CLOSE ref/Rainfall_322.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 322
+-1                                                       #NUZF2 STRESS PERIOD 322
+-1                                                       #NUZF3 STRESS PERIOD 322
+-1                                                       #NUZF4 STRESS PERIOD 322
+1                                                        #NUZF1 STRESS PERIOD 323
+OPEN/CLOSE ref/Rainfall_323.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 323
+-1                                                       #NUZF2 STRESS PERIOD 323
+-1                                                       #NUZF3 STRESS PERIOD 323
+-1                                                       #NUZF4 STRESS PERIOD 323
+1                                                        #NUZF1 STRESS PERIOD 324
+OPEN/CLOSE ref/Rainfall_324.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 324
+-1                                                       #NUZF2 STRESS PERIOD 324
+-1                                                       #NUZF3 STRESS PERIOD 324
+-1                                                       #NUZF4 STRESS PERIOD 324
+1                                                        #NUZF1 STRESS PERIOD 325
+OPEN/CLOSE ref/Rainfall_325.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 325
+-1                                                       #NUZF2 STRESS PERIOD 325
+-1                                                       #NUZF3 STRESS PERIOD 325
+-1                                                       #NUZF4 STRESS PERIOD 325
+1                                                        #NUZF1 STRESS PERIOD 326
+OPEN/CLOSE ref/Rainfall_326.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 326
+-1                                                       #NUZF2 STRESS PERIOD 326
+-1                                                       #NUZF3 STRESS PERIOD 326
+-1                                                       #NUZF4 STRESS PERIOD 326
+1                                                        #NUZF1 STRESS PERIOD 327
+OPEN/CLOSE ref/Rainfall_327.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 327
+-1                                                       #NUZF2 STRESS PERIOD 327
+-1                                                       #NUZF3 STRESS PERIOD 327
+-1                                                       #NUZF4 STRESS PERIOD 327
+1                                                        #NUZF1 STRESS PERIOD 328
+OPEN/CLOSE ref/Rainfall_328.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 328
+-1                                                       #NUZF2 STRESS PERIOD 328
+-1                                                       #NUZF3 STRESS PERIOD 328
+-1                                                       #NUZF4 STRESS PERIOD 328
+1                                                        #NUZF1 STRESS PERIOD 329
+OPEN/CLOSE ref/Rainfall_329.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 329
+-1                                                       #NUZF2 STRESS PERIOD 329
+-1                                                       #NUZF3 STRESS PERIOD 329
+-1                                                       #NUZF4 STRESS PERIOD 329
+1                                                        #NUZF1 STRESS PERIOD 330
+OPEN/CLOSE ref/Rainfall_330.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 330
+-1                                                       #NUZF2 STRESS PERIOD 330
+-1                                                       #NUZF3 STRESS PERIOD 330
+-1                                                       #NUZF4 STRESS PERIOD 330
+1                                                        #NUZF1 STRESS PERIOD 331
+OPEN/CLOSE ref/Rainfall_331.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 331
+-1                                                       #NUZF2 STRESS PERIOD 331
+-1                                                       #NUZF3 STRESS PERIOD 331
+-1                                                       #NUZF4 STRESS PERIOD 331
+1                                                        #NUZF1 STRESS PERIOD 332
+OPEN/CLOSE ref/Rainfall_332.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 332
+-1                                                       #NUZF2 STRESS PERIOD 332
+-1                                                       #NUZF3 STRESS PERIOD 332
+-1                                                       #NUZF4 STRESS PERIOD 332
+1                                                        #NUZF1 STRESS PERIOD 333
+OPEN/CLOSE ref/Rainfall_333.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 333
+-1                                                       #NUZF2 STRESS PERIOD 333
+-1                                                       #NUZF3 STRESS PERIOD 333
+-1                                                       #NUZF4 STRESS PERIOD 333
+1                                                        #NUZF1 STRESS PERIOD 334
+OPEN/CLOSE ref/Rainfall_334.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 334
+-1                                                       #NUZF2 STRESS PERIOD 334
+-1                                                       #NUZF3 STRESS PERIOD 334
+-1                                                       #NUZF4 STRESS PERIOD 334
+1                                                        #NUZF1 STRESS PERIOD 335
+OPEN/CLOSE ref/Rainfall_335.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 335
+-1                                                       #NUZF2 STRESS PERIOD 335
+-1                                                       #NUZF3 STRESS PERIOD 335
+-1                                                       #NUZF4 STRESS PERIOD 335
+1                                                        #NUZF1 STRESS PERIOD 336
+OPEN/CLOSE ref/Rainfall_336.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 336
+-1                                                       #NUZF2 STRESS PERIOD 336
+-1                                                       #NUZF3 STRESS PERIOD 336
+-1                                                       #NUZF4 STRESS PERIOD 336
+1                                                        #NUZF1 STRESS PERIOD 337
+OPEN/CLOSE ref/Rainfall_337.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 337
+-1                                                       #NUZF2 STRESS PERIOD 337
+-1                                                       #NUZF3 STRESS PERIOD 337
+-1                                                       #NUZF4 STRESS PERIOD 337
+1                                                        #NUZF1 STRESS PERIOD 338
+OPEN/CLOSE ref/Rainfall_338.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 338
+-1                                                       #NUZF2 STRESS PERIOD 338
+-1                                                       #NUZF3 STRESS PERIOD 338
+-1                                                       #NUZF4 STRESS PERIOD 338
+1                                                        #NUZF1 STRESS PERIOD 339
+OPEN/CLOSE ref/Rainfall_339.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 339
+-1                                                       #NUZF2 STRESS PERIOD 339
+-1                                                       #NUZF3 STRESS PERIOD 339
+-1                                                       #NUZF4 STRESS PERIOD 339
+1                                                        #NUZF1 STRESS PERIOD 340
+OPEN/CLOSE ref/Rainfall_340.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 340
+-1                                                       #NUZF2 STRESS PERIOD 340
+-1                                                       #NUZF3 STRESS PERIOD 340
+-1                                                       #NUZF4 STRESS PERIOD 340
+1                                                        #NUZF1 STRESS PERIOD 341
+OPEN/CLOSE ref/Rainfall_341.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 341
+-1                                                       #NUZF2 STRESS PERIOD 341
+-1                                                       #NUZF3 STRESS PERIOD 341
+-1                                                       #NUZF4 STRESS PERIOD 341
+1                                                        #NUZF1 STRESS PERIOD 342
+OPEN/CLOSE ref/Rainfall_342.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 342
+-1                                                       #NUZF2 STRESS PERIOD 342
+-1                                                       #NUZF3 STRESS PERIOD 342
+-1                                                       #NUZF4 STRESS PERIOD 342
+1                                                        #NUZF1 STRESS PERIOD 343
+OPEN/CLOSE ref/Rainfall_343.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 343
+-1                                                       #NUZF2 STRESS PERIOD 343
+-1                                                       #NUZF3 STRESS PERIOD 343
+-1                                                       #NUZF4 STRESS PERIOD 343
+1                                                        #NUZF1 STRESS PERIOD 344
+OPEN/CLOSE ref/Rainfall_344.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 344
+-1                                                       #NUZF2 STRESS PERIOD 344
+-1                                                       #NUZF3 STRESS PERIOD 344
+-1                                                       #NUZF4 STRESS PERIOD 344
+1                                                        #NUZF1 STRESS PERIOD 345
+OPEN/CLOSE ref/Rainfall_345.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 345
+-1                                                       #NUZF2 STRESS PERIOD 345
+-1                                                       #NUZF3 STRESS PERIOD 345
+-1                                                       #NUZF4 STRESS PERIOD 345
+1                                                        #NUZF1 STRESS PERIOD 346
+OPEN/CLOSE ref/Rainfall_346.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 346
+-1                                                       #NUZF2 STRESS PERIOD 346
+-1                                                       #NUZF3 STRESS PERIOD 346
+-1                                                       #NUZF4 STRESS PERIOD 346
+1                                                        #NUZF1 STRESS PERIOD 347
+OPEN/CLOSE ref/Rainfall_347.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 347
+-1                                                       #NUZF2 STRESS PERIOD 347
+-1                                                       #NUZF3 STRESS PERIOD 347
+-1                                                       #NUZF4 STRESS PERIOD 347
+1                                                        #NUZF1 STRESS PERIOD 348
+OPEN/CLOSE ref/Rainfall_348.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 348
+-1                                                       #NUZF2 STRESS PERIOD 348
+-1                                                       #NUZF3 STRESS PERIOD 348
+-1                                                       #NUZF4 STRESS PERIOD 348
+1                                                        #NUZF1 STRESS PERIOD 349
+OPEN/CLOSE ref/Rainfall_349.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 349
+-1                                                       #NUZF2 STRESS PERIOD 349
+-1                                                       #NUZF3 STRESS PERIOD 349
+-1                                                       #NUZF4 STRESS PERIOD 349
+1                                                        #NUZF1 STRESS PERIOD 350
+OPEN/CLOSE ref/Rainfall_350.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 350
+-1                                                       #NUZF2 STRESS PERIOD 350
+-1                                                       #NUZF3 STRESS PERIOD 350
+-1                                                       #NUZF4 STRESS PERIOD 350
+1                                                        #NUZF1 STRESS PERIOD 351
+OPEN/CLOSE ref/Rainfall_351.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 351
+-1                                                       #NUZF2 STRESS PERIOD 351
+-1                                                       #NUZF3 STRESS PERIOD 351
+-1                                                       #NUZF4 STRESS PERIOD 351
+1                                                        #NUZF1 STRESS PERIOD 352
+OPEN/CLOSE ref/Rainfall_352.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 352
+-1                                                       #NUZF2 STRESS PERIOD 352
+-1                                                       #NUZF3 STRESS PERIOD 352
+-1                                                       #NUZF4 STRESS PERIOD 352
+1                                                        #NUZF1 STRESS PERIOD 353
+OPEN/CLOSE ref/Rainfall_353.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 353
+-1                                                       #NUZF2 STRESS PERIOD 353
+-1                                                       #NUZF3 STRESS PERIOD 353
+-1                                                       #NUZF4 STRESS PERIOD 353
+1                                                        #NUZF1 STRESS PERIOD 354
+OPEN/CLOSE ref/Rainfall_354.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 354
+-1                                                       #NUZF2 STRESS PERIOD 354
+-1                                                       #NUZF3 STRESS PERIOD 354
+-1                                                       #NUZF4 STRESS PERIOD 354
+1                                                        #NUZF1 STRESS PERIOD 355
+OPEN/CLOSE ref/Rainfall_355.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 355
+-1                                                       #NUZF2 STRESS PERIOD 355
+-1                                                       #NUZF3 STRESS PERIOD 355
+-1                                                       #NUZF4 STRESS PERIOD 355
+1                                                        #NUZF1 STRESS PERIOD 356
+OPEN/CLOSE ref/Rainfall_356.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 356
+-1                                                       #NUZF2 STRESS PERIOD 356
+-1                                                       #NUZF3 STRESS PERIOD 356
+-1                                                       #NUZF4 STRESS PERIOD 356
+1                                                        #NUZF1 STRESS PERIOD 357
+OPEN/CLOSE ref/Rainfall_357.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 357
+-1                                                       #NUZF2 STRESS PERIOD 357
+-1                                                       #NUZF3 STRESS PERIOD 357
+-1                                                       #NUZF4 STRESS PERIOD 357
+1                                                        #NUZF1 STRESS PERIOD 358
+OPEN/CLOSE ref/Rainfall_358.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 358
+-1                                                       #NUZF2 STRESS PERIOD 358
+-1                                                       #NUZF3 STRESS PERIOD 358
+-1                                                       #NUZF4 STRESS PERIOD 358
+1                                                        #NUZF1 STRESS PERIOD 359
+OPEN/CLOSE ref/Rainfall_359.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 359
+-1                                                       #NUZF2 STRESS PERIOD 359
+-1                                                       #NUZF3 STRESS PERIOD 359
+-1                                                       #NUZF4 STRESS PERIOD 359
+1                                                        #NUZF1 STRESS PERIOD 360
+OPEN/CLOSE ref/Rainfall_360.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 360
+-1                                                       #NUZF2 STRESS PERIOD 360
+-1                                                       #NUZF3 STRESS PERIOD 360
+-1                                                       #NUZF4 STRESS PERIOD 360
+1                                                        #NUZF1 STRESS PERIOD 361
+OPEN/CLOSE ref/Rainfall_361.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 361
+-1                                                       #NUZF2 STRESS PERIOD 361
+-1                                                       #NUZF3 STRESS PERIOD 361
+-1                                                       #NUZF4 STRESS PERIOD 361
+1                                                        #NUZF1 STRESS PERIOD 362
+OPEN/CLOSE ref/Rainfall_362.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 362
+-1                                                       #NUZF2 STRESS PERIOD 362
+-1                                                       #NUZF3 STRESS PERIOD 362
+-1                                                       #NUZF4 STRESS PERIOD 362
+1                                                        #NUZF1 STRESS PERIOD 363
+OPEN/CLOSE ref/Rainfall_363.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 363
+-1                                                       #NUZF2 STRESS PERIOD 363
+-1                                                       #NUZF3 STRESS PERIOD 363
+-1                                                       #NUZF4 STRESS PERIOD 363
+1                                                        #NUZF1 STRESS PERIOD 364
+OPEN/CLOSE ref/Rainfall_364.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 364
+-1                                                       #NUZF2 STRESS PERIOD 364
+-1                                                       #NUZF3 STRESS PERIOD 364
+-1                                                       #NUZF4 STRESS PERIOD 364
+1                                                        #NUZF1 STRESS PERIOD 365
+OPEN/CLOSE ref/Rainfall_365.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 365
+-1                                                       #NUZF2 STRESS PERIOD 365
+-1                                                       #NUZF3 STRESS PERIOD 365
+-1                                                       #NUZF4 STRESS PERIOD 365
+1                                                        #NUZF1 STRESS PERIOD 366
+OPEN/CLOSE ref/Rainfall_366.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 366
+-1                                                       #NUZF2 STRESS PERIOD 366
+-1                                                       #NUZF3 STRESS PERIOD 366
+-1                                                       #NUZF4 STRESS PERIOD 366
+1                                                        #NUZF1 STRESS PERIOD 367
+OPEN/CLOSE ref/Rainfall_367.ref 1.0 (FREE)   -1          #FINF  STRESS PERIOD 367
+-1                                                       #NUZF2 STRESS PERIOD 367
+-1                                                       #NUZF3 STRESS PERIOD 367
+-1                                                       #NUZF4 STRESS PERIOD 367
