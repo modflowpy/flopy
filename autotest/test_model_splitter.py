@@ -1938,6 +1938,43 @@ def test_ats(function_tmpdir):
     assert success
 
 
+def test_ats_multiple_periods(function_tmpdir):
+    nper = 4
+    sim = flopy.mf6.MFSimulation(sim_ws=function_tmpdir)
+    tdis = flopy.mf6.ModflowTdis(
+        sim,
+        nper=nper,
+        perioddata=[(1.0, 1, 1.0)] + [(10.0, 10, 1.0)] * (nper - 1),
+    )
+    ats_perioddata = [(kper, 1.0, 0.1, 5.0, 2.0, 5.0) for kper in range(1, nper)]
+    tdis.ats.initialize(maxats=len(ats_perioddata), perioddata=ats_perioddata)
+
+    flopy.mf6.ModflowIms(sim)
+    gwf = flopy.mf6.ModflowGwf(sim, modelname="ats")
+    flopy.mf6.ModflowGwfdis(gwf, nlay=1, nrow=1, ncol=10, top=10.0, botm=0.0)
+    flopy.mf6.ModflowGwfic(gwf, strt=5.0)
+    flopy.mf6.ModflowGwfnpf(gwf, k=1.0)
+    flopy.mf6.ModflowGwfchd(
+        gwf, stress_period_data=[[(0, 0, 0), 6.0], [(0, 0, 9), 4.0]]
+    )
+
+    array = np.ones((1, 10), dtype=int)
+    array[0, 5:] = 2
+
+    mfs = flopy.mf6.utils.Mf6Splitter(sim)
+    new_sim = mfs.split_model(array)
+
+    ats = new_sim.tdis.ats
+    assert ats.maxats.get_data() == len(ats_perioddata)
+    assert len(ats.perioddata.get_data()) == len(ats_perioddata)
+
+    split_ws = function_tmpdir / "split"
+    new_sim.set_sim_path(split_ws)
+    new_sim.write_simulation(silent=True)
+    ats_text = (split_ws / ats.filename).read_text().upper().split()
+    assert ats_text[ats_text.index("MAXATS") + 1] == str(len(ats_perioddata))
+
+
 @requires_exe("mf6")
 def test_reconstruct_recarray(function_tmpdir):
     sim_path = get_example_data_path() / "mf6-freyberg"
