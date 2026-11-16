@@ -3698,16 +3698,17 @@ class CellBudgetFile:
             ]
         )
 
-        sorted_kstpkper = sorted(kstpkper, key=lambda x: (int(x[0]), int(x[1])))
-
-        text_mapping = {}
+        # budget text names in the file selected for export
+        selected_texts = set()
         for txt in textlist:
             txt_str = txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
             txt_upper = txt_str.upper()
-            matching_records = [
+            selected_texts.update(
                 t for t in self.textlist if txt_upper in t.decode().strip().upper()
-            ]
-            text_mapping[txt] = matching_records
+            )
+
+        # time steps selected for export (1-based)
+        selected_kstpkper = {(int(k), int(p)) for k, p in kstpkper}
 
         nlay = self.nlay if self.nlay > 0 else None
         nrow = self.nrow if self.nrow > 0 else None
@@ -3722,142 +3723,121 @@ class CellBudgetFile:
                 print("  Grid shape not specified")
 
         with open(filename, "wb") as f:
-            for ksp in sorted_kstpkper:
-                kstp = int(ksp[0])
-                kper = int(ksp[1])
+            # iterate over records in file order, so that each record's
+            # header and data come from the same place, and so that all
+            # records with the same text (e.g. multiple packages of the
+            # same type) are exported
+            for idx, header in enumerate(self.recordarray):
+                if header["text"] not in selected_texts:
+                    continue
+                kstp = int(header["kstp"])
+                kper = int(header["kper"])
+                if (kstp, kper) not in selected_kstpkper:
+                    continue
 
-                # get_data() expects 0-based but kstpkper is 1-based
-                ksp_0based = (kstp - 1, kper - 1)
+                # take imeth from the record's header. records from
+                # non-compact files are indexed with imeth 0, which is
+                # written as the equivalent imeth 1 in the compact output.
+                imeth = int(header["imeth"])
+                if imeth == 0:
+                    imeth = 1
+                if imeth not in (1, 6):
+                    raise NotImplementedError(
+                        f"Exporting imeth={imeth} records is not supported, "
+                        "expected imeth=0 or 1 (array) or imeth=6 (list)"
+                    )
+                data = self.get_data(idx=idx)[0]
+
+                # copy text as-is to preserve its justification
+                text_bytes = _pad_text_to_16(header["text"])
+                text_str = text_bytes.decode().strip()
+                delt = float(header["delt"])
+                pertim = float(header["pertim"])
+                totim = float(header["totim"])
 
                 if verbose:
-                    print(f"\n  Writing kstp={kstp}, kper={kper}")
+                    print(f"    Writing {text_str}: imeth={imeth}")
 
-                for txt in textlist:
-                    for file_txt in text_mapping[txt]:
-                        data_list = self.get_data(kstpkper=ksp_0based, text=file_txt)
-                        if not data_list:
-                            continue
-                        data = data_list[0]
-                        mask = (
-                            (self.recordarray["kstp"] == kstp)
-                            & (self.recordarray["kper"] == kper)
-                            & (self.recordarray["text"] == file_txt)
+                is_flowja = text_str.upper() == "FLOW-JA-FACE"
+
+                # Determine dimensions based on data type
+                if is_flowja and imeth == 1:
+                    # keep FLOW-JA-FACE flat/size NJA
+                    nja = np.asarray(data).size
+                    ndim1, ndim2, ndim3 = nja, 1, -1
+                else:
+                    # Regular budget term: use grid dimensions
+                    if nlay is None or nrow is None or ncol is None:
+                        raise ValueError(
+                            f"Grid dimensions (nlay, nrow, ncol) "
+                            f"required for non-FLOW-JA-FACE "
+                            f"budget term '{text_str}'. "
+                            f"Provided: nlay={nlay}, nrow={nrow}, "
+                            f"ncol={ncol}"
                         )
-                        records = self.recordarray[mask]
-                        if len(records) == 0:
-                            continue
+                    # negative nlay -> compact format
+                    ndim1, ndim2, ndim3 = ncol, nrow, -nlay
 
-                        record = records[0]
+                header1 = np.array(
+                    [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)],
+                    dtype=h1dt,
+                )
+                header1.tofile(f)
 
-                        if isinstance(data, np.recarray):
-                            imeth = 6  # list
-                        else:
-                            imeth = 1  # array
+                header2 = np.array([(imeth, delt, pertim, totim)], dtype=h2dt)
+                header2.tofile(f)
 
-                        text_str = file_txt.decode().strip()
-                        text_bytes = _pad_text_to_16(text_str)
-                        delt = float(record["delt"])
-                        pertim = float(record["pertim"])
-                        totim = float(record["totim"])
+                if imeth == 1:
+                    arr = np.asarray(data, dtype=realtype)
+                    # keep FLOW-JA-FACE flat/size NJA.
+                    # reshape other variables to grid.
+                    if is_flowja and arr.ndim != 1:
+                        arr = arr.flatten()
+                    elif arr.ndim == 1:
+                        arr = arr.reshape(nlay, nrow, ncol)
 
-                        if verbose:
-                            print(f"    Writing {text_str}: imeth={imeth}")
+                    arr.tofile(f)
 
-                        is_flowja = text_str.upper() == "FLOW-JA-FACE"
+                elif imeth == 6:
+                    # write model and package names
+                    for name in ["modelnam", "paknam", "modelnam2", "paknam2"]:
+                        f.write(_pad_text_to_16(header[name]))
 
-                        # Determine dimensions based on data type
-                        if is_flowja and imeth in [0, 1]:
-                            # keep FLOW-JA-FACE flat/size NJA
-                            nja = np.asarray(data).size
-                            ndim1, ndim2, ndim3 = nja, 1, -1
-                        else:
-                            # Regular budget term: use grid dimensions
-                            if nlay is None or nrow is None or ncol is None:
-                                raise ValueError(
-                                    f"Grid dimensions (nlay, nrow, ncol) "
-                                    f"required for non-FLOW-JA-FACE "
-                                    f"budget term '{text_str}'. "
-                                    f"Provided: nlay={nlay}, nrow={nrow}, "
-                                    f"ncol={ncol}"
-                                )
-                            # negative nlay -> compact format
-                            ndim1, ndim2, ndim3 = ncol, nrow, -nlay
+                    # write naux and aux var names
+                    standard_fields = {"node", "node2", "q"}
+                    auxtxt = [
+                        name for name in data.dtype.names if name not in standard_fields
+                    ]
+                    naux = len(auxtxt)
+                    np.array([naux + 1], dtype=np.int32).tofile(f)
+                    for auxname in auxtxt:
+                        f.write(_pad_text_to_16(auxname))
 
-                        header1 = np.array(
-                            [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)],
-                            dtype=h1dt,
+                    if not (isinstance(data, np.ndarray) and data.dtype.names):
+                        raise ValueError(
+                            "For imeth=6, data must be a numpy recarray "
+                            "with fields: node, node2, q, and optional "
+                            "auxiliary fields"
                         )
-                        header1.tofile(f)
 
-                        header2 = np.array([(imeth, delt, pertim, totim)], dtype=h2dt)
-                        header2.tofile(f)
+                    # write nlist and list data
+                    nlist = len(data)
+                    np.array([nlist], dtype=np.int32).tofile(f)
+                    dt_list = [
+                        ("node", np.int32),
+                        ("node2", np.int32),
+                        ("q", realtype),
+                    ]
+                    for auxname in auxtxt:
+                        dt_list.append((auxname, realtype))
 
-                        if imeth in [0, 1]:
-                            arr = np.asarray(data, dtype=realtype)
-                            # keep FLOW-JA-FACE flat/size NJA.
-                            # reshape other variables to grid.
-                            if is_flowja and arr.ndim != 1:
-                                arr = arr.flatten()
-                            elif arr.ndim == 1:
-                                arr = arr.reshape(nlay, nrow, ncol)
+                    output_dt = np.dtype(dt_list)
+                    output_data = np.zeros(nlist, dtype=output_dt)
+                    for field in output_dt.names:
+                        if field in data.dtype.names:
+                            output_data[field] = data[field].astype(output_dt[field])
 
-                            arr.tofile(f)
-
-                        elif imeth == 6:
-                            # write model and package names
-                            modelnam = record["modelnam"].decode().strip()
-                            paknam = record["paknam"].decode().strip()
-                            modelnam2 = record["modelnam2"].decode().strip()
-                            paknam2 = record["paknam2"].decode().strip()
-
-                            for name in [modelnam, paknam, modelnam2, paknam2]:
-                                name_bytes = _pad_text_to_16(name)
-                                f.write(name_bytes)
-
-                            # write naux and aux var names
-                            standard_fields = {"node", "node2", "q"}
-                            auxtxt = [
-                                name
-                                for name in data.dtype.names
-                                if name not in standard_fields
-                            ]
-                            naux = len(auxtxt)
-                            np.array([naux + 1], dtype=np.int32).tofile(f)
-                            for auxname in auxtxt:
-                                f.write(_pad_text_to_16(auxname))
-
-                            if not (isinstance(data, np.ndarray) and data.dtype.names):
-                                raise ValueError(
-                                    "For imeth=6, data must be a numpy recarray "
-                                    "with fields: node, node2, q, and optional "
-                                    "auxiliary fields"
-                                )
-
-                            # nrite nlist and list data
-                            nlist = len(data)
-                            np.array([nlist], dtype=np.int32).tofile(f)
-                            dt_list = [
-                                ("node", np.int32),
-                                ("node2", np.int32),
-                                ("q", realtype),
-                            ]
-                            for auxname in auxtxt:
-                                dt_list.append((auxname, realtype))
-
-                            output_dt = np.dtype(dt_list)
-                            output_data = np.zeros(nlist, dtype=output_dt)
-                            for field in output_dt.names:
-                                if field in data.dtype.names:
-                                    output_data[field] = data[field].astype(
-                                        output_dt[field]
-                                    )
-
-                            output_data.tofile(f)
-
-                        else:
-                            raise NotImplementedError(
-                                "Expected imeth=1 (array) or imeth=6 (list)"
-                            )
+                    output_data.tofile(f)
 
         if verbose:
             print(f"\nSuccessfully wrote {filename}")
