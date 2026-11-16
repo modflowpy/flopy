@@ -25,6 +25,52 @@ from ..datafile import Header, LayerFile
 from ..gridutil import get_lni
 
 
+def _match_names(name, names):
+    """
+    Find the names in a binary file matching a user-specified name.
+
+    Matching is case-insensitive and ignores surrounding whitespace. An exact
+    match is preferred: if one exists, only it is returned. Otherwise, all
+    names containing the given name as a substring are returned, in order.
+    This keeps abbreviations like ``"spdis"`` working while making sure that,
+    for example, ``"RCH"`` selects ``RCH`` records and not ``RCHA`` or
+    ``UZF-GWRCH`` records.
+
+    Parameters
+    ----------
+    name : str or bytes
+        The name to look for.
+    names : sequence of bytes
+        The names in the file (e.g. budget text or package names).
+
+    Returns
+    -------
+    list of bytes
+        The matching names, as they appear in ``names``.
+    """
+    if isinstance(name, bytes):
+        name = name.decode()
+    key = name.strip().upper()
+    exact = [n for n in names if n.decode().strip().upper() == key]
+    if exact:
+        return exact
+    return [n for n in names if key in n.decode().strip().upper()]
+
+
+def _match_name(name, names):
+    """
+    Find the name in a binary file best matching a user-specified name,
+    preferring an exact match over a substring match. See `_match_names`.
+
+    Returns
+    -------
+    bytes or None
+        The best matching name, or None if there is no match.
+    """
+    matches = _match_names(name, names)
+    return matches[0] if matches else None
+
+
 def _pad_text_to_16(text):
     """
     Pad text to exactly 16 bytes, left-justified (MODFLOW standard).
@@ -2668,14 +2714,7 @@ class CellBudgetFile:
         # check and make sure that text is in file
         text16 = None
         if text is not None:
-            if isinstance(text, bytes):
-                ttext = text.decode()
-            else:
-                ttext = text
-            for t in self.textlist:
-                if ttext.upper() in t.decode():
-                    text16 = t
-                    break
+            text16 = _match_name(text, self.textlist)
             if text16 is None:
                 raise ValueError("The specified text string is not in the budget file")
         return text16
@@ -2688,14 +2727,7 @@ class CellBudgetFile:
         # check and make sure that text is in file
         paknam16 = None
         if paknam is not None:
-            if isinstance(paknam, bytes):
-                tpaknam = paknam.decode()
-            else:
-                tpaknam = paknam
-            for t in self._unique_package_names(to):
-                if tpaknam.upper() in t.decode():
-                    paknam16 = t
-                    break
+            paknam16 = _match_name(paknam, self._unique_package_names(to))
             if paknam16 is None:
                 raise ValueError(
                     "The specified package name string is not in the budget file"
@@ -3702,12 +3734,7 @@ class CellBudgetFile:
 
         text_mapping = {}
         for txt in textlist:
-            txt_str = txt.decode().strip() if isinstance(txt, bytes) else txt.strip()
-            txt_upper = txt_str.upper()
-            matching_records = [
-                t for t in self.textlist if txt_upper in t.decode().strip().upper()
-            ]
-            text_mapping[txt] = matching_records
+            text_mapping[txt] = _match_names(txt, self.textlist)
 
         nlay = self.nlay if self.nlay > 0 else None
         nrow = self.nrow if self.nrow > 0 else None

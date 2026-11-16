@@ -1299,3 +1299,94 @@ def test_cellbudgetfile_write_preserves_aux_vars(dis_sim, function_tmpdir):
             assert np.allclose(spdis_orig[i][field], spdis_rewritten[i][field]), (
                 f"Field {field} mismatch at timestep {i}"
             )
+
+
+def test_match_names_prefers_exact():
+    from flopy.utils.binaryfile import _match_name, _match_names
+
+    texts = [
+        b"    FLOW-JA-FACE",
+        b"       UZF-GWRCH",
+        b"            RCHA",
+        b"             RCH",
+    ]
+    # exact match wins over earlier substring matches, any case/padding
+    for name in ["RCH", "rch", " RCH ", b"RCH", "RCH".rjust(16)]:
+        assert _match_names(name, texts) == [b"             RCH"]
+    assert _match_name("rcha", texts) == b"            RCHA"
+    # without an exact match, fall back to substring matching
+    assert _match_name("flow", texts) == b"    FLOW-JA-FACE"
+    assert _match_names("gwrc", texts) == [b"       UZF-GWRCH"]
+    assert _match_name("nope", texts) is None
+
+    paknams = [b"RCH_10          ", b"RCH_1           "]
+    assert _match_name("rch_1", paknams) == b"RCH_1           "
+    assert _match_name("rch_", paknams) == b"RCH_10          "
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_text_paknam_prefer_exact_match(function_tmpdir):
+    from flopy.mf6 import (
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowGwfic,
+        ModflowGwfnpf,
+        ModflowGwfoc,
+        ModflowGwfrch,
+        ModflowGwfrcha,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    name = "rchmix"
+    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
+    ModflowTdis(sim, nper=1)
+    ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=name, save_flows=True)
+    ModflowGwfdis(gwf, nlay=1, nrow=3, ncol=3, top=10.0, botm=0.0)
+    ModflowGwfnpf(gwf)
+    ModflowGwfic(gwf, strt=5.0)
+    ModflowGwfchd(gwf, stress_period_data=[((0, 0, 0), 5.0)])
+    # array-based recharge (budget text RCHA) listed before the
+    # list-based recharge packages (budget text RCH), and a package
+    # name (RCH_10) containing another (RCH_1) listed first
+    ModflowGwfrcha(gwf, recharge=1e-3, pname="rcha_0", filename=f"{name}.rcha")
+    ModflowGwfrch(
+        gwf,
+        stress_period_data=[((0, 2, 2), 2.0)],
+        pname="rch_10",
+        filename=f"{name}_10.rch",
+    )
+    ModflowGwfrch(
+        gwf,
+        stress_period_data=[((0, 1, 1), 1.0)],
+        pname="rch_1",
+        filename=f"{name}_1.rch",
+    )
+    ModflowGwfoc(gwf, budget_filerecord=f"{name}.cbc", saverecord=[("BUDGET", "ALL")])
+    sim.write_simulation(silent=True)
+    success, _ = sim.run_simulation(silent=True)
+    assert success
+
+    cbc = gwf.output.budget()
+    totim = cbc.get_times()[-1]
+
+    rch = cbc.get_data(totim=totim, text="rch")
+    assert len(rch) == 2
+    assert all(r.dtype.names == ("node", "node2", "q") for r in rch)
+    assert sorted(float(r["q"][0]) for r in rch) == [1.0, 2.0]
+
+    rcha = cbc.get_data(totim=totim, text="rcha")
+    assert len(rcha) == 1
+
+    rch_1 = cbc.get_data(totim=totim, text="rch", paknam2="rch_1")
+    assert len(rch_1) == 1 and float(rch_1[0]["q"][0]) == 1.0
+    rch_10 = cbc.get_data(totim=totim, text="rch", paknam2="rch_10")
+    assert len(rch_10) == 1 and float(rch_10[0]["q"][0]) == 2.0
+
+    # export with text="RCH" should not pick up RCHA records
+    out = function_tmpdir / "rch_only.cbc"
+    cbc.export(out, text="RCH")
+    exported = CellBudgetFile(out)
+    assert [t.strip() for t in exported.textlist] == [b"RCH"]
