@@ -1439,18 +1439,39 @@ def test_cellbudgetfile_export_multiple_packages_kstpkper_subset(
 
 
 @pytest.mark.parametrize(
-    "relpath,kstpkper",
+    "relpath",
     [
         # imeth 1 and 2 (compact list without aux)
+        "freyberg_multilayer_transient/freyberg.cbc",
+        # imeth 5 (compact list with naux + 1 = 1)
+        "preserve_unitnums/testsfr2.ghb.cbc",
+        # imeth 1, 2 and 5
+        "mfusg_test/03_conduit_confined/output/ex3.cbb",
+        # CLN records whose ncol differs from the file-level ncol
+        "mfusg_test/03A_conduit_unconfined/output/ex3A.cln.cbb",
+    ],
+)
+def test_cellbudgetfile_export_mf2005_compact_unchanged(
+    example_data_path, function_tmpdir, relpath
+):
+    """Exporting a whole MF2005 compact file reproduces it byte for byte."""
+    src = example_data_path / relpath
+    out = function_tmpdir / "out.cbc"
+    CellBudgetFile(src).export(out)
+    assert src.read_bytes() == out.read_bytes()
+
+
+@pytest.mark.parametrize(
+    "relpath,kstpkper",
+    [
         ("freyberg_multilayer_transient/freyberg.cbc", [(1, 1), (1, 2)]),
-        # imeth 5 (compact list with aux)
-        ("preserve_unitnums/testsfr2.ghb.cbc", None),
+        ("mfusg_test/03_conduit_confined/output/ex3.cbb", None),
     ],
 )
 def test_cellbudgetfile_export_mf2005_compact_lists(
     example_data_path, function_tmpdir, relpath, kstpkper
 ):
-    """MF2005 compact list records (imeth 2 and 5) are exported as imeth 6."""
+    """MF2005 compact records keep their imeth, and list records their fields."""
     cbc = CellBudgetFile(example_data_path / relpath)
     out = function_tmpdir / "out.cbc"
     cbc.export(out, kstpkper=kstpkper)
@@ -1467,17 +1488,98 @@ def test_cellbudgetfile_export_mf2005_compact_lists(
     for j, i in enumerate(idx):
         hdr = cbc.recordarray[i]
         exp_hdr = exported.recordarray[j]
-        for field in ["kstp", "kper", "text"]:
+        for field in ["kstp", "kper", "text", "ncol", "nrow", "nlay", "imeth"]:
             assert hdr[field] == exp_hdr[field]
         a = cbc.get_data(idx=i)[0]
         b = exported.get_data(idx=j)[0]
         if hdr["imeth"] in (2, 5):
-            assert exp_hdr["imeth"] == 6
+            assert b.dtype.names == a.dtype.names
             for name in a.dtype.names:
-                assert np.allclose(a[name], b[name]), name
+                assert np.array_equal(a[name], b[name]), name
         else:
-            assert exp_hdr["imeth"] == hdr["imeth"]
-            assert np.allclose(a, b)
+            assert np.array_equal(a, b, equal_nan=True)
+
+
+def _write_mf2005_compact_cbc(path, precision):
+    """Write a compact budget file with imeth 2, 3, 4 and 5 records."""
+    realtype = np.float32 if precision == "single" else np.float64
+    nlay, nrow, ncol = 3, 2, 2
+    h1 = np.dtype(
+        [
+            ("kstp", "i4"),
+            ("kper", "i4"),
+            ("text", "S16"),
+            ("ncol", "i4"),
+            ("nrow", "i4"),
+            ("nlay", "i4"),
+        ]
+    )
+    h2 = np.dtype(
+        [("imeth", "i4"), ("delt", realtype), ("pertim", realtype), ("totim", realtype)]
+    )
+
+    def header(f, text, imeth):
+        np.array([(1, 1, text, ncol, nrow, -nlay)], h1).tofile(f)
+        np.array([(imeth, 1.0, 1.0, 1.0)], h2).tofile(f)
+
+    with open(path, "wb") as f:
+        header(f, b"           WELLS", 2)
+        np.array([2], np.int32).tofile(f)
+        np.array([(3, -1.5), (10, -2.5)], [("node", "i4"), ("q", realtype)]).tofile(f)
+
+        header(f, b"              ET", 3)
+        np.array([[1, 2], [3, 1]], np.int32).tofile(f)
+        np.array([[1.0, 2.0], [3.0, 4.0]], realtype).tofile(f)
+
+        header(f, b"        RECHARGE", 4)
+        np.array([[5.0, 6.0], [7.0, 8.0]], realtype).tofile(f)
+
+        header(f, b" HEAD DEP BOUNDS", 5)
+        np.array([2], np.int32).tofile(f)  # naux + 1
+        f.write(b"IFACE           ")
+        np.array([2], np.int32).tofile(f)
+        np.array(
+            [(4, 0.5, 6.0), (11, 0.25, 0.0)],
+            [("node", "i4"), ("q", realtype), ("IFACE", realtype)],
+        ).tofile(f)
+
+
+@pytest.mark.parametrize("precision", ["single", "double"])
+def test_cellbudgetfile_export_imeth_2_to_5(function_tmpdir, precision):
+    """imeth 2-5 records, including aux names, are written unchanged."""
+    src = function_tmpdir / "mf2005.cbc"
+    _write_mf2005_compact_cbc(src, precision)
+    cbc = CellBudgetFile(src, precision=precision)
+    assert list(cbc.recordarray["imeth"]) == [2, 3, 4, 5]
+
+    out = function_tmpdir / "out.cbc"
+    cbc.export(out)
+    assert src.read_bytes() == out.read_bytes()
+
+    # subset
+    out = function_tmpdir / "subset.cbc"
+    cbc.export(out, text=["ET", "HEAD DEP BOUNDS"])
+    exported = CellBudgetFile(out, precision=precision)
+    assert list(exported.recordarray["imeth"]) == [3, 5]
+    ilayer, et = exported.get_data(idx=0)[0]
+    assert ilayer.tolist() == [[1, 2], [3, 1]]
+    assert et.tolist() == [[1.0, 2.0], [3.0, 4.0]]
+    ghb = exported.get_data(idx=1)[0]
+    assert ghb.dtype.names == ("node", "q", "IFACE")
+    assert ghb["IFACE"].tolist() == [6.0, 0.0]
+
+
+def test_cellbudgetfile_export_imeth_2_to_5_precision(function_tmpdir):
+    """imeth 2-5 real fields are converted to the requested precision."""
+    src = function_tmpdir / "mf2005.cbc"
+    _write_mf2005_compact_cbc(src, "single")
+    cbc = CellBudgetFile(src, precision="single")
+    out = function_tmpdir / "out.cbc"
+    cbc.export(out, precision="double")
+
+    expected = function_tmpdir / "expected.cbc"
+    _write_mf2005_compact_cbc(expected, "double")
+    assert out.read_bytes() == expected.read_bytes()
 
 
 def test_cellbudgetfile_export_auto_precision(example_data_path, function_tmpdir):
