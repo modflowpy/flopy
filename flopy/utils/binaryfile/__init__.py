@@ -3735,18 +3735,31 @@ class CellBudgetFile:
                 if (kstp, kper) not in selected_kstpkper:
                     continue
 
-                # take imeth from the record's header. records from
-                # non-compact files are indexed with imeth 0, which is
-                # written as the equivalent imeth 1 in the compact output.
+                # output is always compact, with array records written
+                # as imeth 1 and list records as imeth 6:
+                # - imeth 0 (non-compact) is equivalent to imeth 1
+                # - imeth 2 and 5 (MF2005 lists) are written as imeth 6,
+                #   with blank model and package names
+                # - imeth 3 (layer indicator + 2D array) and imeth 4 (2D
+                #   array for layer 1) are expanded to full 3D arrays
                 imeth = int(header["imeth"])
+                data = self.get_data(idx=idx)[0]
                 if imeth == 0:
                     imeth = 1
-                if imeth not in (1, 6):
-                    raise NotImplementedError(
-                        f"Exporting imeth={imeth} records is not supported, "
-                        "expected imeth=0 or 1 (array) or imeth=6 (list)"
-                    )
-                data = self.get_data(idx=idx)[0]
+                elif imeth in (2, 5):
+                    imeth = 6
+                elif imeth in (3, 4):
+                    arr3d = np.zeros((nlay, nrow, ncol), dtype=realtype)
+                    if imeth == 3:
+                        ilayer, values = data
+                        rows, cols = np.indices((nrow, ncol))
+                        arr3d[ilayer - 1, rows, cols] = values
+                    else:
+                        arr3d[0] = data
+                    data = arr3d
+                    imeth = 1
+                elif imeth not in (1, 6):
+                    raise ValueError(f"Invalid imeth={imeth} in budget file")
 
                 # copy text as-is to preserve its justification
                 text_bytes = _pad_text_to_16(header["text"])

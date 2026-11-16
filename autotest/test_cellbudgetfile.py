@@ -1431,3 +1431,94 @@ def test_cellbudgetfile_export_multiple_packages_kstpkper_subset(
     rch = exported.get_data(text="RCH")
     assert len(rch) == 2
     assert [float(r["q"][0]) for r in rch] == [4.0, 3.0]
+
+
+@pytest.mark.parametrize(
+    "relpath,kstpkper",
+    [
+        # imeth 1 and 2 (compact list without aux)
+        ("freyberg_multilayer_transient/freyberg.cbc", [(1, 1), (1, 2)]),
+        # imeth 5 (compact list with aux)
+        ("preserve_unitnums/testsfr2.ghb.cbc", None),
+    ],
+)
+def test_cellbudgetfile_export_mf2005_compact_lists(
+    example_data_path, function_tmpdir, relpath, kstpkper
+):
+    """MF2005 compact list records (imeth 2 and 5) are exported as imeth 6."""
+    cbc = CellBudgetFile(example_data_path / relpath)
+    out = function_tmpdir / "out.cbc"
+    cbc.export(out, kstpkper=kstpkper)
+    exported = CellBudgetFile(out)
+
+    if kstpkper is None:
+        kstpkper = cbc.kstpkper
+    kk = [
+        (int(k), int(p))
+        for k, p in zip(cbc.recordarray["kstp"], cbc.recordarray["kper"])
+    ]
+    idx = [i for i, ksp in enumerate(kk) if ksp in set(kstpkper)]
+    assert len(exported.recordarray) == len(idx)
+    for j, i in enumerate(idx):
+        hdr = cbc.recordarray[i]
+        exp_hdr = exported.recordarray[j]
+        for field in ["kstp", "kper", "text"]:
+            assert hdr[field] == exp_hdr[field]
+        a = cbc.get_data(idx=i)[0]
+        b = exported.get_data(idx=j)[0]
+        if hdr["imeth"] in (2, 5):
+            assert exp_hdr["imeth"] == 6
+            for name in a.dtype.names:
+                assert np.allclose(a[name], b[name]), name
+        else:
+            assert exp_hdr["imeth"] == hdr["imeth"]
+            assert np.allclose(a, b)
+
+
+def test_cellbudgetfile_export_imeth_3_4(function_tmpdir):
+    """imeth 3 and 4 records are expanded to full 3D arrays (imeth 1)."""
+    nlay, nrow, ncol = 3, 2, 2
+    h1 = np.dtype(
+        [
+            ("kstp", "i4"),
+            ("kper", "i4"),
+            ("text", "S16"),
+            ("ncol", "i4"),
+            ("nrow", "i4"),
+            ("nlay", "i4"),
+        ]
+    )
+    h2 = np.dtype([("imeth", "i4"), ("delt", "f4"), ("pertim", "f4"), ("totim", "f4")])
+    ilayer = np.array([[1, 2], [3, 1]], dtype=np.int32)
+    et = np.array([[1.0, 2.0], [3.0, 4.0]], dtype=np.float32)
+    rch = np.array([[5.0, 6.0], [7.0, 8.0]], dtype=np.float32)
+
+    src = function_tmpdir / "imeth34.cbc"
+    with open(src, "wb") as f:
+        np.array([(1, 1, b"              ET", ncol, nrow, -nlay)], h1).tofile(f)
+        np.array([(3, 1.0, 1.0, 1.0)], h2).tofile(f)
+        ilayer.tofile(f)
+        et.tofile(f)
+        np.array([(1, 1, b"        RECHARGE", ncol, nrow, -nlay)], h1).tofile(f)
+        np.array([(4, 1.0, 1.0, 1.0)], h2).tofile(f)
+        rch.tofile(f)
+
+    cbc = CellBudgetFile(src, precision="single")
+    assert list(cbc.recordarray["imeth"]) == [3, 4]
+    out = function_tmpdir / "out.cbc"
+    cbc.export(out)
+    exported = CellBudgetFile(out, precision="single")
+    assert list(exported.recordarray["imeth"]) == [1, 1]
+    assert list(exported.recordarray["text"]) == list(cbc.recordarray["text"])
+
+    et3d = exported.get_data(idx=0)[0]
+    expected = np.zeros((nlay, nrow, ncol), dtype=np.float32)
+    for r in range(nrow):
+        for c in range(ncol):
+            expected[ilayer[r, c] - 1, r, c] = et[r, c]
+    assert np.array_equal(et3d, expected)
+
+    rch3d = exported.get_data(idx=1)[0]
+    expected = np.zeros((nlay, nrow, ncol), dtype=np.float32)
+    expected[0] = rch
+    assert np.array_equal(rch3d, expected)
