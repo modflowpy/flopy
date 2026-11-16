@@ -145,6 +145,77 @@ def test_headfile_build_index(example_data_path):
     )
 
 
+@pytest.mark.parametrize("precision", ["single", "double"])
+def test_headfile_build_index_mixed_text(function_tmpdir, precision):
+    # MODFLOW-2005 output control allows heads and drawdown to be saved
+    # to the same unit; each reader should only index its own records
+    nlay, nrow, ncol = 2, 3, 4
+    dtype = np.float32 if precision == "single" else np.float64
+    fpth = function_tmpdir / "mixed.hds"
+
+    def value(text, kper, ilay):
+        return (100.0 if text == "HEAD" else -1.0) * kper + ilay
+
+    with open(fpth, "wb") as f:
+        for kper in (1, 2, 3):
+            for text in ("HEAD", "DRAWDOWN"):
+                for ilay in range(1, nlay + 1):
+                    header = BinaryHeader.create(
+                        bintype="head",
+                        precision=precision,
+                        text=text,
+                        kstp=1,
+                        kper=kper,
+                        pertim=1.0,
+                        totim=float(kper),
+                        ncol=ncol,
+                        nrow=nrow,
+                        ilay=ilay,
+                    )
+                    header.tofile(f)
+                    np.full((nrow, ncol), value(text, kper, ilay), dtype).tofile(f)
+
+    for text in ("HEAD", "DRAWDOWN"):
+        with HeadFile(fpth, text=text.lower(), precision=precision) as hds:
+            assert len(hds) == 3 * nlay
+            assert hds.get_times() == [1.0, 2.0, 3.0]
+            assert hds.get_kstpkper() == [(0, 0), (0, 1), (0, 2)]
+            assert hds.nlay == nlay
+            assert all(t.strip() == text.encode() for t in hds.recordarray["text"])
+            assert list(hds.headers["text"]) == [text] * (3 * nlay)
+            for kper in (1, 2, 3):
+                data = hds.get_data(totim=float(kper))
+                assert data.shape == (nlay, nrow, ncol)
+                for ilay in range(1, nlay + 1):
+                    np.testing.assert_allclose(data[ilay - 1], value(text, kper, ilay))
+            ts = hds.get_ts((1, 2, 3))
+            np.testing.assert_allclose(ts[:, 0], [1.0, 2.0, 3.0])
+            np.testing.assert_allclose(
+                ts[:, 1], [value(text, kper, 2) for kper in (1, 2, 3)]
+            )
+
+
+def test_headfile_build_index_no_matching_text(function_tmpdir):
+    fpth = function_tmpdir / "drawdown_only.hds"
+    with open(fpth, "wb") as f:
+        header = BinaryHeader.create(
+            bintype="head",
+            precision="double",
+            text="DRAWDOWN",
+            kstp=1,
+            kper=1,
+            pertim=1.0,
+            totim=1.0,
+            ncol=4,
+            nrow=3,
+            ilay=1,
+        )
+        header.tofile(f)
+        np.zeros((3, 4), np.float64).tofile(f)
+    with pytest.raises(ValueError, match="No records with text 'head'"):
+        HeadFile(fpth, precision="double")
+
+
 def test_concentration_build_index(example_data_path):
     # test low-level BinaryLayerFile._build_index() method with UCN file
     pth = example_data_path / "mt3d_test/mf2005mt3d/P07/MT3D001.UCN"
