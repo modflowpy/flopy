@@ -3736,28 +3736,18 @@ class CellBudgetFile:
                     continue
 
                 # output is always compact, with array records written
-                # as imeth 1 and list records as imeth 6:
-                # - imeth 0 (non-compact) is equivalent to imeth 1
-                # - imeth 2 and 5 (MF2005 lists) are written as imeth 6,
-                #   with blank model and package names
-                # - imeth 3 (layer indicator + 2D array) and imeth 4 (2D
-                #   array for layer 1) are expanded to full 3D arrays
+                # as imeth 1 and list records as imeth 6. imeth 0
+                # (non-compact) is equivalent to imeth 1. imeth 2-5
+                # (MF2005 compact) are converted as before: lists
+                # (2, 5) to imeth 6 with blank model/package names,
+                # arrays (3, 4) to imeth 1.
+                # TODO: write imeth 2-5 records unchanged instead
                 imeth = int(header["imeth"])
                 data = self.get_data(idx=idx)[0]
-                if imeth == 0:
+                if imeth in (0, 3, 4):
                     imeth = 1
                 elif imeth in (2, 5):
                     imeth = 6
-                elif imeth in (3, 4):
-                    arr3d = np.zeros((nlay, nrow, ncol), dtype=realtype)
-                    if imeth == 3:
-                        ilayer, values = data
-                        rows, cols = np.indices((nrow, ncol))
-                        arr3d[ilayer - 1, rows, cols] = values
-                    else:
-                        arr3d[0] = data
-                    data = arr3d
-                    imeth = 1
                 elif imeth not in (1, 6):
                     raise ValueError(f"Invalid imeth={imeth} in budget file")
 
