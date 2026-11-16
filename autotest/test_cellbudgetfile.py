@@ -1299,3 +1299,182 @@ def test_cellbudgetfile_write_preserves_aux_vars(dis_sim, function_tmpdir):
             assert np.allclose(spdis_orig[i][field], spdis_rewritten[i][field]), (
                 f"Field {field} mismatch at timestep {i}"
             )
+
+
+@pytest.fixture
+def multi_rch_sim(function_tmpdir):
+    """
+    MF6 model with two list-based RCH packages, so the budget file
+    has two RCH records per time step, and two stress periods.
+    """
+    from flopy.mf6 import (
+        ModflowGwf,
+        ModflowGwfchd,
+        ModflowGwfdis,
+        ModflowGwfic,
+        ModflowGwfnpf,
+        ModflowGwfoc,
+        ModflowGwfrch,
+        ModflowIms,
+        ModflowTdis,
+    )
+
+    name = "multirch"
+    sim = MFSimulation(sim_name=name, sim_ws=function_tmpdir, exe_name="mf6")
+    ModflowTdis(sim, nper=2, perioddata=[(1.0, 1, 1.0), (1.0, 1, 1.0)])
+    ModflowIms(sim)
+    gwf = ModflowGwf(sim, modelname=name, save_flows=True)
+    ModflowGwfdis(gwf, nlay=1, nrow=3, ncol=3, top=10.0, botm=0.0)
+    ModflowGwfnpf(gwf, save_specific_discharge=True)
+    ModflowGwfic(gwf, strt=5.0)
+    ModflowGwfchd(gwf, stress_period_data=[((0, 0, 0), 5.0)])
+    ModflowGwfrch(
+        gwf,
+        stress_period_data={0: [((0, 2, 2), 2.0)], 1: [((0, 2, 2), 4.0)]},
+        pname="rch_10",
+        filename=f"{name}_10.rch",
+    )
+    ModflowGwfrch(
+        gwf,
+        stress_period_data={0: [((0, 1, 1), 1.0)], 1: [((0, 1, 1), 3.0)]},
+        pname="rch_1",
+        filename=f"{name}_1.rch",
+    )
+    ModflowGwfoc(gwf, budget_filerecord=f"{name}.cbc", saverecord=[("BUDGET", "ALL")])
+    sim.write_simulation(silent=True)
+    success, _ = sim.run_simulation(silent=True)
+    assert success
+    return sim
+
+
+def _assert_records_equal(cbc, exported, idx_orig, idx_exported=None):
+    if idx_exported is None:
+        idx_exported = idx_orig
+    fields = ["kstp", "kper", "text", "imeth", "paknam2"]
+    orig_ra = cbc.recordarray[idx_orig]
+    exp_ra = exported.recordarray[idx_exported]
+    assert len(orig_ra) == len(exp_ra)
+    for field in fields:
+        assert np.array_equal(orig_ra[field], exp_ra[field]), field
+    for i, j in zip(idx_orig, idx_exported):
+        a = cbc.get_data(idx=int(i))[0]
+        b = exported.get_data(idx=int(j))[0]
+        if a.dtype.names:
+            assert a.dtype.names == b.dtype.names
+            for name in a.dtype.names:
+                assert np.allclose(a[name], b[name]), (i, name)
+        else:
+            assert np.allclose(a, b), i
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_export_multiple_packages(multi_rch_sim, function_tmpdir):
+    cbc = multi_rch_sim.get_model().output.budget()
+    rch = cbc.get_data(text="RCH")
+    assert len(rch) == 4  # 2 packages x 2 stress periods
+
+    out = function_tmpdir / "all.cbc"
+    cbc.export(out)
+    exported = CellBudgetFile(out)
+    all_idx = np.arange(len(cbc.recordarray))
+    assert len(exported.recordarray) == len(cbc.recordarray)
+    _assert_records_equal(cbc, exported, all_idx)
+    assert len(exported.get_data(text="RCH")) == 4
+
+    # the export should be the same size as the original. it is not
+    # byte-identical because MF6 right-justifies auxiliary variable names
+    # (e.g. DATA-SPDIS qx, qy, qz), which flopy strips when reading.
+    assert out.stat().st_size == os.path.getsize(cbc.filename)
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_export_multiple_packages_text_subset(
+    multi_rch_sim, function_tmpdir
+):
+    cbc = multi_rch_sim.get_model().output.budget()
+    out = function_tmpdir / "rch.cbc"
+    cbc.export(out, text="RCH")
+    exported = CellBudgetFile(out)
+    assert [t.strip() for t in exported.textlist] == [b"RCH"]
+    assert [p.strip() for p in exported.recordarray["paknam2"]] == [
+        b"RCH_10",
+        b"RCH_1",
+        b"RCH_10",
+        b"RCH_1",
+    ]
+    rch_idx = np.flatnonzero(cbc.recordarray["text"] == exported.textlist[0])
+    _assert_records_equal(cbc, exported, rch_idx, np.arange(len(rch_idx)))
+
+    # text given as a list in a different order than in the file
+    # should still produce records in file order
+    out = function_tmpdir / "rch_spdis.cbc"
+    cbc.export(out, text=["RCH", "DATA-SPDIS"])
+    exported = CellBudgetFile(out)
+    assert [t.strip() for t in exported.recordarray["text"]] == [
+        b"DATA-SPDIS",
+        b"RCH",
+        b"RCH",
+    ] * 2
+    mask = np.isin(cbc.recordarray["text"], exported.textlist)
+    idx = np.flatnonzero(mask)
+    assert len(idx) == 6
+    _assert_records_equal(cbc, exported, idx, np.arange(len(idx)))
+
+
+@pytest.mark.requires_exe("mf6")
+def test_cellbudgetfile_export_multiple_packages_kstpkper_subset(
+    multi_rch_sim, function_tmpdir
+):
+    cbc = multi_rch_sim.get_model().output.budget()
+    assert cbc.kstpkper == [(1, 1), (1, 2)]
+    out = function_tmpdir / "sp2.cbc"
+    cbc.export(out, kstpkper=[(1, 2)])
+    exported = CellBudgetFile(out)
+    assert exported.kstpkper == [(1, 2)]
+    idx = np.flatnonzero(cbc.recordarray["kper"] == 2)
+    _assert_records_equal(cbc, exported, idx, np.arange(len(idx)))
+    rch = exported.get_data(text="RCH")
+    assert len(rch) == 2
+    assert [float(r["q"][0]) for r in rch] == [4.0, 3.0]
+
+
+@pytest.mark.parametrize(
+    "relpath,kstpkper",
+    [
+        # imeth 1 and 2 (compact list without aux)
+        ("freyberg_multilayer_transient/freyberg.cbc", [(1, 1), (1, 2)]),
+        # imeth 5 (compact list with aux)
+        ("preserve_unitnums/testsfr2.ghb.cbc", None),
+    ],
+)
+def test_cellbudgetfile_export_mf2005_compact_lists(
+    example_data_path, function_tmpdir, relpath, kstpkper
+):
+    """MF2005 compact list records (imeth 2 and 5) are exported as imeth 6."""
+    cbc = CellBudgetFile(example_data_path / relpath)
+    out = function_tmpdir / "out.cbc"
+    cbc.export(out, kstpkper=kstpkper)
+    exported = CellBudgetFile(out)
+
+    if kstpkper is None:
+        kstpkper = cbc.kstpkper
+    kk = [
+        (int(k), int(p))
+        for k, p in zip(cbc.recordarray["kstp"], cbc.recordarray["kper"])
+    ]
+    idx = [i for i, ksp in enumerate(kk) if ksp in set(kstpkper)]
+    assert len(exported.recordarray) == len(idx)
+    for j, i in enumerate(idx):
+        hdr = cbc.recordarray[i]
+        exp_hdr = exported.recordarray[j]
+        for field in ["kstp", "kper", "text"]:
+            assert hdr[field] == exp_hdr[field]
+        a = cbc.get_data(idx=i)[0]
+        b = exported.get_data(idx=j)[0]
+        if hdr["imeth"] in (2, 5):
+            assert exp_hdr["imeth"] == 6
+            for name in a.dtype.names:
+                assert np.allclose(a[name], b[name]), name
+        else:
+            assert exp_hdr["imeth"] == hdr["imeth"]
+            assert np.allclose(a, b)
