@@ -1408,8 +1408,13 @@ def test_cellbudgetfile_export_multiple_packages_text_subset(
     # text given as a list in a different order than in the file
     # should still produce records in file order
     out = function_tmpdir / "rch_spdis.cbc"
-    cbc.export(out, text=["DATA-SPDIS", "RCH"])
+    cbc.export(out, text=["RCH", "DATA-SPDIS"])
     exported = CellBudgetFile(out)
+    assert [t.strip() for t in exported.recordarray["text"]] == [
+        b"DATA-SPDIS",
+        b"RCH",
+        b"RCH",
+    ] * 2
     mask = np.isin(cbc.recordarray["text"], exported.textlist)
     idx = np.flatnonzero(mask)
     assert len(idx) == 6
