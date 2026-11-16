@@ -1478,3 +1478,14 @@ def test_cellbudgetfile_export_mf2005_compact_lists(
         else:
             assert exp_hdr["imeth"] == hdr["imeth"]
             assert np.allclose(a, b)
+
+
+def test_cellbudgetfile_export_auto_precision(example_data_path, function_tmpdir):
+    """With precision detected automatically, export keeps the file's precision."""
+    src = example_data_path / "freyberg_multilayer_transient" / "freyberg.cbc"
+    cbc = CellBudgetFile(src)
+    assert cbc.realtype == np.float32
+    out = function_tmpdir / "out.cbc"
+    cbc.export(out, kstpkper=[(1, 1)])
+    exported = CellBudgetFile(out)
+    assert exported.realtype == np.float32

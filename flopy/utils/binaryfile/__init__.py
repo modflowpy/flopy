@@ -3675,8 +3675,13 @@ class CellBudgetFile:
             textlist = [_pad_text_to_16(t) for t in text]
 
         verbose = kwargs.get("verbose", False)
-        precision = kwargs.get("precision", self.precision)
-        realtype = np.float32 if precision == "single" else np.float64
+        # default to the file's precision, as detected if it was "auto"
+        precision = kwargs.get("precision")
+        if precision in (None, "auto"):
+            realtype = self.realtype
+            precision = "single" if realtype == np.float32 else "double"
+        else:
+            realtype = np.float32 if precision == "single" else np.float64
 
         # header dtypes
         h1dt = np.dtype(
