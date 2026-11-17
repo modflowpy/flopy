@@ -435,24 +435,31 @@ class BinaryLayerFile(LayerFile):
         ipos = 0
         while ipos < self.totalbytes:
             header = self._get_header()
-            self.recordarray.append(header)
+            databytes = self.get_databytes(header)
             if self.text.upper() not in header["text"]:
+                # the file may contain other record types (e.g. HEAD and
+                # DRAWDOWN saved to the same unit), skip over their data
+                self.file.seek(databytes, 1)
+                ipos = self.file.tell()
                 continue
-            if ipos == 0:
-                self.times.append(header["totim"])
+            self.recordarray.append(header)
+            totim = header["totim"]
+            if not self.times or totim != self.times[-1]:
+                self.times.append(totim)
                 self.kstpkper.append((header["kstp"], header["kper"]))
-            else:
-                totim = header["totim"]
-                if totim != self.times[-1]:
-                    self.times.append(totim)
-                    self.kstpkper.append((header["kstp"], header["kper"]))
             ipos = self.file.tell()
             self.iposarray.append(ipos)
-            databytes = self.get_databytes(header)
             self.file.seek(databytes, 1)
             ipos = self.file.tell()
 
-        # self.recordarray contains a recordarray of all the headers.
+        if len(self.recordarray) == 0:
+            self.file.close()
+            raise ValueError(
+                f"No records with text '{self.text.decode().strip()}' "
+                f"found in {self.filename}"
+            )
+
+        # self.recordarray contains the headers of all records matching text.
         self.recordarray = np.array(self.recordarray, dtype=self.header_dtype)
         self.iposarray = np.array(self.iposarray, dtype=np.int64)
         self.nlay = np.max(self.recordarray["ilay"])
