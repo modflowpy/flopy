@@ -3649,6 +3649,13 @@ class CellBudgetFile:
             - precision : str, 'single' or 'double' (default is the file's precision)
             - verbose : bool, print progress messages
 
+        Notes
+        -----
+        The output is a subset of the file in its own format, not a
+        conversion. Headers are always compact, and each record keeps its
+        imeth, except imeth 0 (non-compact full array), which is written
+        as the equivalent imeth 1.
+
         Examples
         --------
         >>> cbc = CellBudgetFile('input.cbc')
@@ -3675,8 +3682,13 @@ class CellBudgetFile:
             textlist = [_pad_text_to_16(t) for t in text]
 
         verbose = kwargs.get("verbose", False)
-        precision = kwargs.get("precision", self.precision)
-        realtype = np.float32 if precision == "single" else np.float64
+        # default to the file's precision, as detected if it was "auto"
+        precision = kwargs.get("precision")
+        if precision in (None, "auto"):
+            realtype = self.realtype
+            precision = "single" if realtype == np.float32 else "double"
+        else:
+            realtype = np.float32 if precision == "single" else np.float64
 
         # header dtypes
         h1dt = np.dtype(
@@ -3710,17 +3722,9 @@ class CellBudgetFile:
         # time steps selected for export (1-based)
         selected_kstpkper = {(int(k), int(p)) for k, p in kstpkper}
 
-        nlay = self.nlay if self.nlay > 0 else None
-        nrow = self.nrow if self.nrow > 0 else None
-        ncol = self.ncol if self.ncol > 0 else None
-
         if verbose:
             print(f"Writing binary budget file: {filename}")
             print(f"  Precision: {precision}")
-            if nlay is not None and nrow is not None and ncol is not None:
-                print(f"  Grid shape: {nlay} layers x {nrow} rows x {ncol} cols")
-            else:
-                print("  Grid shape not specified")
 
         with open(filename, "wb") as f:
             # iterate over records in file order, so that each record's
@@ -3735,20 +3739,14 @@ class CellBudgetFile:
                 if (kstp, kper) not in selected_kstpkper:
                     continue
 
-                # output is always compact, with array records written
-                # as imeth 1 and list records as imeth 6. imeth 0
-                # (non-compact) is equivalent to imeth 1. imeth 2-5
-                # (MF2005 compact) are converted as before: lists
-                # (2, 5) to imeth 6 with blank model/package names,
-                # arrays (3, 4) to imeth 1.
-                # TODO: write imeth 2-5 records unchanged instead
+                # output is always compact, and records keep their
+                # imeth, except imeth 0 (non-compact array), which is
+                # equivalent to imeth 1.
                 imeth = int(header["imeth"])
                 data = self.get_data(idx=idx)[0]
-                if imeth in (0, 3, 4):
+                if imeth == 0:
                     imeth = 1
-                elif imeth in (2, 5):
-                    imeth = 6
-                elif imeth not in (1, 6):
+                elif imeth not in range(1, 7):
                     raise ValueError(f"Invalid imeth={imeth} in budget file")
 
                 # copy text as-is to preserve its justification
@@ -3761,25 +3759,12 @@ class CellBudgetFile:
                 if verbose:
                     print(f"    Writing {text_str}: imeth={imeth}")
 
-                is_flowja = text_str.upper() == "FLOW-JA-FACE"
-
-                # Determine dimensions based on data type
-                if is_flowja and imeth == 1:
-                    # keep FLOW-JA-FACE flat/size NJA
-                    nja = np.asarray(data).size
-                    ndim1, ndim2, ndim3 = nja, 1, -1
-                else:
-                    # Regular budget term: use grid dimensions
-                    if nlay is None or nrow is None or ncol is None:
-                        raise ValueError(
-                            f"Grid dimensions (nlay, nrow, ncol) "
-                            f"required for non-FLOW-JA-FACE "
-                            f"budget term '{text_str}'. "
-                            f"Provided: nlay={nlay}, nrow={nrow}, "
-                            f"ncol={ncol}"
-                        )
-                    # negative nlay -> compact format
-                    ndim1, ndim2, ndim3 = ncol, nrow, -nlay
+                # copy the record's own dimensions, which can differ
+                # from the grid's (e.g. FLOW-JA-FACE, MFUSG CLN flows).
+                # negative nlay -> compact format
+                ndim1 = int(header["ncol"])
+                ndim2 = int(header["nrow"])
+                ndim3 = -abs(int(header["nlay"]))
 
                 header1 = np.array(
                     [(kstp, kper, text_bytes, ndim1, ndim2, ndim3)],
@@ -3791,15 +3776,31 @@ class CellBudgetFile:
                 header2.tofile(f)
 
                 if imeth == 1:
-                    arr = np.asarray(data, dtype=realtype)
-                    # keep FLOW-JA-FACE flat/size NJA.
-                    # reshape other variables to grid.
-                    if is_flowja and arr.ndim != 1:
-                        arr = arr.flatten()
-                    elif arr.ndim == 1:
-                        arr = arr.reshape(nlay, nrow, ncol)
+                    np.asarray(data, dtype=realtype).tofile(f)
 
-                    arr.tofile(f)
+                elif imeth in (2, 5):
+                    # imeth 5 has aux names before the list; imeth 2 has
+                    # no aux and no naux
+                    auxtxt = [n for n in data.dtype.names if n not in ("node", "q")]
+                    if imeth == 5:
+                        np.array([len(auxtxt) + 1], dtype=np.int32).tofile(f)
+                        for auxname in auxtxt:
+                            f.write(_pad_text_to_16(auxname))
+                    np.array([len(data)], dtype=np.int32).tofile(f)
+                    dt_list = [("node", np.int32), ("q", realtype)]
+                    dt_list += [(name, realtype) for name in auxtxt]
+                    output_data = np.empty(len(data), dtype=np.dtype(dt_list))
+                    for field in output_data.dtype.names:
+                        output_data[field] = data[field]
+                    output_data.tofile(f)
+
+                elif imeth == 3:
+                    ilayer, arr = data
+                    np.asarray(ilayer, dtype=np.int32).tofile(f)
+                    np.asarray(arr, dtype=realtype).tofile(f)
+
+                elif imeth == 4:
+                    np.asarray(data, dtype=realtype).tofile(f)
 
                 elif imeth == 6:
                     # write model and package names
