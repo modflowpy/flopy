@@ -617,7 +617,7 @@ class MFDataItemStructure:
                     self.ucase = bool(arr_line[1])
             elif arr_line[0] == "preserve_case":
                 self.preserve_case = self._get_boolean_val(arr_line)
-            elif arr_line[0] == "default_value":
+            elif arr_line[0] in ("default_value", "default"):
                 self.default_value = " ".join(arr_line[1:])
             elif arr_line[0] == "numeric_index":
                 self.numeric_index = self._get_boolean_val(arr_line)
