@@ -4,7 +4,7 @@ important classes that can be accessed by the user.
 
 *  HeadFile (Binary head file.  Can also be used for drawdown)
 *  HeadUFile (Binary MODFLOW-USG unstructured head file)
-*  UcnFile (Binary concentration file from MT3DMS)
+*  UcnFile (Binary concentration file from MT3DMS or MODFLOW 6 GWT)
 *  CellBudgetFile (Binary cell-by-cell flow file)
 
 """
@@ -1321,8 +1321,9 @@ class UcnFile(BinaryLayerFile):
     Notes
     -----
     The UcnFile class provides simple ways to retrieve 2d and 3d
-    concentration arrays from a MT3D binary head file and time series
-    arrays for one or more cells.
+    concentration arrays from an MT3D or MODFLOW 6 GWT binary
+    concentration file and time series arrays for one or more cells.
+    The file type is detected from the first record header.
 
     The BinaryLayerFile class is built on a record array consisting of
     headers, which are record arrays of the modflow header information
@@ -1337,6 +1338,9 @@ class UcnFile(BinaryLayerFile):
     >>> ucnobj = bf.UcnFile('MT3D001.UCN', precision='single')
     >>> ucnobj.headers
     >>> rec = ucnobj.get_data(kstpkper=(0, 0))
+
+    >>> gwtobj = bf.UcnFile('gwt.ucn')  # MODFLOW 6 GWT concentration file
+    >>> conc = gwtobj.get_alldata()
 
     """
 
