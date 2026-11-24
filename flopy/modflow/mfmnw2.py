@@ -1752,7 +1752,7 @@ class ModflowMnw2(Package):
                         fmt = float_format + " {:.0f}"
                         f_mnw.write(fmt.format(hlim, qcut))
                         if qcut != 0:
-                            fmt = " {} {}".format(float_format)
+                            fmt = float_format + float_format
                             f_mnw.write(
                                 fmt.format(
                                     *self.stress_period_data[per][["qfrcmn", "qfrcmx"]][
