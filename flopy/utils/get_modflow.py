@@ -514,7 +514,7 @@ def run_main(
     assets = release.get("assets", [])
     for asset in assets:
         asset_name = asset["name"]
-        if ostag in asset_name:
+        if asset_name == f"{ostag}.zip" or asset_name.endswith(f"_{ostag}.zip"):
             break
     else:
         raise ValueError(

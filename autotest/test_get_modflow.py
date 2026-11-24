@@ -316,6 +316,20 @@ def test_run_main_any_repo(tmp_path, monkeypatch):
         run_main(tmp_path, owner="me", repo="my-build", ostag="linux", quiet=True)
 
 
+@pytest.mark.parametrize("asset", ["macarm.zip", "mf6.8.2_macarm.zip"])
+def test_run_main_ostag_matches_asset_exactly(tmp_path, monkeypatch, asset):
+    # an asset whose name only contains the ostag is not selected
+    release = {
+        "tag_name": "v1",
+        "assets": [{"name": asset}],
+        "html_url": "https://example.com",
+    }
+    monkeypatch.setattr(get_modflow, "get_release", lambda *args, **kwargs: release)
+
+    with pytest.raises(ValueError, match="could not find ostag"):
+        run_main(tmp_path, owner="me", repo="my-build", ostag="mac", quiet=True)
+
+
 @flaky
 @requires_github
 @pytest.mark.parametrize("repo", repo_options.keys())
