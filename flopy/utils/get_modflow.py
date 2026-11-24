@@ -395,6 +395,7 @@ def run_main(
     quiet=False,
     tries=None,
     retry_delay=None,
+    libdir=None,
     _is_cli=False,
 ):
     """Run main method to get MODFLOW and related programs.
@@ -433,6 +434,10 @@ def run_main(
     retry_delay : float, optional
         Base seconds between retries, growing exponentially. Defaults to the
         ``GET_MODFLOW_RETRY_DELAY`` environment variable, or 2.0.
+    libdir : str, Path or bool, optional
+        Directory to install shared libraries on Linux and macOS, created if
+        needed. True selects ``lib`` beside ``bindir``. Default is ``bindir``.
+        On Windows, shared libraries are always installed in ``bindir``.
     _is_cli : bool, default False
         Control behavior of method if this is run as a command-line interface
         or as a Python function.
@@ -704,6 +709,18 @@ def run_main(
             pth = bindir / fname
             pth.chmod(pth.stat().st_mode | 0o111)
 
+    if libdir and "win" not in ostag:
+        libdir = bindir.parent / "lib" if libdir is True else Path(libdir).resolve()
+        libdir.mkdir(parents=True, exist_ok=True)
+        libs = [Path(f).name for f in extract if f.endswith(lib_suffix)]
+        if libs and not quiet:
+            print(
+                f"moving {len(libs)} shared "
+                f"librar{'ies' if len(libs) != 1 else 'y'} to '{libdir}'"
+            )
+        for fname in libs:
+            shutil.move(bindir / fname, libdir / fname)
+
     # Show listing
     if not quiet:
         if any(items):
@@ -844,6 +861,13 @@ Examples:
         default=None,
         help="Base seconds between retries, grows exponentially; default is "
         f"{http_retry_delay} (env: GET_MODFLOW_RETRY_DELAY).",
+    )
+    parser.add_argument(
+        "--libdir",
+        nargs="?",
+        const=True,
+        help="Directory to install shared libraries on Linux and macOS; "
+        "default is the bindir. Without a value, 'lib' beside the bindir.",
     )
     args = vars(parser.parse_args())
     try:

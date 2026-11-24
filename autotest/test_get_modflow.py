@@ -4,6 +4,7 @@ import io
 import os
 import sys
 import urllib.request
+import zipfile
 from os.path import expandvars
 from pathlib import Path
 from platform import system
@@ -328,6 +329,51 @@ def test_run_main_ostag_matches_asset_exactly(tmp_path, monkeypatch, asset):
 
     with pytest.raises(ValueError, match="could not find ostag"):
         run_main(tmp_path, owner="me", repo="my-build", ostag="mac", quiet=True)
+
+
+@pytest.mark.parametrize("libdir", [None, True, "custom"])
+def test_run_main_libdir(tmp_path, monkeypatch, libdir):
+    # shared libraries go to libdir, executables to bindir
+    release = {
+        "tag_name": "v1",
+        "html_url": "https://example.com",
+        "assets": [
+            {
+                "name": "linux.zip",
+                "browser_download_url": "https://example.com/linux.zip",
+                "updated_at": "",
+            }
+        ],
+    }
+    monkeypatch.setattr(get_modflow, "get_release", lambda *args, **kwargs: release)
+    downloads = tmp_path / "downloads"
+    downloads.mkdir()
+    with zipfile.ZipFile(downloads / "my-build-v1-linux.zip", "w") as zipf:
+        zipf.writestr("bin/mf6", "")
+        zipf.writestr("bin/libmf6.so", "")
+    bindir = tmp_path / "bin"
+    bindir.mkdir()
+    if libdir == "custom":
+        libdir = tmp_path / "custom"
+        expected_libdir = libdir
+    elif libdir:
+        expected_libdir = tmp_path / "lib"
+    else:
+        expected_libdir = bindir
+
+    run_main(
+        bindir,
+        owner="me",
+        repo="my-build",
+        ostag="linux",
+        downloads_dir=downloads,
+        libdir=libdir,
+        quiet=True,
+    )
+
+    assert (bindir / "mf6").is_file()
+    assert (expected_libdir / "libmf6.so").is_file()
+    assert not (bindir / "bin").exists()
 
 
 @flaky
