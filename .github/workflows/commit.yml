@@ -148,14 +148,6 @@ jobs:
       - name: Install Modflow-related executables
         uses: modflowpy/install-modflow-action@v1
 
-      - name: Install triangle (macOS workaround)
-        if: runner.os == 'macOS'
-        uses: modflowpy/install-modflow-action@v1
-        with:
-          repo: executables
-          ostag: mac
-          subset: triangle
-
       - name: Setup GNU Fortran
         uses: fortran-lang/setup-fortran@v1
         with:
