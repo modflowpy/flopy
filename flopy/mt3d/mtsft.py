@@ -456,35 +456,6 @@ class Mt3dSft(Package):
         nsfinit : int
             number of simulated stream reaches in the surface-water transport
             process.
-        isfsolv : int
-            Specifies the numerical technique that will be used to solve the
-            transport problem in the surface water network.  The first release
-            of MT3D-USGS (version 1.0) only allows for a finite-difference
-            formulation and regardless of what value the user specifies, the
-            variable defaults to 1, meaning the finite-difference solution is
-            invoked.
-        wimp : float
-            Is the stream solver time weighting factor.  Ranges between 0.0
-            and 1.0.  Values of 0.0, 0.5, or 1.0 correspond to explicit,
-            Crank-Nicolson, and fully implicit schemes, respectively.
-        wups : float
-            Is the space weighting factor employed in the stream network
-            solver. Ranges between 0.0 and 1.0.  Values of 0.0 and 1.0
-            correspond to a central-in-space and upstream weighting factors,
-            respectively.
-        cclosesf : float
-            Is the closure criterion for the SFT solver
-        mxitersf : int
-            Limits the maximum number of iterations the SFT solver can use to
-            find a solution of the stream transport problem.
-        crntsf : float
-            Is the Courant constraint specific to the SFT time step, its value
-            has no bearing upon the groundwater transport solution time step.
-        iprtxmd : int
-            a flag to print SFT solution information to the standard output
-            file. IPRTXMD can equal 0, 1, or 2, and will write increasing
-            amounts of solver information to the standard output file,
-            respectively.
 
         Returns
         -------
