@@ -254,7 +254,7 @@ def process_open_close_line(
                 value_,
                 traceback_,
                 message,
-                debug,
+                sim_data.debug,
             )
         while index < len(arr_line):
             if isinstance(arr_line[index], str):
