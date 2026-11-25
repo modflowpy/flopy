@@ -171,7 +171,7 @@ class ModflowUzf1(Package):
         *   h < CELTOP-EXTDP, ET is zero;
         *   CELTOP-EXTDP < h < CELTOP-EXTDP+SMOOTHINT, ET is smoothed;
         CELTOP-EXTDP+SMOOTHINT < h, ET is equal to potential ET.
-    uzgage : dict of lists or list of lists
+    uzgag : dict of lists or list of lists
         Dataset 8 in UZF Package documentation. Each entry in the dict
         is keyed by iftunit.
             Dict of lists: If iftunit is negative, the list is empty.

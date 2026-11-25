@@ -898,12 +898,10 @@ class NetCdf:
 
         Parameters
         ----------
-        name : str
+        group : str
             name of the netcdf group
         dimensions : tuple
             data dimension names for group
-        dimension_shape : tuple
-            tuple of data dimension lengths
         attributes : dict
             nested dictionary of {dimension : {attributes}} for each netcdf
             group dimension
